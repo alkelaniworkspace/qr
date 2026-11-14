@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { adminClient } from "@/lib/supabase/admin";
+import { serverEnv, supabaseConfigured } from "@/lib/env";
 import type { CodeMode, CodeTypeId } from "./types";
 
 export interface PublicCode {
@@ -16,6 +17,7 @@ export interface PublicCode {
 /** Public lookup by slug (bypasses RLS, returns only what a scanner needs). */
 export const getPublicCode = cache(async (slug: string): Promise<PublicCode | null> => {
   if (!/^[A-Za-z0-9_-]{4,64}$/.test(slug)) return null;
+  if (!supabaseConfigured || !serverEnv().secretKey) return null;
   const { data } = await adminClient()
     .from("qr_codes")
     .select("id, slug, name, type, mode, status, content")

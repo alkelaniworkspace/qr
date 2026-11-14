@@ -27,6 +27,12 @@ export async function proxy(request: NextRequest) {
   // Scans and hosted pages never need a session.
   if (pathname.startsWith("/r/") || pathname.startsWith("/p/")) return NextResponse.next();
 
+  // Without database settings only the public pages work.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+    if (PROTECTED.some((p) => pathname.startsWith(p))) return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",

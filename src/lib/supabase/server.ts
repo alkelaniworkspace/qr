@@ -1,7 +1,7 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { env } from "@/lib/env";
+import { env, supabaseConfigured } from "@/lib/env";
 
 /** Per-request client acting as the signed-in user (RLS applies). */
 export async function createClient() {
@@ -22,6 +22,7 @@ export async function createClient() {
 
 /** Returns the signed-in user's id, or null. Verifies the JWT. */
 export async function getUserId(): Promise<string | null> {
+  if (!supabaseConfigured) return null;
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   return (data?.claims?.sub as string | undefined) ?? null;
@@ -29,6 +30,7 @@ export async function getUserId(): Promise<string | null> {
 
 /** Signed-in user from the verified JWT claims, or null. */
 export async function getSessionUser(): Promise<{ id: string; email: string } | null> {
+  if (!supabaseConfigured) return null;
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const sub = data?.claims?.sub as string | undefined;

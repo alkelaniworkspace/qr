@@ -3,7 +3,9 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { env } from "@/lib/env";
+import { env, supabaseConfigured } from "@/lib/env";
+
+const NOT_READY = "Die Anmeldung ist gleich verfügbar. Wir richten gerade die Datenbank ein.";
 
 export type AuthState = { error?: string; info?: string; email?: string } | undefined;
 
@@ -16,6 +18,7 @@ export async function signIn(_: AuthState, form: FormData): Promise<AuthState> {
   const email = String(form.get("email") ?? "").trim();
   const password = String(form.get("password") ?? "");
   if (!email || !password) return { error: "Bitte E-Mail und Passwort eingeben", email };
+  if (!supabaseConfigured) return { error: NOT_READY, email };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -42,6 +45,7 @@ export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
   });
   const email = String(form.get("email") ?? "");
   if (!parsed.success) return { error: parsed.error.issues[0].message, email };
+  if (!supabaseConfigured) return { error: NOT_READY, email };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
