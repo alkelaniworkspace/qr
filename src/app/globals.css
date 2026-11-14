@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #14130f;
+  --color-ink-soft: #2a2822;
+  --color-paper: #f7f5f0;
+  --color-sand: #efebe2;
+  --color-line: #e2ddd1;
+  --color-muted: #6f6a5f;
+  --color-gold: #a8823f;
+  --color-gold-soft: #d9c49a;
+  --color-success: #1f6b4f;
+  --color-danger: #a8322d;
+  --color-warn: #a86a12;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.375rem;
+  --shadow-soft: 0 1px 2px rgb(20 19 15 / 0.04), 0 8px 24px -12px rgb(20 19 15 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(20 19 15 / 0.05), 0 24px 48px -24px rgb(20 19 15 / 0.25);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-paper text-ink font-sans;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection {
+    background: var(--color-gold-soft);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+@utility grain {
+  background-image: radial-gradient(rgb(20 19 15 / 0.035) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@utility animate-rise {
+  animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Checkerboard behind transparent previews */
+@utility checker {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #eee 25%, transparent 25%),
+    linear-gradient(-45deg, #eee 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #eee 75%),
+    linear-gradient(-45deg, transparent 75%, #eee 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}

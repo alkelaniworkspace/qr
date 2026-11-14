@@ -1,0 +1,84 @@
+# Scanwerk – منصة QR Codes فاخرة
+
+منصة SaaS لتصميم أكواد QR وإدارتها، موجّهة لسوق ألمانيا/DACH. واجهة المستخدم بالألماني.
+الاسم «Scanwerk» اسم عمل مؤقت، وبتغيّره من مكان واحد: `src/lib/site.ts`.
+
+## شو موجود بهالنسخة
+
+| الجزء | التفاصيل |
+| --- | --- |
+| استوديو التصميم | 6 أشكال نقاط، 4 إطارات زوايا و5 أشكال داخلية، لون أو تدرّج (خطي/دائري)، لون منفصل للزوايا، خلفية أو شفاف، لوغو مع تفريغ وخلفية، إطارات بنص (Banner / Karte / Ticket)، هامش، مستوى تصحيح الأخطاء، 6 قوالب جاهزة |
+| فحص قابلية المسح | علامة من 100 (تباين، ألوان معكوسة، هامش، حجم اللوغو) + **مسح حقيقي** للكود بالمتصفح بـ jsQR بدقة شبيهة بكاميرا الموبايل |
+| 15 نوع كود | Website، Speisekarte، Visitenkarte، Link-Seite، Google-Bewertung، Gutschein، PDF، Veranstaltung، Standort، App-Download (iOS/Android تلقائي)، WLAN، E-Mail، SMS، Anruf، Text |
+| ديناميكي / ثابت | الديناميكي بيمر من `/r/<slug>` وبتقدر تغيّر محتواه بأي وقت. الثابت المحتوى جوّا الكود نفسه ومجاني بدون حدود |
+| صفحات مستضافة | صفحات موبايل أنيقة لكل نوع إله صفحة، بلون الزبون، مع تحميل vCard وملف ICS للتقويم |
+| الإحصائيات | مسحات يومية (30 يوم)، زوار فريدين، ساعات اليوم، أجهزة، أنظمة، مدن. **بدون كوكيز وبدون تخزين IP** (hash يومي مملّح) |
+| التحميل | PNG لحد 4096px و SVG للطباعة |
+| الأمان | RLS على كل الجداول، الـ slug ما بيتغيّر بعد الإنشاء، عدّاد المسحات والخطة ما بيقدر المستخدم يعدّلهم، حد الأكواد الديناميكية مفروض بقاعدة البيانات، فحص الروابط بـ Google Safe Browsing، تنظيف التصميم بالسيرفر |
+| الوعد | خدمة التحويل **ما بتفحص الاشتراك أبداً**: الكود بيضل شغّال للأبد |
+| استوديو عام | `/create` لتوليد أكواد ثابتة بدون تسجيل (مفيد للـ SEO وبيجيب زبائن) |
+
+## التقنيات
+
+Next.js 16 (App Router, Turbopack, `proxy.ts`) · React 19 · Tailwind CSS 4 · Supabase (Auth, Postgres, Storage) · Zod 4 · محرك SVG خاص فينا (`src/lib/qr/render.ts`).
+
+## التشغيل
+
+```bash
+npm install
+cp .env.example .env.local   # عبّي القيم
+npm run dev
+```
+
+### Supabase
+
+1. اعمل **مشروع Supabase خاص بالمنصة** (منفصل عن مواقع الزبائن)، ومنطقته `eu-central-1` (فرانكفورت).
+2. نفّذ `supabase/migrations/20261114000000_init.sql`، إما بالـ SQL Editor أو بـ `supabase db push`.
+3. Authentication → URL Configuration: حط `NEXT_PUBLIC_APP_URL` كـ Site URL، وزيد `…/auth/confirm` على Redirect URLs.
+4. لتجرّب أكثر من كود ديناميكي ارفع خطتك يدوياً:
+   `update profiles set plan = 'agency' where id = '<user-id>';`
+
+### الدومين القصير (قرار مهم)
+
+الرابط اللي بينطبع جوّا الكود الديناميكي هو `NEXT_PUBLIC_SHORT_URL/<slug>`، وإذا الإعداد فاضي بيصير `NEXT_PUBLIC_APP_URL/r/<slug>`.
+**قرّر الدومين قبل ما تطبع أول كود حقيقي**، لأن الأكواد المطبوعة ما بيتغيّر فيها شي بعدين. وجّه الدومين القصير على نفس النشر على Vercel، والـ proxy بيتكفّل بالباقي.
+
+## الفحوصات
+
+```bash
+npm run verify       # typecheck + lint + verify:qr + verify:sql
+npm run verify:qr    # بيرسم 30 تصميم مختلف وبيقرأهم بقارئ QR حقيقي
+npm run verify:sql   # بيطبّق الـ migration على Postgres بالذاكرة (PGlite) وبيفحص RLS والحدود والإحصائيات
+```
+
+## هيكل المشروع
+
+```
+src/
+  app/
+    page.tsx                 الصفحة الرئيسية
+    create/                  الاستوديو العام (بدون تسجيل)
+    (auth)/                  تسجيل الدخول والتسجيل
+    dashboard/               لوحة التحكم، كود جديد، تعديل، إحصائيات، الخطة
+    r/[slug]/route.ts        مسار المسح (تحويل + تسجيل المسحة بعد الرد)
+    p/[slug]/                الصفحات المستضافة + vcard + ics
+  components/studio/         الاستوديو (المحتوى، التصميم، المعاينة)
+  components/pages/          تصميم الصفحات المستضافة
+  lib/qr/                    الرسم، فحص القراءة، التصدير، تنظيف التصميم
+  lib/codes/                 تعريف الأنواع، المحتوى، التحويل، vCard/ICS
+  lib/analytics/             تسجيل المسحات مع الحفاظ على الخصوصية
+  proxy.ts                   الجلسات + الدومين القصير
+supabase/migrations/         قاعدة البيانات
+scripts/                     الفحوصات
+```
+
+## الخطوات الجاية
+
+- [ ] الدفع بـ Stripe (Checkout + Customer Portal + Webhook بيحدّث `profiles.plan`)
+- [ ] Brand Kit (حفظ تصاميم جاهزة)
+- [ ] الدومين الخاص للزبون (Business)
+- [ ] أكواد فنية بالذكاء الاصطناعي (Replicate) وأكواد متحركة
+- [ ] Apple/Google Wallet للـ Visitenkarte
+- [ ] واجهة بعدة لغات (EN/AR/TR)، نسيت كلمة السر، تسجيل بـ Google
+- [ ] White Label وإنشاء بالجملة (CSV) وAPI للوكالات
+- [ ] Impressum / Datenschutz / AGB بنصوص قانونية حقيقية (حالياً placeholders)
