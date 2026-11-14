@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, ImagePlus, X } from "lucide-react";
-import { eyeGlyph, renderQrSvg } from "@/lib/qr/render";
+import { ChevronDown, ImagePlus, RotateCcw, X } from "lucide-react";
+import { eyeGlyph, patternGlyph, renderQrSvg } from "@/lib/qr/render";
 import {
   DEFAULT_STYLE, STYLE_PRESETS,
   type DotStyle, type EyeBallStyle, type EyeFrameStyle, type FrameStyle, type QrStyle,
@@ -17,17 +17,57 @@ interface Props {
   onChange: (s: QrStyle) => void;
 }
 
-const SAMPLE = "SCANWERK";
+const SAMPLE = "SCANWERK-2026";
+const SWATCHES = ["#0f1113", "#ffffff", "#d2ff1f", "#ff5d6c", "#38d5ff", "#a78bfa", "#3ee6a8", "#ffb020", "#1a1d4e", "#5a1428"];
 
-function Section({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+const DOTS: { value: DotStyle; label: string }[] = [
+  { value: "square", label: "Quadrat" },
+  { value: "rounded", label: "Weich" },
+  { value: "fluid", label: "Fließend" },
+  { value: "classy", label: "Elegant" },
+  { value: "dots", label: "Punkte" },
+  { value: "bubble", label: "Bubbles" },
+  { value: "mini", label: "Pixel" },
+  { value: "diamond", label: "Raute" },
+  { value: "vertical", label: "Säulen" },
+  { value: "horizontal", label: "Streifen" },
+];
+const FRAMES: { value: EyeFrameStyle; label: string }[] = [
+  { value: "square", label: "Eckig" },
+  { value: "rounded", label: "Rund" },
+  { value: "circle", label: "Kreis" },
+  { value: "leaf", label: "Blatt" },
+  { value: "octagon", label: "Achteck" },
+  { value: "shield", label: "Wappen" },
+];
+const BALLS: { value: EyeBallStyle; label: string }[] = [
+  { value: "square", label: "Eckig" },
+  { value: "rounded", label: "Rund" },
+  { value: "circle", label: "Kreis" },
+  { value: "diamond", label: "Raute" },
+  { value: "leaf", label: "Blatt" },
+  { value: "octagon", label: "Achteck" },
+  { value: "shield", label: "Wappen" },
+];
+const FRAME_STYLES: { value: FrameStyle; label: string }[] = [
+  { value: "none", label: "Ohne" },
+  { value: "label", label: "Banner" },
+  { value: "card", label: "Karte" },
+  { value: "ticket", label: "Ticket" },
+];
+
+function Section({ title, hint, defaultOpen = false, children }: { title: string; hint?: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-line last:border-0">
-      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center justify-between py-4 text-left" aria-expanded={open}>
-        <span className="text-[15px] font-medium">{title}</span>
-        <ChevronDown className={cn("size-4 text-muted transition-transform", open && "rotate-180")} />
+    <div className="card overflow-hidden">
+      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-white/[0.02]" aria-expanded={open}>
+        <span>
+          <span className="block font-display text-base uppercase">{title}</span>
+          {hint && <span className="mt-0.5 block text-xs text-faint">{hint}</span>}
+        </span>
+        <ChevronDown className={cn("size-4 shrink-0 text-dim transition-transform duration-300", open && "rotate-180 text-lime")} />
       </button>
-      {open && <div className="pb-6">{children}</div>}
+      {open && <div className="border-t border-edge px-5 pb-6 pt-5 animate-rise">{children}</div>}
     </div>
   );
 }
@@ -40,12 +80,12 @@ function Tile({ active, onClick, children, label }: { active: boolean; onClick: 
       title={label}
       aria-pressed={active}
       className={cn(
-        "group flex flex-col items-center gap-1.5 rounded-xl border bg-white p-2 text-[11px] text-muted transition",
-        active ? "border-ink ring-2 ring-ink/10 text-ink" : "border-line hover:border-ink/30",
+        "group flex flex-col items-center gap-2 rounded-2xl border bg-bg/60 p-2.5 text-[11px] font-semibold transition duration-200 hover:-translate-y-0.5",
+        active ? "border-lime text-lime shadow-[0_0_0_1px_rgba(210,255,31,0.4),0_0_24px_-6px_rgba(210,255,31,0.6)]" : "border-edge text-dim hover:border-white/25 hover:text-fg",
       )}
     >
       {children}
-      <span className="truncate">{label}</span>
+      <span className="max-w-full truncate">{label}</span>
     </button>
   );
 }
@@ -56,13 +96,13 @@ function Svg({ svg, className }: { svg: string; className?: string }) {
 
 function Segmented<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void }) {
   return (
-    <div className="inline-flex rounded-full border border-line bg-white p-1">
+    <div className="inline-flex flex-wrap rounded-[14px] border border-edge bg-bg/60 p-1">
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
-          className={cn("rounded-full px-3.5 py-1.5 text-[13px] transition", value === o.value ? "bg-ink text-paper" : "text-muted hover:text-ink")}
+          className={cn("rounded-[10px] px-4 py-2 text-xs font-bold uppercase tracking-wide transition", value === o.value ? "bg-lime text-on-lime shadow-[0_2px_0_#7fa000]" : "text-dim hover:text-fg")}
         >
           {o.label}
         </button>
@@ -74,123 +114,129 @@ function Segmented<T extends string>({ value, options, onChange }: { value: T; o
 function Slider({ label, value, min, max, step, onChange, format }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; format?: (v: number) => string }) {
   return (
     <div>
-      <div className="mb-1.5 flex justify-between text-[13px]">
-        <span className="font-medium text-ink-soft">{label}</span>
-        <span className="tabular-nums text-muted">{format ? format(value) : value}</span>
+      <div className="mb-2 flex justify-between">
+        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">{label}</span>
+        <span className="font-mono text-xs text-lime">{format ? format(value) : value}</span>
       </div>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full accent-ink" />
+      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full" />
     </div>
   );
 }
 
-const DOTS: { value: DotStyle; label: string }[] = [
-  { value: "square", label: "Quadrat" },
-  { value: "rounded", label: "Weich" },
-  { value: "fluid", label: "Fließend" },
-  { value: "classy", label: "Elegant" },
-  { value: "dots", label: "Punkte" },
-  { value: "diamond", label: "Raute" },
-];
-const FRAMES: { value: EyeFrameStyle; label: string }[] = [
-  { value: "square", label: "Eckig" },
-  { value: "rounded", label: "Abgerundet" },
-  { value: "circle", label: "Rund" },
-  { value: "leaf", label: "Blatt" },
-];
-const BALLS: { value: EyeBallStyle; label: string }[] = [
-  { value: "square", label: "Eckig" },
-  { value: "rounded", label: "Abgerundet" },
-  { value: "circle", label: "Rund" },
-  { value: "diamond", label: "Raute" },
-  { value: "leaf", label: "Blatt" },
-];
-const FRAME_STYLES: { value: FrameStyle; label: string }[] = [
-  { value: "none", label: "Ohne" },
-  { value: "label", label: "Banner" },
-  { value: "card", label: "Karte" },
-  { value: "ticket", label: "Ticket" },
-];
+function Swatches({ value, onChange }: { value: string; onChange: (c: string) => void }) {
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {SWATCHES.map((c) => (
+        <button
+          key={c}
+          type="button"
+          aria-label={`Farbe ${c}`}
+          onClick={() => onChange(c)}
+          className={cn("size-6 rounded-lg border transition hover:scale-110", value.toLowerCase() === c ? "border-lime ring-2 ring-lime/40" : "border-white/15")}
+          style={{ backgroundColor: c }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <label className="flex cursor-pointer items-center gap-3 text-sm font-medium">
+      <span className={cn("relative h-6 w-11 shrink-0 rounded-full border transition", checked ? "border-lime bg-lime" : "border-edge-strong bg-bg")}>
+        <span className={cn("absolute top-0.5 size-[18px] rounded-full transition-all", checked ? "left-[22px] bg-on-lime" : "left-0.5 bg-dim")} />
+      </span>
+      <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {label}
+    </label>
+  );
+}
 
 export function DesignPanel({ style, onChange }: Props) {
   const set = (patch: Partial<QrStyle>) => onChange({ ...style, ...patch });
   const [logoError, setLogoError] = useState<string | null>(null);
 
   const presetSvgs = useMemo(
-    () => STYLE_PRESETS.map((p) => renderQrSvg(SAMPLE, { ...DEFAULT_STYLE, ...p.style } as QrStyle, { size: 96, id: `preset-${p.id}` })),
+    () => STYLE_PRESETS.map((p) => renderQrSvg(SAMPLE, { ...DEFAULT_STYLE, ...p.style, margin: 2 } as QrStyle, { size: 120, id: `preset-${p.id}` })),
     [],
   );
-  const dotSvgs = useMemo(
-    () => DOTS.map((d) => renderQrSvg(SAMPLE, { ...DEFAULT_STYLE, dots: d.value, eyeFrame: "square", eyeBall: "square", margin: 1 }, { size: 72, id: `dot-${d.value}` })),
-    [],
-  );
+  const dotSvgs = useMemo(() => DOTS.map((d) => patternGlyph(d.value)), []);
 
   const fill = style.fill;
-  const colors: [string, string] = fill.type === "solid" ? [fill.color, fill.color] : fill.colors;
+  const mainColor = fill.type === "solid" ? fill.color : fill.colors[0];
 
   async function onLogo(file: File) {
     setLogoError(null);
     if (!/^image\/(png|jpe?g|webp|svg\+xml)$/.test(file.type)) return setLogoError("Bitte PNG, JPG, WebP oder SVG wählen");
     try {
       const src = await fileToLogoDataUrl(file);
-      set({ logo: { src, size: 0.22, excavate: true, plate: true, ...(style.logo ? { size: style.logo.size } : {}) }, ecc: "H" });
+      set({ logo: { src, size: style.logo?.size ?? 0.22, excavate: true, plate: true }, ecc: "H" });
     } catch {
       setLogoError("Bild konnte nicht gelesen werden");
     }
   }
 
   return (
-    <div>
-      <Section title="Vorlagen" defaultOpen>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+    <div className="space-y-3">
+      <Section title="Vorlagen" hint="Ein Klick, fertiger Look" defaultOpen>
+        <div className="grid grid-cols-4 gap-2.5">
           {STYLE_PRESETS.map((p, i) => (
-            <Tile key={p.id} label={p.name} active={false} onClick={() => onChange({ ...style, ...DEFAULT_STYLE, logo: style.logo, frame: style.frame, ...p.style, ecc: style.logo ? "H" : DEFAULT_STYLE.ecc } as QrStyle)}>
-              <Svg svg={presetSvgs[i]} className="size-14" />
+            <Tile
+              key={p.id}
+              label={p.name}
+              active={false}
+              onClick={() => onChange({ ...DEFAULT_STYLE, ...p.style, logo: style.logo, frame: style.frame, margin: style.margin, ecc: style.logo ? "H" : DEFAULT_STYLE.ecc } as QrStyle)}
+            >
+              <Svg svg={presetSvgs[i]} className="aspect-square w-full overflow-hidden rounded-xl" />
             </Tile>
           ))}
         </div>
       </Section>
 
-      <Section title="Muster" defaultOpen>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+      <Section title="Muster" hint="10 Formen für die Punkte" defaultOpen>
+        <div className="grid grid-cols-5 gap-2.5">
           {DOTS.map((d, i) => (
             <Tile key={d.value} label={d.label} active={style.dots === d.value} onClick={() => set({ dots: d.value })}>
-              <Svg svg={dotSvgs[i]} className="size-12" />
+              <Svg svg={dotSvgs[i]} className="size-11" />
             </Tile>
           ))}
         </div>
       </Section>
 
-      <Section title="Ecken">
-        <p className="mb-2 text-[13px] font-medium text-ink-soft">Rahmen</p>
-        <div className="mb-5 grid grid-cols-4 gap-2">
+      <Section title="Ecken" hint="Rahmen und Kern getrennt wählen" defaultOpen>
+        <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">Rahmen</p>
+        <div className="mb-6 grid grid-cols-3 gap-2 sm:grid-cols-6">
           {FRAMES.map((f) => (
             <Tile key={f.value} label={f.label} active={style.eyeFrame === f.value} onClick={() => set({ eyeFrame: f.value })}>
-              <Svg svg={eyeGlyph(f.value, style.eyeBall)} className="size-9" />
+              <Svg svg={eyeGlyph(f.value, style.eyeBall, "#f7f7f8")} className="size-9" />
             </Tile>
           ))}
         </div>
-        <p className="mb-2 text-[13px] font-medium text-ink-soft">Innen</p>
-        <div className="grid grid-cols-5 gap-2">
+        <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">Kern</p>
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
           {BALLS.map((b) => (
             <Tile key={b.value} label={b.label} active={style.eyeBall === b.value} onClick={() => set({ eyeBall: b.value })}>
-              <Svg svg={eyeGlyph(style.eyeFrame, b.value)} className="size-9" />
+              <Svg svg={eyeGlyph(style.eyeFrame, b.value, "#f7f7f8")} className="size-8" />
             </Tile>
           ))}
         </div>
       </Section>
 
-      <Section title="Farben" defaultOpen>
-        <div className="space-y-5">
+      <Section title="Farben" hint="Punkte, Ecken, Hintergrund" defaultOpen>
+        <div className="space-y-6">
           <Segmented
             value={fill.type}
             options={[{ value: "solid", label: "Einfarbig" }, { value: "linear", label: "Verlauf" }, { value: "radial", label: "Radial" }]}
             onChange={(t) =>
-              set({ fill: t === "solid" ? { type: "solid", color: colors[0] } : { type: t, colors: fill.type === "solid" ? [colors[0], "#a8823f"] : colors, rotation: fill.type === "solid" ? 45 : fill.rotation } })
+              set({ fill: t === "solid" ? { type: "solid", color: mainColor } : { type: t, colors: fill.type === "solid" ? [mainColor, "#38d5ff"] : fill.colors, rotation: fill.type === "solid" ? 45 : fill.rotation } })
             }
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-5 sm:grid-cols-2">
             {fill.type === "solid" ? (
-              <FieldShell label="Vordergrund"><ColorInput value={fill.color} onChange={(c) => set({ fill: { type: "solid", color: c } })} /></FieldShell>
+              <FieldShell label="Punkte">
+                <ColorInput value={fill.color} onChange={(c) => set({ fill: { type: "solid", color: c } })} />
+                <Swatches value={fill.color} onChange={(c) => set({ fill: { type: "solid", color: c } })} />
+              </FieldShell>
             ) : (
               <>
                 <FieldShell label="Farbe 1"><ColorInput value={fill.colors[0]} onChange={(c) => set({ fill: { ...fill, colors: [c, fill.colors[1]] } })} /></FieldShell>
@@ -198,71 +244,63 @@ export function DesignPanel({ style, onChange }: Props) {
               </>
             )}
             <FieldShell label="Hintergrund">
-              <ColorInput value={style.background} onChange={(c) => set({ background: c })} />
+              <ColorInput value={style.background} onChange={(c) => set({ background: c, transparent: false })} />
+              <Swatches value={style.background} onChange={(c) => set({ background: c, transparent: false })} />
             </FieldShell>
           </div>
           {fill.type === "linear" && (
             <Slider label="Winkel" value={fill.rotation} min={0} max={360} step={5} format={(v) => `${v}°`} onChange={(v) => set({ fill: { ...fill, rotation: v } })} />
           )}
-          <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" className="size-4 accent-ink" checked={style.eyeColor !== null} onChange={(e) => set({ eyeColor: e.target.checked ? "#a8823f" : null })} />
-              Eigene Farbe für Ecken
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" className="size-4 accent-ink" checked={style.transparent} onChange={(e) => set({ transparent: e.target.checked })} />
-              Transparenter Hintergrund
-            </label>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <Toggle checked={style.eyeColor !== null} onChange={(v) => set({ eyeColor: v ? "#d2ff1f" : null })} label="Eigene Farbe Rahmen" />
+              {style.eyeColor !== null && <div className="mt-3"><ColorInput value={style.eyeColor} onChange={(c) => set({ eyeColor: c })} /></div>}
+            </div>
+            <div>
+              <Toggle checked={style.eyeBallColor !== null} onChange={(v) => set({ eyeBallColor: v ? "#d2ff1f" : null })} label="Eigene Farbe Kern" />
+              {style.eyeBallColor !== null && <div className="mt-3"><ColorInput value={style.eyeBallColor} onChange={(c) => set({ eyeBallColor: c })} /></div>}
+            </div>
           </div>
-          {style.eyeColor !== null && (
-            <FieldShell label="Farbe der Ecken" className="max-w-[50%]">
-              <ColorInput value={style.eyeColor} onChange={(c) => set({ eyeColor: c })} />
-            </FieldShell>
-          )}
+          <Toggle checked={style.transparent} onChange={(v) => set({ transparent: v })} label="Transparenter Hintergrund" />
         </div>
       </Section>
 
-      <Section title="Logo">
+      <Section title="Logo" hint="Mit Freistellung und Platte">
         {style.logo ? (
           <div className="space-y-5">
             <div className="flex items-center gap-4">
-              <span className="checker grid size-16 place-items-center overflow-hidden rounded-xl border border-line">
+              <span className="checker grid size-16 place-items-center overflow-hidden rounded-xl">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={style.logo.src} alt="" className="max-h-12 max-w-12" />
               </span>
-              <button type="button" onClick={() => set({ logo: null })} className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-danger">
+              <button type="button" onClick={() => set({ logo: null })} className="inline-flex items-center gap-1.5 text-sm font-semibold text-dim hover:text-rose">
                 <X className="size-4" /> Logo entfernen
               </button>
             </div>
             <Slider label="Größe" value={style.logo.size} min={0.12} max={0.3} step={0.01} format={(v) => `${Math.round(v * 100)} %`} onChange={(v) => set({ logo: { ...style.logo!, size: v } })} />
-            <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="size-4 accent-ink" checked={style.logo.excavate} onChange={(e) => set({ logo: { ...style.logo!, excavate: e.target.checked } })} />
-                Fläche freistellen
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="size-4 accent-ink" checked={style.logo.plate} onChange={(e) => set({ logo: { ...style.logo!, plate: e.target.checked } })} />
-                Hintergrundplatte
-              </label>
+            <div className="flex flex-wrap gap-x-8 gap-y-3">
+              <Toggle checked={style.logo.excavate} onChange={(v) => set({ logo: { ...style.logo!, excavate: v } })} label="Fläche freistellen" />
+              <Toggle checked={style.logo.plate} onChange={(v) => set({ logo: { ...style.logo!, plate: v } })} label="Hintergrundplatte" />
             </div>
-            <p className="text-xs text-muted">Mit Logo nutzt der Code automatisch die höchste Fehlerkorrektur (H).</p>
+            <p className="text-xs text-faint">Mit Logo nutzt der Code automatisch die höchste Fehlerkorrektur (H).</p>
           </div>
         ) : (
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line bg-white px-4 py-8 text-sm text-muted transition hover:border-ink/30">
-            <ImagePlus className="size-6" strokeWidth={1.5} />
-            Logo hochladen (PNG, JPG, WebP, SVG)
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-edge-strong bg-bg/60 px-4 py-9 text-sm font-semibold text-dim transition hover:border-lime/60 hover:text-lime">
+            <ImagePlus className="size-7" strokeWidth={1.6} />
+            Logo hochladen
+            <span className="text-xs font-normal text-faint">PNG, JPG, WebP oder SVG</span>
             <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="sr-only" onChange={(e) => e.target.files?.[0] && onLogo(e.target.files[0])} />
           </label>
         )}
-        {logoError && <p className="mt-2 text-xs text-danger">{logoError}</p>}
+        {logoError && <p className="mt-2 text-xs text-rose">{logoError}</p>}
       </Section>
 
-      <Section title="Rahmen & Text">
+      <Section title="Rahmen & Text" hint="Call-to-Action unter dem Code">
         <div className="space-y-5">
           <Segmented value={style.frame.style} options={FRAME_STYLES} onChange={(v) => set({ frame: { ...style.frame, style: v } })} />
           {style.frame.style !== "none" && (
-            <div className="grid grid-cols-2 gap-3">
-              <FieldShell label="Text" className="col-span-2">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FieldShell label="Text" className="sm:col-span-2">
                 <Input value={style.frame.text} maxLength={40} onChange={(e) => set({ frame: { ...style.frame, text: e.target.value } })} />
               </FieldShell>
               <FieldShell label="Rahmenfarbe"><ColorInput value={style.frame.color} onChange={(c) => set({ frame: { ...style.frame, color: c } })} /></FieldShell>
@@ -272,17 +310,23 @@ export function DesignPanel({ style, onChange }: Props) {
         </div>
       </Section>
 
-      <Section title="Erweitert">
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Slider label="Ruhezone (Rand)" value={style.margin} min={0} max={8} step={1} format={(v) => `${v} Module`} onChange={(v) => set({ margin: v })} />
+      <Section title="Feinschliff" hint="Rand, Ecken, Fehlerkorrektur">
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Slider label="Ruhezone" value={style.margin} min={0} max={8} step={1} format={(v) => `${v} Module`} onChange={(v) => set({ margin: v })} />
+          <Slider label="Ecken-Rundung" value={style.radius} min={0} max={20} step={1} format={(v) => `${v} %`} onChange={(v) => set({ radius: v })} />
           <FieldShell label="Fehlerkorrektur" hint={style.logo ? "Mit Logo immer H" : "Höher = robuster, aber dichter"}>
             <Select value={style.logo ? "H" : style.ecc} disabled={!!style.logo} onChange={(e) => set({ ecc: e.target.value as QrStyle["ecc"] })}>
-              <option value="L">L – 7 %</option>
-              <option value="M">M – 15 %</option>
-              <option value="Q">Q – 25 %</option>
-              <option value="H">H – 30 %</option>
+              <option value="L">L · 7 %</option>
+              <option value="M">M · 15 %</option>
+              <option value="Q">Q · 25 %</option>
+              <option value="H">H · 30 %</option>
             </Select>
           </FieldShell>
+          <div className="flex items-end">
+            <button type="button" onClick={() => onChange({ ...DEFAULT_STYLE, logo: style.logo, ecc: style.logo ? "H" : DEFAULT_STYLE.ecc })} className="inline-flex h-12 items-center gap-2 rounded-[14px] border border-edge px-4 text-xs font-bold uppercase tracking-wide text-dim transition hover:border-white/25 hover:text-fg">
+              <RotateCcw className="size-4" /> Zurücksetzen
+            </button>
+          </div>
         </div>
       </Section>
     </div>

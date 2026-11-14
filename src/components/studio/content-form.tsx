@@ -50,8 +50,8 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
             );
           case "checkbox":
             return (
-              <label key={field.name} className="col-span-2 flex items-center gap-2.5 text-sm">
-                <input type="checkbox" className="size-4 accent-ink" checked={Boolean(value[field.name])} onChange={(e) => set(field.name, e.target.checked)} />
+              <label key={field.name} className="col-span-2 flex items-center gap-2.5 text-sm font-medium">
+                <input type="checkbox" className="size-4 accent-lime" checked={Boolean(value[field.name])} onChange={(e) => set(field.name, e.target.checked)} />
                 {field.label}
               </label>
             );
@@ -65,14 +65,14 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
             return (
               <div key={field.name} className="col-span-2">
                 <LinksEditor value={(value[field.name] as LinkItem[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
-                {error && <p className="mt-1.5 text-xs text-danger">{error}</p>}
+                {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}
               </div>
             );
           case "menu":
             return (
               <div key={field.name} className="col-span-2">
                 <MenuEditor value={(value[field.name] as MenuSection[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
-                {error && <p className="mt-1.5 text-xs text-danger">{error}</p>}
+                {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}
               </div>
             );
           case "file":
@@ -111,7 +111,7 @@ export function ColorInput({ id, value, onChange }: { id?: string; value: string
     setText(value);
   }
   return (
-    <div className="flex h-11 items-center gap-2 rounded-xl border border-line bg-white pl-1.5 pr-3 focus-within:border-ink/40">
+    <div className="flex h-12 items-center gap-2 rounded-[14px] border border-edge bg-bg/60 pl-2 pr-3 focus-within:border-lime/60">
       <input
         id={id}
         type="color"
@@ -128,7 +128,7 @@ export function ColorInput({ id, value, onChange }: { id?: string; value: string
           setText(v);
           if (/^#[0-9a-fA-F]{6}$/.test(v)) onChange(v.toLowerCase());
         }}
-        className="w-full bg-transparent font-mono text-sm uppercase outline-none"
+        className="w-full bg-transparent font-mono text-sm uppercase text-fg outline-none"
       />
     </div>
   );
@@ -152,13 +152,13 @@ function LinksEditor({ value, onChange, errors, prefix }: { value: LinkItem[]; o
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[13px] font-medium text-ink-soft">Links</span>
-        <span className="text-xs text-muted">{value.length} / 30</span>
+        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">Links</span>
+        <span className="text-xs text-faint">{value.length} / 30</span>
       </div>
       <div className="space-y-2.5">
         {value.map((link, i) => (
-          <div key={i} className="group flex items-start gap-2 rounded-2xl border border-line bg-white p-2.5">
-            <GripVertical className="mt-3 size-4 shrink-0 text-muted/50" />
+          <div key={i} className="group flex items-start gap-2 rounded-2xl border border-edge bg-surface p-2.5">
+            <GripVertical className="mt-4 size-4 shrink-0 text-faint" />
             <div className="grid flex-1 gap-2 sm:grid-cols-[150px_1fr]">
               <Input
                 value={link.label}
@@ -174,7 +174,7 @@ function LinksEditor({ value, onChange, errors, prefix }: { value: LinkItem[]; o
                 onChange={(e) => update(i, { url: e.target.value })}
               />
               {(errors[`${prefix}.${i}.url`] || errors[`${prefix}.${i}.label`]) && (
-                <p className="text-xs text-danger sm:col-span-2">{errors[`${prefix}.${i}.label`] ?? errors[`${prefix}.${i}.url`]}</p>
+                <p className="text-xs text-rose sm:col-span-2">{errors[`${prefix}.${i}.label`] ?? errors[`${prefix}.${i}.url`]}</p>
               )}
             </div>
             <RowActions onUp={() => onChange(move(value, i, -1))} onDown={() => onChange(move(value, i, 1))} onRemove={() => onChange(value.filter((_, k) => k !== i))} />
@@ -194,12 +194,12 @@ function LinksEditor({ value, onChange, errors, prefix }: { value: LinkItem[]; o
 }
 
 function RowActions({ onUp, onDown, onRemove }: { onUp: () => void; onDown: () => void; onRemove: () => void }) {
-  const btn = "grid size-8 place-items-center rounded-lg text-muted hover:bg-sand hover:text-ink";
+  const btn = "grid size-8 place-items-center rounded-lg text-faint transition hover:bg-white/[0.07] hover:text-fg";
   return (
     <div className="flex shrink-0 flex-col sm:flex-row">
       <button type="button" className={btn} onClick={onUp} aria-label="Nach oben"><ArrowUp className="size-4" /></button>
       <button type="button" className={btn} onClick={onDown} aria-label="Nach unten"><ArrowDown className="size-4" /></button>
-      <button type="button" className={cn(btn, "hover:text-danger")} onClick={onRemove} aria-label="Entfernen"><Trash2 className="size-4" /></button>
+      <button type="button" className={cn(btn, "hover:text-rose")} onClick={onRemove} aria-label="Entfernen"><Trash2 className="size-4" /></button>
     </div>
   );
 }
@@ -214,18 +214,18 @@ function MenuEditor({ value, onChange, errors, prefix }: { value: MenuSection[];
   return (
     <div className="space-y-4">
       {value.map((section, i) => (
-        <div key={i} className="rounded-2xl border border-line bg-white">
-          <div className="flex items-center gap-2 border-b border-line p-3">
+        <div key={i} className="rounded-2xl border border-edge bg-surface">
+          <div className="flex items-center gap-2 border-b border-edge p-3">
             <Input
               value={section.title}
               placeholder="Kategorie, z. B. Hauptgerichte"
-              className="border-transparent font-medium"
+              className="border-transparent bg-transparent font-display uppercase"
               aria-invalid={!!errors[`${prefix}.${i}.title`]}
               onChange={(e) => setSection(i, { ...section, title: e.target.value })}
             />
             <RowActions onUp={() => onChange(move(value, i, -1))} onDown={() => onChange(move(value, i, 1))} onRemove={() => onChange(value.filter((_, k) => k !== i))} />
           </div>
-          <div className="divide-y divide-line">
+          <div className="divide-y divide-edge">
             {section.items.map((item, j) => {
               const setItem = (patch: Partial<MenuItem>) =>
                 setSection(i, { ...section, items: section.items.map((x, k) => (k === j ? { ...x, ...patch } : x)) });
@@ -237,7 +237,7 @@ function MenuEditor({ value, onChange, errors, prefix }: { value: MenuSection[];
                     <Input value={item.price} placeholder="12,90" inputMode="decimal" onChange={(e) => setItem({ price: e.target.value })} />
                     <Input className="col-span-2" value={item.description} placeholder="Beschreibung (optional)" onChange={(e) => setItem({ description: e.target.value })} />
                     <Input className="col-span-2" value={item.tags} placeholder="Hinweise: vegan, scharf, A, G …" onChange={(e) => setItem({ tags: e.target.value })} />
-                    {err && <p className="col-span-2 text-xs text-danger">{err}</p>}
+                    {err && <p className="col-span-2 text-xs text-rose">{err}</p>}
                   </div>
                   <RowActions
                     onUp={() => setSection(i, { ...section, items: move(section.items, j, -1) })}
@@ -287,18 +287,18 @@ function FileUpload({ accept, userId, value, onChange }: { accept: string; userI
   return (
     <div>
       {value ? (
-        <div className="flex items-center justify-between rounded-xl border border-line bg-white px-4 py-3 text-sm">
+        <div className="flex items-center justify-between rounded-[14px] border border-lime/40 bg-lime/10 px-4 py-3 text-sm font-semibold">
           <span className="truncate">{value.name}</span>
-          <button type="button" className="text-muted hover:text-danger" onClick={() => onChange(null)}>Entfernen</button>
+          <button type="button" className="text-dim hover:text-rose" onClick={() => onChange(null)}>Entfernen</button>
         </div>
       ) : (
-        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line bg-white px-4 py-8 text-sm text-muted transition hover:border-ink/30">
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-edge-strong bg-surface px-4 py-9 text-sm text-dim transition hover:border-lime/60 hover:text-lime">
           <FileUp className="size-6" strokeWidth={1.5} />
           {busy ? "Wird hochgeladen …" : "Datei auswählen oder hierher ziehen"}
           <input type="file" accept={accept} className="sr-only" disabled={busy} onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
         </label>
       )}
-      {error && <p className="mt-1.5 text-xs text-danger">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}
     </div>
   );
 }

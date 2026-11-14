@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Infinity as InfinityIcon, Loader2, Lock, Pencil, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, Check, Infinity as InfinityIcon, Loader2, Lock, Palette, PenLine, Sparkles } from "lucide-react";
 import { CODE_TYPES, TYPE_ORDER, type CodeMode, type CodeTypeId } from "@/lib/codes/types";
 import { staticPayload } from "@/lib/codes/payload";
 import { shortLink } from "@/lib/env";
@@ -13,6 +13,7 @@ import { DEFAULT_STYLE, normalizeStyle, type QrStyle } from "@/lib/qr/style";
 import { ContentForm } from "./content-form";
 import { DesignPanel } from "./design-panel";
 import { Preview } from "./preview";
+import { HostedPage } from "@/components/pages/hosted-pages";
 import { TypeIcon } from "@/components/type-icon";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { createCode, updateCode, type SaveInput } from "@/app/dashboard/actions";
@@ -39,6 +40,12 @@ interface Props {
 
 type Tab = "content" | "design";
 
+const GROUPS = [
+  { id: "page", title: "Mit eigener Handy-Seite", hint: "Wir hosten eine schöne Seite für dich" },
+  { id: "link", title: "Weiterleitung", hint: "Scan führt direkt ans Ziel" },
+  { id: "direct", title: "Direkt im Code", hint: "Funktioniert sogar offline" },
+] as const;
+
 export function Studio({ variant, userId, code, dynamicLocked = false, initialType }: Props) {
   const router = useRouter();
   const isPublic = variant === "public";
@@ -61,10 +68,7 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const data = useMemo(
-    () => (!type ? "" : mode === "dynamic" ? shortLink(slug) : staticPayload(type, content)),
-    [type, mode, slug, content],
-  );
+  const data = useMemo(() => (!type ? "" : mode === "dynamic" ? shortLink(slug) : staticPayload(type, content)), [type, mode, slug, content]);
   const svg = useMemo(() => (data ? renderQrSvg(data, style, { size: 640, id: "studio" }) : ""), [data, style]);
 
   function pickType(t: CodeTypeId) {
@@ -102,15 +106,18 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
   if (!def || !type) {
     return (
       <div className="animate-rise">
-        <h1 className="font-display text-4xl sm:text-5xl">Was soll dein Code können?</h1>
-        <p className="mt-2 text-muted">Wähle einen Typ. Alles Weitere gestaltest du im nächsten Schritt.</p>
-        {(["page", "link", "direct"] as const).map((group) => (
-          <section key={group} className="mt-10">
-            <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-muted">
-              {group === "page" ? "Mit eigener Seite" : group === "link" ? "Weiterleitung" : "Direkt im Code"}
-            </h2>
+        <p className="text-sm text-dim">Schritt 1 von 2</p>
+        <h1 className="mt-1 font-display text-5xl uppercase leading-[0.95] sm:text-6xl">
+          Was soll dein Code <span className="text-lime glow-text">können?</span>
+        </h1>
+        {GROUPS.map((group, gi) => (
+          <section key={group.id} className="mt-12">
+            <div className="mb-4 flex items-baseline gap-3">
+              <h2 className="font-display text-xl uppercase">{group.title}</h2>
+              <span className="text-sm text-faint">{group.hint}</span>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {types.filter((t) => CODE_TYPES[t].group === group).map((t) => {
+              {types.filter((t) => CODE_TYPES[t].group === group.id).map((t, i) => {
                 const d = CODE_TYPES[t];
                 const locked = dynamicLocked && !d.modes.includes("static");
                 return (
@@ -118,18 +125,20 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
                     key={t}
                     type="button"
                     onClick={() => pickType(t)}
-                    className="group flex items-start gap-4 rounded-2xl border border-line bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-ink/25 hover:shadow-soft"
+                    style={{ animationDelay: `${(gi * 3 + i) * 40}ms` }}
+                    className="card group flex items-center gap-4 p-4 text-left transition duration-200 animate-rise hover:-translate-y-1 hover:border-lime/50"
                   >
-                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-sand text-ink transition group-hover:bg-ink group-hover:text-paper">
-                      <TypeIcon name={d.icon} />
+                    <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-elevated text-lime transition group-hover:bg-lime group-hover:text-on-lime group-hover:shadow-[0_0_24px_-4px_rgba(210,255,31,0.7)]">
+                      <TypeIcon name={d.icon} className="size-5" />
                     </span>
-                    <span>
-                      <span className="flex items-center gap-2 font-medium">
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2 font-bold">
                         {d.label}
-                        {locked && <Lock className="size-3.5 text-muted" />}
+                        {locked && <Lock className="size-3.5 text-faint" />}
                       </span>
-                      <span className="mt-0.5 block text-sm text-muted">{d.description}</span>
+                      <span className="mt-0.5 block truncate text-sm text-dim">{d.description}</span>
                     </span>
+                    <ArrowRight className="size-4 shrink-0 -translate-x-1 text-lime opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100" />
                   </button>
                 );
               })}
@@ -141,52 +150,53 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
   }
 
   const dynamicBlocked = mode === "dynamic" && dynamicLocked && variant !== "edit";
+  const phone = mode === "dynamic" && def.hostedPage
+    ? <HostedPage code={{ id: "preview", slug, name: name || def.label, type, mode, status: "active", content }} />
+    : undefined;
 
   // ───────── Step 2: content + design ─────────
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px] xl:gap-12">
-      <div className="min-w-0">
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          {variant !== "edit" && !isPublic && (
-            <button type="button" onClick={() => setType(null)} className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
-              <ArrowLeft className="size-4" /> Typ ändern
-            </button>
-          )}
-        </div>
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] xl:gap-10">
+      <div className="min-w-0 animate-rise">
+        {variant !== "edit" && !isPublic && (
+          <button type="button" onClick={() => setType(null)} className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-dim hover:text-fg">
+            <ArrowLeft className="size-4" /> Typ ändern
+          </button>
+        )}
 
         <div className="flex items-start gap-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-ink text-paper">
+          <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-lime text-on-lime shadow-[0_0_32px_-6px_rgba(210,255,31,0.7)]">
             <TypeIcon name={def.icon} className="size-6" />
           </span>
           <div className="min-w-0 flex-1">
             {isPublic ? (
-              <h1 className="font-display text-4xl">QR-Code erstellen</h1>
+              <h1 className="font-display text-4xl uppercase leading-none sm:text-5xl">QR-Code <span className="text-lime">erstellen</span></h1>
             ) : (
               <label className="group flex items-center gap-2">
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder={`${def.label} – Name für dich`}
-                  className="w-full bg-transparent font-display text-3xl outline-none placeholder:text-muted/50 sm:text-4xl"
+                  placeholder={`${def.label} benennen`}
+                  className="w-full bg-transparent font-display text-4xl uppercase leading-none text-fg outline-none placeholder:text-faint sm:text-5xl"
                   maxLength={120}
                 />
-                <Pencil className="size-4 shrink-0 text-muted opacity-0 transition group-hover:opacity-100" />
+                <PenLine className="size-5 shrink-0 text-faint transition group-hover:text-lime" />
               </label>
             )}
-            <p className="mt-1 text-sm text-muted">{def.description}</p>
+            <p className="mt-2 text-sm text-dim">{def.description}</p>
           </div>
         </div>
 
         {isPublic && (
-          <div className="mt-6 flex gap-2 overflow-x-auto pb-1">
+          <div className="mt-7 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
             {types.map((t) => (
               <button
                 key={t}
                 type="button"
                 onClick={() => pickType(t)}
                 className={cn(
-                  "inline-flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition",
-                  t === type ? "border-ink bg-ink text-paper" : "border-line bg-white hover:border-ink/30",
+                  "inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition",
+                  t === type ? "border-lime bg-lime text-on-lime shadow-[0_3px_0_#7fa000]" : "border-edge bg-surface text-dim hover:border-white/25 hover:text-fg",
                 )}
               >
                 <TypeIcon name={CODE_TYPES[t].icon} className="size-4" /> {CODE_TYPES[t].label}
@@ -196,90 +206,82 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
         )}
 
         {!isPublic && def.modes.length > 1 && variant !== "edit" && (
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <ModeCard
-              active={mode === "dynamic"}
-              onClick={() => setMode("dynamic")}
-              title="Dynamisch"
-              icon={<Sparkles className="size-4" />}
-              text="Inhalt jederzeit ändern, Scans messen. Empfohlen für Druck."
-              locked={dynamicLocked}
-            />
-            <ModeCard
-              active={mode === "static"}
-              onClick={() => setMode("static")}
-              title="Statisch"
-              icon={<InfinityIcon className="size-4" />}
-              text="Inhalt steckt direkt im Code. Ohne Statistik, unbegrenzt kostenlos."
-            />
+          <div className="mt-7 grid gap-3 sm:grid-cols-2">
+            <ModeCard active={mode === "dynamic"} onClick={() => setMode("dynamic")} title="Dynamisch" icon={<Sparkles className="size-4" />} text="Inhalt jederzeit ändern, Scans messen. Empfohlen für Druck." locked={dynamicLocked} />
+            <ModeCard active={mode === "static"} onClick={() => setMode("static")} title="Statisch" icon={<InfinityIcon className="size-4" />} text="Inhalt steckt im Code. Ohne Statistik, für immer gratis." />
           </div>
         )}
 
-        <div className="mt-8 flex gap-1 border-b border-line">
-          {(["content", "design"] as const).map((t) => (
+        <div className="mt-8 grid grid-cols-2 gap-1 rounded-2xl border border-edge bg-surface p-1.5 sm:inline-grid sm:w-auto">
+          {([["content", "Inhalt", PenLine], ["design", "Design", Palette]] as const).map(([t, label, Icon], i) => (
             <button
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={cn("relative px-4 pb-3 text-sm font-medium transition", tab === t ? "text-ink" : "text-muted hover:text-ink")}
+              className={cn("inline-flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold uppercase tracking-wide transition", tab === t ? "bg-lime text-on-lime shadow-[0_3px_0_#7fa000]" : "text-dim hover:text-fg")}
             >
-              {t === "content" ? "1  Inhalt" : "2  Design"}
-              {tab === t && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-ink" />}
+              <span className={cn("grid size-5 place-items-center rounded-md text-[11px]", tab === t ? "bg-on-lime/15" : "bg-white/[0.06]")}>{i + 1}</span>
+              <Icon className="size-4" /> {label}
             </button>
           ))}
         </div>
 
         <div className="pt-7">
           {tab === "content" ? (
-            <>
-              <ContentForm fields={def.fields} value={content} errors={errors} onChange={setContent} userId={userId} />
-              <div className="mt-8 flex justify-end">
-                <Button type="button" variant="secondary" onClick={() => setTab("design")}>Weiter zum Design</Button>
+            <div className="animate-rise">
+              <div className="card p-5 sm:p-6">
+                <ContentForm fields={def.fields} value={content} errors={errors} onChange={setContent} userId={userId} />
               </div>
-            </>
+              <div className="mt-6 flex justify-end">
+                <Button type="button" variant="secondary" onClick={() => setTab("design")}>Weiter zum Design <ArrowRight className="size-4" /></Button>
+              </div>
+            </div>
           ) : (
             <DesignPanel style={style} onChange={setStyle} />
           )}
         </div>
       </div>
 
-      <aside className="lg:sticky lg:top-6 lg:self-start">
+      <aside className="lg:sticky lg:top-24 lg:self-start">
         <Preview
           svg={svg}
           data={data}
           style={style}
           name={name || def.label}
+          phone={phone}
           footer={
-            <div className="mt-4 border-t border-line pt-4">
+            <div className="mt-4 border-t border-edge pt-4">
               {message && (
-                <p className={cn("mb-3 rounded-xl px-3 py-2 text-sm", message.tone === "error" ? "bg-danger/10 text-danger" : "bg-success/10 text-success")}>
+                <p className={cn("mb-3 rounded-xl border px-3 py-2.5 text-sm font-semibold", message.tone === "error" ? "border-rose/30 bg-rose/10 text-rose" : "border-lime/40 bg-lime/10 text-lime")}>
                   {message.text}
                 </p>
               )}
               {isPublic ? (
                 <div className="text-center">
-                  <p className="text-sm text-muted">Inhalt später ändern und Scans messen?</p>
-                  <ButtonLink href="/signup" variant="gold" className="mt-3 w-full">Kostenlos dynamisch speichern</ButtonLink>
+                  <p className="text-sm text-dim">Inhalt später ändern und Scans messen?</p>
+                  <ButtonLink href="/signup" size="lg" className="shine mt-3 w-full">Dynamisch speichern</ButtonLink>
                 </div>
               ) : dynamicBlocked ? (
                 <div className="text-center">
-                  <p className="text-sm text-muted">Alle dynamischen Codes deines Tarifs sind vergeben.</p>
-                  <ButtonLink href="/dashboard/billing" variant="gold" className="mt-3 w-full">Tarif upgraden</ButtonLink>
+                  <p className="text-sm text-dim">Alle dynamischen Codes deines Tarifs sind vergeben.</p>
+                  <ButtonLink href="/dashboard/billing" size="lg" className="mt-3 w-full">Tarif upgraden</ButtonLink>
                 </div>
               ) : (
-                <Button type="button" variant="gold" size="lg" className="w-full" onClick={save} disabled={pending}>
+                <Button type="button" size="lg" className="shine w-full" onClick={save} disabled={pending}>
                   {pending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                   {variant === "edit" ? "Änderungen speichern" : "Code speichern"}
                 </Button>
               )}
               {mode === "dynamic" && (
-                <p className="mt-3 text-center text-xs text-muted">
-                  Link im Code: <span className="font-mono text-ink-soft">{data.replace(/^https?:\/\//, "")}</span>
-                  <br />Dieser Code funktioniert für immer, auch ohne Abo.
+                <p className="mt-3 text-center text-xs leading-relaxed text-faint">
+                  Link im Code: <span className="font-mono text-dim">{data.replace(/^https?:\/\//, "")}</span>
+                  <br />Funktioniert für immer, auch ohne Abo.
                 </p>
               )}
               {variant === "edit" && code && (
-                <p className="mt-2 text-center text-xs"><Link href={`/dashboard/codes/${code.id}`} className="text-muted underline-offset-4 hover:underline">Zur Statistik</Link></p>
+                <p className="mt-3 text-center text-xs">
+                  <Link href={`/dashboard/codes/${code.id}`} className="inline-flex items-center gap-1 font-semibold text-dim hover:text-lime"><BarChart3 className="size-3.5" /> Zur Statistik</Link>
+                </p>
               )}
             </div>
           }
@@ -294,12 +296,12 @@ function ModeCard({ active, onClick, title, text, icon, locked }: { active: bool
     <button
       type="button"
       onClick={onClick}
-      className={cn("rounded-2xl border bg-white p-4 text-left transition", active ? "border-ink ring-2 ring-ink/10" : "border-line hover:border-ink/30")}
+      className={cn("card p-4 text-left transition duration-200", active ? "card-glow" : "hover:border-white/25")}
     >
-      <span className="flex items-center gap-2 text-sm font-medium">
-        {icon} {title} {locked && <Lock className="size-3.5 text-muted" />}
+      <span className={cn("flex items-center gap-2 font-display text-base uppercase", active && "text-lime")}>
+        {icon} {title} {locked && <Lock className="size-3.5 text-faint" />}
       </span>
-      <span className="mt-1 block text-xs leading-relaxed text-muted">{text}</span>
+      <span className="mt-1.5 block text-xs leading-relaxed text-dim">{text}</span>
     </button>
   );
 }

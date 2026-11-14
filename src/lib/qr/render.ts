@@ -53,23 +53,43 @@ function diamond(cx: number, cy: number, r: number) {
   return `M${f(cx)} ${f(cy - r)}L${f(cx + r)} ${f(cy)}L${f(cx)} ${f(cy + r)}L${f(cx - r)} ${f(cy)}Z`;
 }
 
-function eyeFrame(x: number, y: number, style: EyeFrameStyle) {
+function octagon(x: number, y: number, w: number, cut: number) {
+  return `M${f(x + cut)} ${f(y)}H${f(x + w - cut)}L${f(x + w)} ${f(y + cut)}V${f(y + w - cut)}L${f(x + w - cut)} ${f(y + w)}H${f(x + cut)}L${f(x)} ${f(y + w - cut)}V${f(y + cut)}Z`;
+}
+
+type Radii = [number, number, number, number];
+/** Mirror corner radii so asymmetric eyes (leaf, shield) point the same way on every corner. corner: 0 = top-left, 1 = top-right, 2 = bottom-left */
+function orient([tl, tr, br, bl]: Radii, corner: number): Radii {
+  if (corner === 1) return [tr, tl, bl, br];
+  if (corner === 2) return [bl, br, tr, tl];
+  return [tl, tr, br, bl];
+}
+
+function eyeFrame(x: number, y: number, style: EyeFrameStyle, corner = 0) {
   switch (style) {
+    case "octagon":
+      return octagon(x, y, 7, 2) + octagon(x + 1, y + 1, 5, 1.55);
+    case "shield":
+      return rrect(x, y, 7, 7, orient([3.2, 3.2, 0.5, 3.2], corner)) + rrect(x + 1, y + 1, 5, 5, orient([2.2, 2.2, 0.25, 2.2], corner));
     case "circle":
       return circle(x + 3.5, y + 3.5, 3.5) + circle(x + 3.5, y + 3.5, 2.5);
     case "rounded":
       return rrect(x, y, 7, 7, [2, 2, 2, 2]) + rrect(x + 1, y + 1, 5, 5, [1.2, 1.2, 1.2, 1.2]);
     case "leaf":
-      return rrect(x, y, 7, 7, [3, 0.6, 3, 0.6]) + rrect(x + 1, y + 1, 5, 5, [2, 0.3, 2, 0.3]);
+      return rrect(x, y, 7, 7, orient([3, 0.6, 3, 0.6], corner)) + rrect(x + 1, y + 1, 5, 5, orient([2, 0.3, 2, 0.3], corner));
     default:
       return rrect(x, y, 7, 7, [0, 0, 0, 0]) + rrect(x + 1, y + 1, 5, 5, [0, 0, 0, 0]);
   }
 }
 
-function eyeBall(x: number, y: number, style: EyeBallStyle) {
+function eyeBall(x: number, y: number, style: EyeBallStyle, corner = 0) {
   const bx = x + 2;
   const by = y + 2;
   switch (style) {
+    case "octagon":
+      return octagon(bx, by, 3, 0.9);
+    case "shield":
+      return rrect(bx, by, 3, 3, orient([1.4, 1.4, 0.2, 1.4], corner));
     case "circle":
       return circle(bx + 1.5, by + 1.5, 1.5);
     case "rounded":
@@ -77,7 +97,7 @@ function eyeBall(x: number, y: number, style: EyeBallStyle) {
     case "diamond":
       return diamond(bx + 1.5, by + 1.5, 1.85);
     case "leaf":
-      return rrect(bx, by, 3, 3, [1.5, 0.3, 1.5, 0.3]);
+      return rrect(bx, by, 3, 3, orient([1.5, 0.3, 1.5, 0.3], corner));
     default:
       return rrect(bx, by, 3, 3, [0, 0, 0, 0]);
   }
@@ -90,6 +110,57 @@ function fillDefs(id: string, fill: Fill) {
     return `<radialGradient id="${id}" cx="0.5" cy="0.5" r="0.75"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></radialGradient>`;
   }
   return `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0" gradientTransform="rotate(${f(fill.rotation)} 0.5 0.5)"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+}
+
+
+type Neighbours = { top: boolean; bottom: boolean; left: boolean; right: boolean };
+
+/** Path for one dark module at (x, y). r/c seed the bubble size; neighbours drive the connected styles. */
+function dotShape(style: QrStyle["dots"], x: number, y: number, r: number, c: number, { top, bottom, left, right }: Neighbours): string {
+  switch (style) {
+    case "dots":
+      return circle(x + 0.5, y + 0.5, 0.5);
+    case "diamond":
+      return diamond(x + 0.5, y + 0.5, 0.6);
+    case "rounded":
+      return rrect(x + 0.04, y + 0.04, 0.92, 0.92, [0.3, 0.3, 0.3, 0.3]);
+    case "mini":
+      return rrect(x + 0.14, y + 0.14, 0.72, 0.72, [0.12, 0.12, 0.12, 0.12]);
+    case "vertical": {
+      const R = 0.4;
+      return rrect(x + 0.1, y, 0.8, 1, [!top ? R : 0, !top ? R : 0, !bottom ? R : 0, !bottom ? R : 0]);
+    }
+    case "horizontal": {
+      const R = 0.4;
+      return rrect(x, y + 0.1, 1, 0.8, [!left ? R : 0, !right ? R : 0, !right ? R : 0, !left ? R : 0]);
+    }
+    case "bubble": {
+      // deterministic pseudo-random size per module, so the same code always looks the same
+      const h = Math.sin(r * 12.9898 + c * 78.233) * 43758.5453;
+      return circle(x + 0.5, y + 0.5, 0.36 + (h - Math.floor(h)) * 0.16);
+    }
+    case "fluid": {
+      const R = 0.5;
+      return rrect(x, y, 1, 1, [!top && !left ? R : 0, !top && !right ? R : 0, !bottom && !right ? R : 0, !bottom && !left ? R : 0]);
+    }
+    case "classy": {
+      const R = 0.5;
+      return rrect(x, y, 1, 1, [!top && !left ? R : 0, 0, !bottom && !right ? R : 0, 0]);
+    }
+    default:
+      return `M${x} ${y}h1v1h-1Z`;
+  }
+}
+
+/** Close-up of a dot style on a fixed sample pattern, for the studio's style picker. */
+export function patternGlyph(style: QrStyle["dots"], color = "#f7f7f8"): string {
+  const rows = ["1101100", "0111011", "1100110", "1011101", "0110011", "1101110", "0011011"];
+  const on = (r: number, c: number) => rows[r]?.[c] === "1";
+  let d = "";
+  for (let r = 0; r < rows.length; r++)
+    for (let c = 0; c < rows[r].length; c++)
+      if (on(r, c)) d += dotShape(style, c, r, r, c, { top: on(r - 1, c), bottom: on(r + 1, c), left: on(r, c - 1), right: on(r, c + 1) });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.3 -0.3 7.6 7.6"><path d="${d}" fill="${color}"/></svg>`;
 }
 
 const esc = (s: string) =>
@@ -126,45 +197,17 @@ export function renderQrSvg(data: string, style: QrStyle, opts: RenderOptions = 
       if (!on(r, c)) continue;
       const x = c + pad;
       const y = r + pad;
-      const top = on(r - 1, c), bottom = on(r + 1, c), left = on(r, c - 1), right = on(r, c + 1);
-      switch (style.dots) {
-        case "dots":
-          dots += circle(x + 0.5, y + 0.5, 0.5);
-          break;
-        case "diamond":
-          dots += diamond(x + 0.5, y + 0.5, 0.6);
-          break;
-        case "rounded":
-          dots += rrect(x + 0.04, y + 0.04, 0.92, 0.92, [0.3, 0.3, 0.3, 0.3]);
-          break;
-        case "fluid": {
-          const R = 0.5;
-          dots += rrect(x, y, 1, 1, [
-            !top && !left ? R : 0,
-            !top && !right ? R : 0,
-            !bottom && !right ? R : 0,
-            !bottom && !left ? R : 0,
-          ]);
-          break;
-        }
-        case "classy": {
-          const R = 0.5;
-          dots += rrect(x, y, 1, 1, [!top && !left ? R : 0, 0, !bottom && !right ? R : 0, 0]);
-          break;
-        }
-        default:
-          dots += `M${x} ${y}h1v1h-1Z`;
-      }
+      dots += dotShape(style.dots, x, y, r, c, { top: on(r - 1, c), bottom: on(r + 1, c), left: on(r, c - 1), right: on(r, c + 1) });
     }
   }
 
   // ---- finder eyes ----
   let frames = "";
   let balls = "";
-  for (const [r, c] of [[0, 0], [0, n - 7], [n - 7, 0]] as const) {
-    frames += eyeFrame(c + pad, r + pad, style.eyeFrame);
-    balls += eyeBall(c + pad, r + pad, style.eyeBall);
-  }
+  ([[0, 0], [0, n - 7], [n - 7, 0]] as const).forEach(([r, c], corner) => {
+    frames += eyeFrame(c + pad, r + pad, style.eyeFrame, corner);
+    balls += eyeBall(c + pad, r + pad, style.eyeBall, corner);
+  });
 
   // ---- layout incl. optional frame ----
   const codeW = n + pad * 2;
@@ -180,6 +223,8 @@ export function renderQrSvg(data: string, style: QrStyle, opts: RenderOptions = 
   const gradId = `${id}-fill`;
   const fillAttr = style.fill.type === "solid" ? style.fill.color : `url(#${gradId})`;
   const eyeFill = style.eyeColor ?? fillAttr;
+  const ballFill = style.eyeBallColor ?? style.eyeColor ?? fillAttr;
+  const bgRadius = Math.max(0, Math.min(20, style.radius ?? 0)) / 100;
   const bg = style.transparent ? null : style.background;
 
   const parts: string[] = [];
@@ -193,7 +238,7 @@ export function renderQrSvg(data: string, style: QrStyle, opts: RenderOptions = 
     parts.push(`<rect x="${f(codeX)}" y="${f(codeY)}" width="${f(codeW)}" height="${f(codeW)}" rx="${f(codeW * 0.04)}" fill="${bg ?? "#ffffff"}"/>`);
     parts.push(textEl(totalW / 2, codeW + border * 2 + labelH / 2 - border * 0.5));
   } else {
-    if (bg) parts.push(`<rect x="${f(codeX)}" y="${f(codeY)}" width="${f(codeW)}" height="${f(codeW)}" rx="${fr.style === "none" ? 0 : f(codeW * 0.03)}" fill="${bg}"/>`);
+    if (bg) parts.push(`<rect x="${f(codeX)}" y="${f(codeY)}" width="${f(codeW)}" height="${f(codeW)}" rx="${f(codeW * Math.max(bgRadius, fr.style === "none" ? 0 : 0.03))}" fill="${bg}"/>`);
     if (fr.style === "label") {
       const ly = codeW + gap;
       parts.push(`<rect x="0" y="${f(ly)}" width="${f(totalW)}" height="${f(labelH)}" rx="${f(labelH / 2)}" fill="${fr.color}"/>`);
@@ -210,7 +255,7 @@ export function renderQrSvg(data: string, style: QrStyle, opts: RenderOptions = 
   parts.push(`<g transform="translate(${f(codeX)} ${f(codeY)})">`);
   parts.push(`<path d="${dots}" fill="${fillAttr}"/>`);
   parts.push(`<path d="${frames}" fill="${eyeFill}" fill-rule="evenodd"/>`);
-  parts.push(`<path d="${balls}" fill="${eyeFill}"/>`);
+  parts.push(`<path d="${balls}" fill="${ballFill}"/>`);
   if (style.logo && logoBox) {
     const lx = logoBox.x + pad;
     const ly = logoBox.y + pad;

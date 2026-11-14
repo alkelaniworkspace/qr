@@ -15,9 +15,13 @@ const LOGO =
 const data = "https://scanwerk.de/r/Ab3xK9";
 const variants: [string, QrStyle][] = [];
 for (const p of STYLE_PRESETS) variants.push([p.name, { ...DEFAULT_STYLE, ...p.style } as QrStyle]);
-for (const dots of ["square", "rounded", "dots", "classy", "diamond", "fluid"] as const)
+for (const dots of ["square", "rounded", "dots", "classy", "diamond", "fluid", "mini", "vertical", "horizontal", "bubble"] as const)
   for (const frame of ["none", "card", "label", "ticket"] as const)
     variants.push([`${dots}/${frame}/logo`, { ...DEFAULT_STYLE, dots, frame: { ...DEFAULT_STYLE.frame, style: frame }, logo: { src: LOGO, size: 0.22, excavate: true, plate: true } }]);
+
+for (const eyeFrame of ["square", "rounded", "circle", "leaf", "octagon", "shield"] as const)
+  for (const eyeBall of ["square", "rounded", "circle", "diamond", "leaf", "octagon", "shield"] as const)
+    variants.push([`eyes ${eyeFrame}/${eyeBall}`, { ...DEFAULT_STYLE, eyeFrame, eyeBall }]);
 
 let failed = 0;
 for (const [name, style] of variants) {

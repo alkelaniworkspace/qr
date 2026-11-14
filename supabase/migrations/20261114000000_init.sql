@@ -209,7 +209,13 @@ returns jsonb language sql stable security invoker set search_path = '' as $$
     'dynamic', (select count(*) from public.qr_codes where mode = 'dynamic'),
     'scans_total', (select coalesce(sum(scan_count), 0) from public.qr_codes),
     'scans_7d', (select count(*) from public.scans where scanned_at > now() - interval '7 days'),
-    'scans_prev_7d', (select count(*) from public.scans where scanned_at between now() - interval '14 days' and now() - interval '7 days')
+    'scans_prev_7d', (select count(*) from public.scans where scanned_at between now() - interval '14 days' and now() - interval '7 days'),
+    'scans_today', (select count(*) from public.scans where scanned_at >= date_trunc('day', now() at time zone 'Europe/Berlin') at time zone 'Europe/Berlin'),
+    'series', (
+      select coalesce(jsonb_agg(coalesce(c.n, 0) order by d.d), '[]'::jsonb)
+      from generate_series((now() - interval '13 days')::date, now()::date, interval '1 day') as d(d)
+      left join (select scanned_at::date as day, count(*) n from public.scans where scanned_at > now() - interval '14 days' group by 1) c on c.day = d.d::date
+    )
   );
 $$;
 

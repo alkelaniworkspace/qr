@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CheckCircle2, ExternalLink } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ExternalLink, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CODE_TYPES } from "@/lib/codes/types";
 import { qrData } from "@/lib/codes/payload";
@@ -10,13 +10,14 @@ import { renderQrSvg } from "@/lib/qr/render";
 import { normalizeStyle } from "@/lib/qr/style";
 import { CodeActions } from "@/components/dashboard/code-actions";
 import { Breakdown, HourStrip, ScanSeries } from "@/components/dashboard/charts";
+import { CountUp } from "@/components/motion/count-up";
 import { TypeIcon } from "@/components/type-icon";
+import { ButtonLink } from "@/components/ui/button";
 import { env } from "@/lib/env";
 import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = { title: "Statistik" };
 
-const nf = new Intl.NumberFormat("de-DE");
 const dtf = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" });
 
 export default async function CodePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ created?: string }> }) {
@@ -35,50 +36,53 @@ export default async function CodePage({ params, searchParams }: { params: Promi
 
   return (
     <div className="animate-rise">
-      <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink"><ArrowLeft className="size-4" /> Alle Codes</Link>
+      <Link href="/dashboard/codes" className="inline-flex items-center gap-1.5 text-sm font-semibold text-dim hover:text-fg"><ArrowLeft className="size-4" /> Alle Codes</Link>
 
       {created && (
-        <div className="mt-5 flex items-center gap-3 rounded-2xl border border-success/20 bg-success/5 px-4 py-3 text-sm text-success">
-          <CheckCircle2 className="size-5 shrink-0" /> Dein Code ist fertig. Lade ihn herunter und teste ihn mit deinem Handy.
+        <div className="mt-5 flex items-center gap-3 rounded-2xl border border-lime/40 bg-lime/10 px-4 py-3 text-sm font-semibold text-lime">
+          <CheckCircle2 className="size-5 shrink-0" /> Dein Code ist fertig. Lade ihn herunter und teste ihn mit dem Handy.
         </div>
       )}
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[300px_1fr]">
-        <div className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
-          <div className="rounded-2xl bg-sand/60 p-5 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="card card-glow relative overflow-hidden p-5">
+          <div className="relative overflow-hidden rounded-2xl bg-white/[0.04] p-4 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
           <div className="mt-4 flex justify-center">
             <CodeActions id={code.id} name={code.name} svg={svg} status={code.status} dynamic={dynamic} />
           </div>
         </div>
 
         <div className="min-w-0">
-          <p className="flex items-center gap-2 text-xs text-muted">
-            <TypeIcon name={def.icon} className="size-3.5" /> {def.label} · {dynamic ? "Dynamisch" : "Statisch"}
-            {code.status === "paused" && <span className="rounded-full bg-warn/10 px-2 py-0.5 font-medium text-warn">Pausiert</span>}
-          </p>
-          <h1 className="mt-1 font-display text-5xl leading-tight">{code.name}</h1>
-          {dynamic && (
-            <div className="mt-4 flex flex-wrap gap-2 text-sm">
-              <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3.5 py-1.5 font-mono text-[13px] hover:border-ink/30">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={cn("badge text-on-lime", code.status === "paused" ? "bg-amber" : dynamic ? "bg-lime" : "bg-violet")}>
+              {code.status === "paused" ? "Pausiert" : dynamic ? "Dynamisch" : "Statisch"}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-dim"><TypeIcon name={def.icon} className="size-3.5" /> {def.label}</span>
+          </div>
+          <h1 className="mt-3 font-display text-5xl uppercase leading-[0.95]">{code.name}</h1>
+          <div className="mt-4 flex flex-wrap gap-2 text-sm">
+            {dynamic && (
+              <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-edge bg-surface px-3.5 py-2 font-mono text-[13px] transition hover:border-lime/50">
                 {link.replace(/^https?:\/\//, "")} <ExternalLink className="size-3.5" />
               </a>
-              {def.hostedPage && (
-                <a href={`${env.appUrl}/p/${code.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3.5 py-1.5 hover:border-ink/30">
-                  Seite ansehen <ExternalLink className="size-3.5" />
-                </a>
-              )}
-            </div>
-          )}
+            )}
+            {dynamic && def.hostedPage && (
+              <a href={`${env.appUrl}/p/${code.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-edge bg-surface px-3.5 py-2 font-semibold transition hover:border-lime/50">
+                Seite ansehen <ExternalLink className="size-3.5" />
+              </a>
+            )}
+            <ButtonLink href={`/dashboard/codes/${code.id}/edit`} variant="secondary" size="sm"><Pencil className="size-3.5" /> Bearbeiten</ButtonLink>
+          </div>
 
           {stats ? (
-            <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
-              <Kpi label="Scans gesamt" value={nf.format(code.scan_count)} />
-              <Kpi label="Scans 30 Tage" value={nf.format(stats.total)} />
-              <Kpi label="Eindeutige Besucher" value={nf.format(stats.unique)} />
-              <Kpi label="Letzter Scan" value={code.last_scanned_at ? dtf.format(new Date(code.last_scanned_at)) : "–"} small />
+            <div className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+              <Kpi label="Scans gesamt" color="text-lime glow-text"><CountUp value={code.scan_count} /></Kpi>
+              <Kpi label="Scans 30 Tage" color="text-mint"><CountUp value={stats.total} /></Kpi>
+              <Kpi label="Eindeutige Besucher" color="text-violet"><CountUp value={stats.unique} /></Kpi>
+              <Kpi label="Letzter Scan" small>{code.last_scanned_at ? dtf.format(new Date(code.last_scanned_at)) : "–"}</Kpi>
             </div>
           ) : (
-            <p className="mt-6 rounded-2xl border border-line bg-white p-5 text-sm text-muted">
+            <p className="card mt-6 p-5 text-sm text-dim">
               Statische Codes enthalten den Inhalt direkt und laufen nicht über unsere Server. Darum gibt es dafür keine Statistik.
             </p>
           )}
@@ -89,7 +93,7 @@ export default async function CodePage({ params, searchParams }: { params: Promi
         <>
           <Panel title="Scans der letzten 30 Tage" className="mt-6">
             {stats.total === 0 ? (
-              <p className="py-10 text-center text-sm text-muted">Noch keine Scans. Scanne den Code einmal mit deinem Handy zum Testen.</p>
+              <p className="py-10 text-center text-sm text-dim">Noch keine Scans. Scanne den Code einmal mit dem Handy zum Testen.</p>
             ) : (
               <ScanSeries series={stats.series} />
             )}
@@ -100,26 +104,26 @@ export default async function CodePage({ params, searchParams }: { params: Promi
             <Panel title="Betriebssystem"><Breakdown items={stats.os} total={stats.total} /></Panel>
             <Panel title="Städte"><Breakdown items={stats.cities} total={stats.total} /></Panel>
           </div>
-          <p className="mt-4 text-xs text-muted">Datenschutzfreundlich: keine Cookies, keine gespeicherten IP-Adressen.</p>
+          <p className="mt-4 text-xs text-faint">Datenschutzfreundlich: keine Cookies, keine gespeicherten IP-Adressen.</p>
         </>
       )}
     </div>
   );
 }
 
-function Kpi({ label, value, small }: { label: string; value: string; small?: boolean }) {
+function Kpi({ label, children, small, color }: { label: string; children: React.ReactNode; small?: boolean; color?: string }) {
   return (
-    <div className="rounded-3xl border border-line bg-white p-5">
-      <p className="text-xs text-muted">{label}</p>
-      <p className={cn("mt-2 font-display leading-none tabular-nums", small ? "text-xl" : "text-4xl")}>{value}</p>
+    <div className="card p-5">
+      <p className="text-sm font-semibold text-dim">{label}</p>
+      <p className={cn("mt-2 font-display leading-none", small ? "text-lg" : "text-4xl", color)}>{children}</p>
     </div>
   );
 }
 
 function Panel({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("rounded-3xl border border-line bg-white p-6", className)}>
-      <h2 className="mb-5 text-sm font-medium">{title}</h2>
+    <section className={cn("card p-6", className)}>
+      <h2 className="mb-5 font-display text-lg uppercase">{title}</h2>
       {children}
     </section>
   );

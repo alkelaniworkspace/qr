@@ -12,10 +12,10 @@ export function AuthForm({ mode, next, initialError }: { mode: "login" | "signup
 
   if (state?.info) {
     return (
-      <div className="rounded-2xl border border-line bg-white p-6 text-center">
-        <MailCheck className="mx-auto size-8 text-success" strokeWidth={1.5} />
+      <div className="card card-glow p-7 text-center">
+        <MailCheck className="mx-auto size-9 text-lime" strokeWidth={1.6} />
         <p className="mt-3 font-medium">{state.info}</p>
-        <p className="mt-1 text-sm text-muted">{state.email}</p>
+        <p className="mt-1 text-sm text-dim">{state.email}</p>
       </div>
     );
   }
@@ -34,16 +34,16 @@ export function AuthForm({ mode, next, initialError }: { mode: "login" | "signup
       <FieldShell label="Passwort" htmlFor="password" hint={mode === "signup" ? "Mindestens 8 Zeichen" : undefined}>
         <Input id="password" name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={mode === "signup" ? 8 : undefined} />
       </FieldShell>
-      {state?.error && <p className="rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger">{state.error}</p>}
-      <Button type="submit" size="lg" className="w-full" disabled={pending}>
+      {state?.error && <p className="rounded-xl border border-rose/30 bg-rose/10 px-3 py-2.5 text-sm text-rose">{state.error}</p>}
+      <Button type="submit" size="lg" className="w-full shine" disabled={pending}>
         {pending && <Loader2 className="size-4 animate-spin" />}
         {mode === "login" ? "Anmelden" : "Kostenlos registrieren"}
       </Button>
-      <p className="text-center text-sm text-muted">
+      <p className="text-center text-sm text-dim">
         {mode === "login" ? (
-          <>Noch kein Konto? <Link href="/signup" className="font-medium text-ink underline-offset-4 hover:underline">Registrieren</Link></>
+          <>Noch kein Konto? <Link href="/signup" className="font-semibold text-lime underline-offset-4 hover:underline">Registrieren</Link></>
         ) : (
-          <>Schon dabei? <Link href="/login" className="font-medium text-ink underline-offset-4 hover:underline">Anmelden</Link></>
+          <>Schon dabei? <Link href="/login" className="font-semibold text-lime underline-offset-4 hover:underline">Anmelden</Link></>
         )}
       </p>
     </form>

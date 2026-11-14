@@ -12,7 +12,7 @@ export default function CreatePage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-5 pb-20 pt-6 sm:px-8">
+      <main className="ambient mx-auto w-full max-w-7xl flex-1 px-5 pb-20 pt-10 sm:px-8">
         <Studio variant="public" />
       </main>
       <SiteFooter />

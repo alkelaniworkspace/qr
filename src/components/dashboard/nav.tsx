@@ -2,31 +2,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard, LayoutGrid, Plus } from "lucide-react";
+import { CreditCard, LayoutGrid, Plus, Zap } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const ITEMS = [
-  { href: "/dashboard", label: "Meine Codes", icon: LayoutGrid, exact: true },
-  { href: "/dashboard/new", label: "Neuer Code", icon: Plus },
-  { href: "/dashboard/billing", label: "Tarif", icon: CreditCard },
+  { href: "/dashboard", label: "Heute", icon: Zap, match: (p: string) => p === "/dashboard" },
+  { href: "/dashboard/codes", label: "Meine Codes", icon: LayoutGrid, match: (p: string) => p.startsWith("/dashboard/codes") },
+  { href: "/dashboard/new", label: "Neuer Code", icon: Plus, match: (p: string) => p.startsWith("/dashboard/new") },
+  { href: "/dashboard/billing", label: "Tarif", icon: CreditCard, match: (p: string) => p.startsWith("/dashboard/billing") },
 ];
 
-export function DashboardNav({ horizontal = false }: { horizontal?: boolean }) {
+export function DashboardNav() {
   const pathname = usePathname();
   return (
-    <nav className={cn(horizontal ? "flex gap-1 overflow-x-auto" : "space-y-1")}>
-      {ITEMS.map(({ href, label, icon: Icon, exact }) => {
-        const active = exact ? pathname === href || pathname.startsWith("/dashboard/codes") : pathname.startsWith(href);
+    <nav className="flex gap-1 overflow-x-auto">
+      {ITEMS.map(({ href, label, icon: Icon, match }) => {
+        const active = match(pathname);
         return (
           <Link
             key={href}
             href={href}
             className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition whitespace-nowrap",
-              active ? "bg-white font-medium text-ink shadow-soft" : "text-muted hover:bg-white/60 hover:text-ink",
+              "flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition",
+              active ? "bg-white/[0.07] text-fg" : "text-dim hover:bg-white/5 hover:text-fg",
             )}
           >
-            <Icon className="size-[18px]" strokeWidth={1.7} />
+            <Icon className={cn("size-4", active && "text-lime")} strokeWidth={2.2} />
             {label}
           </Link>
         );

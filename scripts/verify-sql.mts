@@ -79,5 +79,7 @@ check("stats: 2 unique visitors", stats.s.unique === 2);
 check("stats: 30 day series", stats.s.series.length === 30);
 check("stats: 24 hour buckets", stats.s.hours.length === 24);
 check("B sees no stats for A's code", ((await as(B, `select public.code_stats('${id}', 30) as s`)).rows[0] as { s: { total: number } }).s.total === 0);
-const sum = (await as(A, `select public.dashboard_summary() as s`)).rows[0] as { s: { codes: number; scans_total: number } };
+const sum = (await as(A, `select public.dashboard_summary() as s`)).rows[0] as { s: { codes: number; scans_total: number; scans_today: number; series: number[] } };
 check("dashboard summary", sum.s.codes === 2 && sum.s.scans_total === 3);
+check("dashboard 14-day series", sum.s.series.length === 14 && sum.s.series[13] === 3);
+check("dashboard scans today", sum.s.scans_today === 3);

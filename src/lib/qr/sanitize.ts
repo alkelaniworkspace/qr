@@ -7,14 +7,16 @@ const MAX_LOGO_CHARS = 400_000; // ~300 KB image, logos are resized client side
 const styleSchema = z.object({
   ecc: z.enum(["L", "M", "Q", "H"]),
   margin: z.number().int().min(0).max(8),
-  dots: z.enum(["square", "rounded", "dots", "classy", "diamond", "fluid"]),
-  eyeFrame: z.enum(["square", "rounded", "circle", "leaf"]),
-  eyeBall: z.enum(["square", "rounded", "circle", "diamond", "leaf"]),
+  dots: z.enum(["square", "rounded", "dots", "classy", "diamond", "fluid", "mini", "vertical", "horizontal", "bubble"]),
+  eyeFrame: z.enum(["square", "rounded", "circle", "leaf", "octagon", "shield"]),
+  eyeBall: z.enum(["square", "rounded", "circle", "diamond", "leaf", "octagon", "shield"]),
   fill: z.discriminatedUnion("type", [
     z.object({ type: z.literal("solid"), color: hex }),
     z.object({ type: z.enum(["linear", "radial"]), colors: z.tuple([hex, hex]), rotation: z.number().min(0).max(360) }),
   ]),
   eyeColor: hex.nullable(),
+  eyeBallColor: hex.nullable(),
+  radius: z.number().min(0).max(20),
   background: hex,
   transparent: z.boolean(),
   logo: z

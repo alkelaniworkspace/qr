@@ -1,21 +1,22 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
 
-export function Mark({ className = "size-7" }: { className?: string }) {
+export function Mark({ className = "size-8" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden>
-      <rect width="32" height="32" rx="9" fill="#14130f" />
-      <path d="M8 8h7v7H8zM17 8h7v7h-7zM8 17h7v7H8z" fill="none" stroke="#d9c49a" strokeWidth="1.6" />
-      <circle cx="20.5" cy="20.5" r="2.6" fill="#d9c49a" />
+      <rect width="32" height="32" rx="9" fill="#d2ff1f" />
+      <path d="M8 8h6.5v6.5H8zM17.5 8H24v6.5h-6.5zM8 17.5h6.5V24H8z" fill="#0f1113" />
+      <path d="M10.2 10.2h2.1v2.1h-2.1zM19.7 10.2h2.1v2.1h-2.1zM10.2 19.7h2.1v2.1h-2.1z" fill="#d2ff1f" />
+      <rect x="17.5" y="17.5" width="6.5" height="6.5" rx="3.25" fill="#0f1113" />
     </svg>
   );
 }
 
 export function Logo({ href = "/" }: { href?: string }) {
   return (
-    <Link href={href} className="flex items-center gap-2.5" aria-label={site.name}>
-      <Mark />
-      <span className="font-display text-[26px] leading-none tracking-tight">{site.name}</span>
+    <Link href={href} className="group flex items-center gap-2.5" aria-label={site.name}>
+      <Mark className="size-8 transition-transform duration-300 group-hover:rotate-[-8deg]" />
+      <span className="font-display text-[22px] leading-none">{site.name}</span>
     </Link>
   );
 }

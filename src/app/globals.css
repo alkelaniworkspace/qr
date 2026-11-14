@@ -1,49 +1,117 @@
 @import "tailwindcss";
 
 @theme {
+  /* App theme: dark ground, one lime accent (Bedienoo style) */
+  --color-bg: #0f1113;
+  --color-surface: #16191c;
+  --color-elevated: #1d2125;
+  --color-edge: rgb(255 255 255 / 0.08);
+  --color-edge-strong: rgb(255 255 255 / 0.16);
+  --color-fg: #f7f7f8;
+  --color-dim: #a6abb1;
+  --color-faint: #6f757c;
+  --color-lime: #d2ff1f;
+  --color-lime-deep: #a9d600;
+  --color-on-lime: #0f1113;
+  --color-mint: #3ee6a8;
+  --color-amber: #ffb020;
+  --color-violet: #a78bfa;
+  --color-sky: #38d5ff;
+  --color-rose: #ff5d6c;
+
+  /* Light palette, used only by customer-facing hosted pages (/p/...) */
   --color-ink: #14130f;
   --color-ink-soft: #2a2822;
   --color-paper: #f7f5f0;
   --color-sand: #efebe2;
   --color-line: #e2ddd1;
   --color-muted: #6f6a5f;
-  --color-gold: #a8823f;
-  --color-gold-soft: #d9c49a;
   --color-success: #1f6b4f;
   --color-danger: #a8322d;
   --color-warn: #a86a12;
 
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-display: "Space Grotesk", "Inter Variable", ui-sans-serif, sans-serif;
 
-  --radius-xl: 1rem;
-  --radius-2xl: 1.375rem;
-  --shadow-soft: 0 1px 2px rgb(20 19 15 / 0.04), 0 8px 24px -12px rgb(20 19 15 / 0.12);
-  --shadow-lift: 0 2px 4px rgb(20 19 15 / 0.05), 0 24px 48px -24px rgb(20 19 15 / 0.25);
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.2), 0 12px 32px -16px rgb(0 0 0 / 0.6);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.25), 0 30px 60px -30px rgb(0 0 0 / 0.8);
 }
 
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    color-scheme: dark;
   }
   body {
-    @apply bg-paper text-ink font-sans;
-    font-feature-settings: "cv11", "ss01";
+    @apply bg-bg text-fg font-sans;
   }
   ::selection {
-    background: var(--color-gold-soft);
+    background: var(--color-lime);
+    color: var(--color-on-lime);
   }
   :focus-visible {
-    outline: 2px solid var(--color-gold);
+    outline: 2px solid var(--color-lime);
     outline-offset: 2px;
+  }
+  input[type="range"] {
+    accent-color: var(--color-lime);
   }
 }
 
 @utility font-display {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Soft corner glows on the page background */
+@utility ambient {
+  background-image:
+    radial-gradient(1200px 700px at 0 -10%, rgb(210 255 31 / 0.07), transparent 60%),
+    radial-gradient(900px 600px at 100% 0, rgb(56 213 255 / 0.05), transparent 60%);
+}
+
+@utility card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-edge);
+  border-radius: 22px;
+}
+
+/* Lime-glowing card for the one thing that matters most */
+@utility card-glow {
+  border-color: rgb(210 255 31 / 0.55);
+  box-shadow: 0 0 0 1px rgb(210 255 31 / 0.15), 0 0 40px -6px rgb(210 255 31 / 0.35);
+}
+
+@utility glow-text {
+  text-shadow: 0 0 28px rgb(210 255 31 / 0.45);
+}
+
+/* Slanted italic badge */
+@utility badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transform: skewX(-12deg);
+  font-size: 11px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+@utility checker {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #e8e8e8 25%, transparent 25%),
+    linear-gradient(-45deg, #e8e8e8 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e8e8e8 75%),
+    linear-gradient(-45deg, transparent 75%, #e8e8e8 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
 }
 
 @utility grain {
@@ -52,21 +120,80 @@
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(18px); }
   to { opacity: 1; transform: none; }
 }
-@utility animate-rise {
-  animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+@keyframes scan {
+  0% { top: 4%; }
+  50% { top: 94%; }
+  100% { top: 4%; }
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+@keyframes shine {
+  0% { left: -60%; }
+  55%, 100% { left: 140%; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(210 255 31 / 0.6); }
+  70% { box-shadow: 0 0 0 8px rgb(210 255 31 / 0); }
 }
 
-/* Checkerboard behind transparent previews */
-@utility checker {
-  background-color: #fff;
-  background-image:
-    linear-gradient(45deg, #eee 25%, transparent 25%),
-    linear-gradient(-45deg, #eee 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #eee 75%),
-    linear-gradient(-45deg, transparent 75%, #eee 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+@utility animate-rise { animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@utility animate-scan { animation: scan 3.2s cubic-bezier(0.6, 0, 0.4, 1) infinite; }
+@utility animate-breathe { animation: breathe 6s ease-in-out infinite; }
+@utility animate-float { animation: float 6s ease-in-out infinite; }
+@utility animate-marquee { animation: marquee 40s linear infinite; }
+@utility animate-pulse-dot { animation: pulse-dot 2s ease-out infinite; }
+
+/* Scroll reveal: elements start hidden, <Reveal> adds .is-in */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--delay, 0ms);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Button light sweep */
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+.shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  left: -60%;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  animation: shine 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+
+@keyframes draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
 }

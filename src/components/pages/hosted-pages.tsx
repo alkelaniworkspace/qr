@@ -15,7 +15,7 @@ const ugc = { target: "_blank", rel: "noopener nofollow ugc" } as const;
 
 function Shell({ accent, children }: { accent: string; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-paper" style={{ "--accent": accent, "--on-accent": onAccent(accent) } as React.CSSProperties}>
+    <div className="min-h-screen bg-paper text-ink [color-scheme:light]" style={{ "--accent": accent, "--on-accent": onAccent(accent) } as React.CSSProperties}>
       <main className="mx-auto max-w-md px-5 pb-16 pt-8 animate-rise">{children}</main>
       <footer className="pb-8 text-center">
         <Link href="/" className="text-xs text-muted/70 hover:text-muted">Erstellt mit {site.name}</Link>

@@ -1,22 +1,26 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger" | "gold";
+type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none";
+  "relative inline-flex items-center justify-center gap-2 rounded-[14px] font-display font-bold uppercase tracking-[0.03em] transition-all duration-150 select-none whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none";
+
 const variants: Record<Variant, string> = {
-  primary: "bg-ink text-paper hover:bg-ink-soft shadow-soft",
-  secondary: "bg-white text-ink border border-line hover:border-ink/30 hover:bg-paper",
-  ghost: "text-ink hover:bg-sand",
-  danger: "bg-danger text-white hover:bg-danger/90",
-  gold: "bg-gold text-white hover:bg-gold/90 shadow-soft",
+  // Chunky 3D lime button: sits on its own shadow, presses down on click
+  primary:
+    "bg-lime text-on-lime shadow-[0_4px_0_#7fa000,0_0_32px_-4px_rgba(210,255,31,0.55)] hover:-translate-y-0.5 hover:shadow-[0_6px_0_#7fa000,0_0_44px_-2px_rgba(210,255,31,0.7)] active:translate-y-1 active:shadow-[0_0_0_#7fa000,0_0_20px_-4px_rgba(210,255,31,0.5)]",
+  secondary:
+    "bg-elevated text-fg border border-edge-strong shadow-[0_4px_0_rgba(0,0,0,0.45)] hover:-translate-y-0.5 hover:border-white/30 active:translate-y-1 active:shadow-none",
+  ghost: "text-dim hover:text-fg hover:bg-white/5",
+  danger: "bg-rose text-white shadow-[0_4px_0_#a1303b] hover:-translate-y-0.5 active:translate-y-1 active:shadow-none",
 };
+
 const sizes: Record<Size, string> = {
-  sm: "h-8 px-3.5 text-[13px]",
-  md: "h-10 px-5 text-sm",
-  lg: "h-12 px-7 text-[15px]",
+  sm: "h-9 px-4 text-[12px]",
+  md: "h-11 px-5 text-[13px]",
+  lg: "h-14 px-7 text-[15px]",
 };
 
 export function buttonClass(variant: Variant = "primary", size: Size = "md", className?: string) {

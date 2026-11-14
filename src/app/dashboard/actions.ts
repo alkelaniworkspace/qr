@@ -53,6 +53,7 @@ export async function createCode(input: SaveInput): Promise<SaveResult> {
       .single();
     if (!error && data) {
       revalidatePath("/dashboard");
+      revalidatePath("/dashboard/codes");
       return { ok: true, id: data.id, slug: data.slug };
     }
     if (error?.message.includes("PLAN_LIMIT_REACHED")) {
@@ -84,6 +85,7 @@ export async function updateCode(id: string, input: SaveInput): Promise<SaveResu
     return { ok: false, message: "Speichern fehlgeschlagen" };
   }
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/codes");
   revalidatePath(`/dashboard/codes/${id}`);
   return { ok: true, id, slug: existing.slug };
 }
@@ -92,6 +94,7 @@ export async function setCodeStatus(id: string, status: "active" | "paused") {
   const supabase = await createClient();
   await supabase.from("qr_codes").update({ status }).eq("id", id);
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/codes");
   revalidatePath(`/dashboard/codes/${id}`);
 }
 
@@ -99,4 +102,5 @@ export async function deleteCode(id: string) {
   const supabase = await createClient();
   await supabase.from("qr_codes").delete().eq("id", id);
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/codes");
 }
