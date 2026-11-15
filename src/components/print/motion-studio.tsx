@@ -70,9 +70,9 @@ function draw(ctx: CanvasRenderingContext2D, W: number, H: number, t: number, im
 
   const landscape = W > H * 1.2;
   const tall = H > W * 1.4;
-  const qrSize = landscape ? H * 0.62 : m * (tall ? 0.62 : 0.44);
+  const qrSize = landscape ? H * 0.62 : m * (tall ? 0.62 : 0.4);
   const qrX = landscape ? W * 0.68 - qrSize / 2 : W / 2 - qrSize / 2;
-  const qrY = landscape ? H / 2 - qrSize / 2 : H * (tall ? 0.36 : 0.3);
+  const qrY = landscape ? H / 2 - qrSize / 2 : H * (tall ? 0.36 : 0.27);
   const intro = Math.min(1, t / 1.2);
 
   // headline
@@ -181,7 +181,7 @@ function draw(ctx: CanvasRenderingContext2D, W: number, H: number, t: number, im
     ctx.fillText(x.cta, bx + bw / 2, by + bh / 2 + m * 0.003);
     ctx.globalAlpha = 1;
   }
-  if (x.footer) {
+  if (x.footer && (tall || landscape)) {
     ctx.font = `600 ${m * 0.03}px Inter, Helvetica, Arial, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
