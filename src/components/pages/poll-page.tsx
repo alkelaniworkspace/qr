@@ -115,13 +115,13 @@ export function PollPage({ c, slug, demo }: { c: C; slug: string; demo: boolean 
   return (
     <div className="pb-4">
       <div className="text-center">
-        <span className="mx-auto grid size-16 place-items-center rounded-3xl bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_14px_30px_-14px_var(--accent)]">
+        <span className="mx-auto grid size-16 place-items-center rounded-[calc(var(--pg-radius)+8px)] bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_14px_30px_-14px_var(--accent)]">
           <BarChart3 className="size-7" />
         </span>
         <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--pg-muted)]">
           {closed ? "Beendet" : multiple ? "Abstimmung · mehrere Antworten" : "Abstimmung"}
         </p>
-        <h1 className="mt-2 font-display text-[32px] leading-[1.05]">{s(c.question) || "Deine Frage"}</h1>
+        <h1 className="mt-2 pg-display text-[32px] leading-[1.05]">{s(c.question) || "Deine Frage"}</h1>
         {s(c.description) && <p className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-[var(--pg-muted)]">{s(c.description)}</p>}
         {closes && !closed && (
           <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--pg-soft)] px-3 py-1 text-xs font-semibold text-[var(--pg-muted)]">
@@ -144,7 +144,7 @@ export function PollPage({ c, slug, demo }: { c: C; slug: string; demo: boolean 
               onClick={() => toggle(i)}
               disabled={!!voted || closed}
               style={{ animationDelay: `${i * 60}ms` }}
-              className={`animate-rise group relative block w-full overflow-hidden rounded-2xl border text-left transition-all duration-300 active:scale-[0.98] disabled:active:scale-100 ${sel ? "border-[var(--accent)] bg-[var(--pg-card)] shadow-[0_0_0_2px_var(--accent)]" : "border-[var(--pg-line)] bg-[var(--pg-card)]"}`}
+              className={`animate-rise group relative block w-full overflow-hidden rounded-[max(12px,var(--pg-radius))] border text-left transition-all duration-300 active:scale-[0.98] disabled:active:scale-100 ${sel ? "border-[var(--accent)] bg-[var(--pg-card)] shadow-[0_0_0_2px_var(--accent)]" : "border-[var(--pg-line)] bg-[var(--pg-card)]"}`}
             >
               {/* result bar grows behind the content */}
               {showResults && !withImages && (
@@ -153,13 +153,13 @@ export function PollPage({ c, slug, demo }: { c: C; slug: string; demo: boolean 
               {withImages && (
                 <span className="relative block aspect-square overflow-hidden bg-[var(--pg-soft)]">
                   {o.image ? (
-                    <SmartImg src={o.image} width={640} className={`size-full object-cover transition duration-500 ${sel ? "scale-105" : "group-hover:scale-105"}`} fallback={<span className="grid size-full place-items-center font-display text-5xl text-[var(--accent)]">{String.fromCharCode(65 + i)}</span>} />
+                    <SmartImg src={o.image} width={640} className={`size-full object-cover transition duration-500 ${sel ? "scale-105" : "group-hover:scale-105"}`} fallback={<span className="grid size-full place-items-center pg-display text-5xl text-[var(--accent)]">{String.fromCharCode(65 + i)}</span>} />
                   ) : (
-                    <span className="grid size-full place-items-center font-display text-5xl text-[var(--accent)]">{String.fromCharCode(65 + i)}</span>
+                    <span className="grid size-full place-items-center pg-display text-5xl text-[var(--accent)]">{String.fromCharCode(65 + i)}</span>
                   )}
                   {showResults && (
                     <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-2.5 pt-8 text-white">
-                      <span className="block font-display text-2xl tabular-nums leading-none">{p}%</span>
+                      <span className="block pg-display text-2xl tabular-nums leading-none">{p}%</span>
                       <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-white/25"><span className="block h-full rounded-full bg-white transition-[width] duration-1000 ease-out" style={{ width: `${p}%` }} /></span>
                     </span>
                   )}
@@ -173,7 +173,7 @@ export function PollPage({ c, slug, demo }: { c: C; slug: string; demo: boolean 
                 )}
                 <span className="min-w-0 flex-1 font-semibold leading-snug">{s(o.label) || `Antwort ${String.fromCharCode(65 + i)}`}</span>
                 {win && <Trophy className="size-4 shrink-0 text-[var(--accent)]" />}
-                {showResults && !withImages && <span className="shrink-0 font-display text-lg tabular-nums">{p}%</span>}
+                {showResults && !withImages && <span className="shrink-0 pg-display text-lg tabular-nums">{p}%</span>}
                 {showResults && sel && <span className="sr-only">(deine Wahl)</span>}
               </span>
             </button>
@@ -186,7 +186,7 @@ export function PollPage({ c, slug, demo }: { c: C; slug: string; demo: boolean 
           type="button"
           onClick={submit}
           disabled={!picked.length || busy}
-          className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] text-[15px] font-semibold text-[var(--on-accent)] shadow-[0_14px_30px_-16px_var(--accent)] transition active:scale-[0.98] disabled:opacity-40"
+          className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-[max(12px,var(--pg-radius))] bg-[var(--accent)] text-[15px] font-semibold text-[var(--on-accent)] shadow-[0_14px_30px_-16px_var(--accent)] transition active:scale-[0.98] disabled:opacity-40"
         >
           {busy ? <Loader2 className="size-5 animate-spin" /> : <Check className="size-5" />}
           {picked.length ? (multiple && picked.length > 1 ? `${picked.length} Stimmen abgeben` : "Abstimmen") : multiple ? "Antworten wählen" : "Antwort wählen"}
@@ -196,7 +196,7 @@ export function PollPage({ c, slug, demo }: { c: C; slug: string; demo: boolean 
       {error && <p role="alert" className="mt-4 rounded-xl border border-[var(--pg-line)] bg-[var(--pg-soft)] px-4 py-3 text-center text-sm">{error}</p>}
 
       {voted && (
-        <div className="animate-rise mt-6 rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)] p-5 text-center">
+        <div className="animate-rise mt-6 rounded-[max(12px,var(--pg-radius))] border border-[var(--pg-line)] bg-[var(--pg-card)] p-5 text-center">
           <PartyPopper className="mx-auto size-7 text-[var(--accent)]" />
           <p className="mt-2 font-semibold">Danke für deine Stimme!</p>
           <p className="mt-1 text-sm text-[var(--pg-muted)]">

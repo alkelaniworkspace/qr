@@ -61,3 +61,18 @@ export const DEFAULT_ACCENT = "#191919";
 export function menuStyle(id: unknown): MenuStyle {
   return MENU_STYLES.find((s) => s.id === id) ?? MENU_STYLES[0];
 }
+
+/**
+ * The menu page's hero / heading look, derived from the shared page design
+ * (src/lib/page-design.ts), so one design editor drives every page type.
+ */
+export function menuStyleFromDesign(d: { font: string; hero: string; radius: string; bg: string; accent: string }, dark: boolean): MenuStyle {
+  const byFont: Record<string, MenuStyleId> = { bold: "street", script: "cafe", elegant: "fine", editorial: "bistro", classic: "trattoria" };
+  const id: MenuStyleId = byFont[d.font] ?? "modern";
+  const base = menuStyle(id);
+  const hero: MenuStyle["hero"] =
+    d.hero === "minimal" ? "classic"
+      : d.hero === "centered" ? (d.font === "elegant" ? "centered" : "soft")
+        : d.font === "bold" ? "bold" : "overlay";
+  return { ...base, hero, vars: null, accent: d.accent, dark, display: "var(--pg-display)", headingScale: base.headingScale };
+}

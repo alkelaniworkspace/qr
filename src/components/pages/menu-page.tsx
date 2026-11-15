@@ -13,7 +13,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Clock, Flame, Leaf, MapPin, Phone, Search, Sparkles, Star, Wheat, X } from "lucide-react";
 import type { MenuItemData, MenuSectionData } from "@/lib/codes/types";
 import { mapsUrl } from "@/lib/codes/payload";
-import { menuStyle, type MenuStyle } from "@/lib/menu-styles";
+import { menuStyleFromDesign, type MenuStyle } from "@/lib/menu-styles";
+import { isDark, resolveDesign } from "@/lib/page-design";
 import { SmartImg } from "./smart-img";
 
 type C = Record<string, unknown>;
@@ -76,7 +77,8 @@ function useReveal(root: React.RefObject<HTMLElement | null>, deps: unknown[]) {
 
 export function MenuPage({ c }: { c: C }) {
   const sections = useMemo(() => normalize(c.sections), [c.sections]);
-  const st = menuStyle(c.style);
+  const d = resolveDesign(c);
+  const st = menuStyleFromDesign(d, isDark(d.bg));
   const layout = s(c.layout) || st.layout;
   const [active, setActive] = useState(0);
   const [query, setQuery] = useState("");
@@ -128,7 +130,8 @@ export function MenuPage({ c }: { c: C }) {
     requestAnimationFrame(() => document.getElementById(`it-${key}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
   };
 
-  const vars = { "--mp-display": st.display, "--mp-radius": `${st.radius}px`, "--mp-hscale": String(st.headingScale) } as React.CSSProperties;
+  // fonts, colours and corners come from the page design (set on the shell)
+  const vars = {} as React.CSSProperties;
   const itemFont = st.id === "bistro" || st.id === "fine" || st.id === "trattoria";
 
   return (

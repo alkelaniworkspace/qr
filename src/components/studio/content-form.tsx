@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { ImageField, LayoutPicker, MenuBuilder, MenuImport, MenuStylePicker } from "./menu-builder";
+import { DesignEditor } from "./design-editor";
 
 type Content = Record<string, unknown>;
 type Errors = Record<string, string>;
@@ -112,6 +113,12 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
             return (
               <FieldShell key={field.name} label={field.label} className="col-span-2">
                 <LayoutPicker value={str(value[field.name]) || "cards"} onChange={(v) => set(field.name, v)} />
+              </FieldShell>
+            );
+          case "design":
+            return (
+              <FieldShell key={field.name} label="Design der Seite" hint="Wähle eine Vorlage und passe Farben, Schrift, Buttons und Hintergrund an. Die Vorschau zeigt jede Änderung sofort." className="col-span-2">
+                <DesignEditor content={value} onChange={(d) => set(field.name, d)} />
               </FieldShell>
             );
           case "menustyle":

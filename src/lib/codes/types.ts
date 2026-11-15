@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { designSchema } from "@/lib/page-design";
 
 /**
  * Registry of every code type. One entry defines: what the user fills in
@@ -31,6 +32,7 @@ export type Field =
   | { kind: "layout"; name: string; label: string }
   | { kind: "menustyle"; name: string; label: string }
   | { kind: "pollOptions"; name: string; label: string }
+  | { kind: "design"; name: string; label: string }
   | { kind: "review"; name: string; label: string; hint?: string }
   | { kind: "theme"; name: string; label: string };
 
@@ -87,8 +89,9 @@ export type MenuSectionData = z.infer<typeof menuSection>;
 const pollOption = z.object({ label: reqStr("Antwort", 80), image: imageUrl() });
 export const POLL_RESULTS = ["after", "always", "never"] as const;
 
-const ACCENT: Field = { kind: "color", name: "accent", label: "Akzentfarbe", half: true };
-const THEME: Field = { kind: "theme", name: "theme", label: "Seiten-Stil" };
+/** One design editor for every hosted page (replaces accent + theme in the editor; both stay readable for old pages). */
+const DESIGN: Field = { kind: "design", name: "design", label: "Design" };
+const img = (name: string, label: string, shape: "square" | "wide"): Field => ({ kind: "image", name, label, shape, half: true });
 const theme = z.enum(["light", "dark", "color"]).default("light");
 
 export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
@@ -113,6 +116,8 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
     modes: ["dynamic", "static"],
     hostedPage: true,
     fields: [
+      img("photo", "Foto", "square"),
+      img("cover", "Titelbild", "wide"),
       { kind: "text", name: "firstName", label: "Vorname", required: true, half: true },
       { kind: "text", name: "lastName", label: "Nachname", half: true },
       { kind: "text", name: "title", label: "Position", half: true },
@@ -124,10 +129,11 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       { kind: "text", name: "street", label: "Straße", half: true },
       { kind: "text", name: "city", label: "PLZ und Ort", half: true },
       { kind: "textarea", name: "note", label: "Kurzbeschreibung" },
-      ACCENT,
-      THEME,
+      DESIGN,
     ],
     schema: z.object({
+      photo: imageUrl(),
+      cover: imageUrl(),
       firstName: reqStr("Vorname", 80),
       lastName: str(80),
       title: str(120),
@@ -141,8 +147,9 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       note: str(500),
       accent: color,
       theme,
+      design: designSchema.optional(),
     }),
-    defaults: { firstName: "", lastName: "", title: "", company: "", phone: "", mobile: "", email: "", website: "", street: "", city: "", note: "", accent: "#191919", theme: "light" },
+    defaults: { firstName: "", lastName: "", title: "", company: "", phone: "", mobile: "", email: "", website: "", street: "", city: "", note: "", accent: "#191919", theme: "light", design: { preset: "studio" } },
   },
   links: {
     id: "links",
@@ -153,20 +160,24 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
     modes: ["dynamic", "static"],
     hostedPage: true,
     fields: [
+      img("avatar", "Profilbild", "square"),
+      img("cover", "Titelbild", "wide"),
       { kind: "text", name: "title", label: "Name", required: true },
       { kind: "textarea", name: "bio", label: "Beschreibung" },
       { kind: "links", name: "links", label: "Links" },
-      ACCENT,
-      THEME,
+      DESIGN,
     ],
     schema: z.object({
+      avatar: imageUrl(),
+      cover: imageUrl(),
       title: reqStr("Name", 80),
       bio: str(300),
       links: z.array(linkItem).min(1, "Mindestens ein Link").max(30),
       accent: color,
       theme,
+      design: designSchema.optional(),
     }),
-    defaults: { title: "", bio: "", links: [{ label: "Instagram", url: "" }], accent: "#191919", theme: "light" },
+    defaults: { title: "", bio: "", links: [{ label: "Instagram", url: "" }], accent: "#191919", theme: "light", design: { preset: "peach" } },
   },
   menu: {
     id: "menu",
@@ -186,10 +197,8 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       { kind: "text", name: "address", label: "Adresse", placeholder: "Hauptstraße 1, 46282 Dorsten", half: true },
       { kind: "textarea", name: "hours", label: "Öffnungszeiten (eine Zeile pro Tag)", placeholder: "Mo–Fr 11–22 Uhr\nSa–So 12–23 Uhr" },
       { kind: "textarea", name: "footer", label: "Hinweis unten", placeholder: "Allergene und Zusatzstoffe erfragen Sie bitte beim Personal." },
-      { kind: "menustyle", name: "style", label: "Design" },
       { kind: "layout", name: "layout", label: "Darstellung der Gerichte" },
-      ACCENT,
-      THEME,
+      DESIGN,
     ],
     schema: z.object({
       name: reqStr("Name", 80),
@@ -205,6 +214,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       style: z.enum(["modern", "bistro", "cafe", "street", "fine", "trattoria"]).default("modern"),
       accent: color,
       theme,
+      design: designSchema.optional(),
     }),
     defaults: {
       name: "",
@@ -222,7 +232,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       layout: "cards",
       style: "modern",
       accent: "#191919",
-      theme: "light",
+      theme: "light", design: { preset: "terracotta" },
     },
   },
   review: {
@@ -234,22 +244,26 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
     modes: ["dynamic", "static"],
     hostedPage: true,
     fields: [
+      img("logo", "Logo", "square"),
+      img("cover", "Titelbild", "wide"),
       { kind: "text", name: "business", label: "Name des Geschäfts", required: true },
       { kind: "textarea", name: "message", label: "Nachricht", placeholder: "Danke für deinen Besuch! Wir freuen uns über deine Bewertung." },
       { kind: "review", name: "googleUrl", label: "Google-Maps-Link deines Geschäfts", hint: "Link aus Google Maps einfügen. Wir erzeugen daraus den direkten Bewertungs-Link." },
       { kind: "url", name: "secondaryUrl", label: "Weitere Plattform (optional)", placeholder: "Tripadvisor, Yelp …" },
-      ACCENT,
-      THEME,
+      DESIGN,
     ],
     schema: z.object({
+      logo: imageUrl(),
+      cover: imageUrl(),
       business: reqStr("Name", 80),
       message: str(300),
       googleUrl: url("Google-Link"),
       secondaryUrl: optUrl(),
       accent: color,
       theme,
+      design: designSchema.optional(),
     }),
-    defaults: { business: "", message: "", googleUrl: "", secondaryUrl: "", accent: "#191919", theme: "light" },
+    defaults: { business: "", message: "", googleUrl: "", secondaryUrl: "", accent: "#191919", theme: "light", design: { preset: "ocean" } },
   },
   poll: {
     id: "poll",
@@ -270,8 +284,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       ] },
       { kind: "datetime", name: "closesAt", label: "Endet am (optional)", half: true },
       { kind: "checkbox", name: "multiple", label: "Mehrere Antworten erlauben" },
-      ACCENT,
-      THEME,
+      DESIGN,
     ],
     schema: z.object({
       question: reqStr("Frage", 160),
@@ -282,6 +295,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       multiple: z.boolean().default(false),
       accent: color,
       theme,
+      design: designSchema.optional(),
     }),
     defaults: {
       question: "",
@@ -291,7 +305,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       closesAt: "",
       multiple: false,
       accent: "#191919",
-      theme: "light",
+      theme: "light", design: { preset: "lavender" },
     },
   },
   coupon: {
@@ -303,6 +317,8 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
     modes: ["dynamic", "static"],
     hostedPage: true,
     fields: [
+      img("logo", "Logo", "square"),
+      img("cover", "Hintergrundbild", "wide"),
       { kind: "text", name: "business", label: "Geschäft", required: true, half: true },
       { kind: "text", name: "discount", label: "Angebot", placeholder: "-20 %", required: true, half: true },
       { kind: "text", name: "headline", label: "Überschrift", placeholder: "Auf deine nächste Bestellung" },
@@ -310,10 +326,11 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       { kind: "date", name: "validUntil", label: "Gültig bis", half: true },
       { kind: "url", name: "url", label: "Einlösen unter (optional)" },
       { kind: "textarea", name: "terms", label: "Bedingungen" },
-      ACCENT,
-      THEME,
+      DESIGN,
     ],
     schema: z.object({
+      logo: imageUrl(),
+      cover: imageUrl(),
       business: reqStr("Geschäft", 80),
       discount: reqStr("Angebot", 40),
       headline: str(120),
@@ -323,8 +340,9 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       terms: str(600),
       accent: color,
       theme,
+      design: designSchema.optional(),
     }),
-    defaults: { business: "", discount: "", headline: "", code: "", validUntil: "", url: "", terms: "", accent: "#191919", theme: "light" },
+    defaults: { business: "", discount: "", headline: "", code: "", validUntil: "", url: "", terms: "", accent: "#191919", theme: "light", design: { preset: "citrus" } },
   },
   pdf: {
     id: "pdf",
@@ -335,20 +353,22 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
     modes: ["dynamic", "static"],
     hostedPage: true,
     fields: [
+      img("cover", "Vorschaubild", "wide"),
       { kind: "text", name: "title", label: "Titel", required: true },
       { kind: "textarea", name: "description", label: "Beschreibung" },
       { kind: "file", name: "file", label: "PDF-Datei", accept: "application/pdf", hint: "Max. 20 MB" },
-      ACCENT,
-      THEME,
+      DESIGN,
     ],
     schema: z.object({
+      cover: imageUrl(),
       title: reqStr("Titel", 120),
       description: str(500),
       file: z.object({ url: url("PDF"), name: str(200) }, { error: "Bitte eine PDF hochladen" }),
       accent: color,
       theme,
+      design: designSchema.optional(),
     }),
-    defaults: { title: "", description: "", file: null, accent: "#191919", theme: "light" },
+    defaults: { title: "", description: "", file: null, accent: "#191919", theme: "light", design: { preset: "nordic" } },
   },
   event: {
     id: "event",
@@ -359,16 +379,17 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
     modes: ["dynamic", "static"],
     hostedPage: true,
     fields: [
+      img("cover", "Titelbild", "wide"),
       { kind: "text", name: "title", label: "Titel", required: true },
       { kind: "datetime", name: "start", label: "Beginn", required: true, half: true },
       { kind: "datetime", name: "end", label: "Ende", half: true },
       { kind: "text", name: "location", label: "Ort" },
       { kind: "textarea", name: "description", label: "Beschreibung" },
       { kind: "url", name: "url", label: "Tickets / Mehr Infos" },
-      ACCENT,
-      THEME,
+      DESIGN,
     ],
     schema: z.object({
+      cover: imageUrl(),
       title: reqStr("Titel", 120),
       start: reqStr("Beginn", 20),
       end: str(20),
@@ -377,8 +398,9 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       url: optUrl(),
       accent: color,
       theme,
+      design: designSchema.optional(),
     }),
-    defaults: { title: "", start: "", end: "", location: "", description: "", url: "", accent: "#191919", theme: "light" },
+    defaults: { title: "", start: "", end: "", location: "", description: "", url: "", accent: "#191919", theme: "light", design: { preset: "midnight" } },
   },
   site: {
     id: "site",
@@ -389,6 +411,8 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
     modes: ["dynamic", "static"],
     hostedPage: true,
     fields: [
+      img("logo", "Logo", "square"),
+      img("cover", "Titelbild", "wide"),
       { kind: "text", name: "name", label: "Name des Geschäfts", required: true, half: true },
       { kind: "text", name: "tagline", label: "Slogan", placeholder: "Handwerk mit Herz seit 1998", half: true },
       { kind: "textarea", name: "about", label: "Über uns" },
@@ -398,10 +422,11 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       { kind: "email", name: "email", label: "E-Mail", half: true },
       { kind: "text", name: "address", label: "Adresse" },
       { kind: "links", name: "links", label: "Links" },
-      ACCENT,
-      THEME,
+      DESIGN,
     ],
     schema: z.object({
+      logo: imageUrl(),
+      cover: imageUrl(),
       name: reqStr("Name", 80),
       tagline: str(140),
       about: str(1200),
@@ -413,8 +438,9 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       links: z.array(linkItem).max(20).default([]),
       accent: color,
       theme,
+      design: designSchema.optional(),
     }),
-    defaults: { name: "", tagline: "", about: "", services: "", hours: "", phone: "", email: "", address: "", links: [], accent: "#191919", theme: "light" },
+    defaults: { name: "", tagline: "", about: "", services: "", hours: "", phone: "", email: "", address: "", links: [], accent: "#191919", theme: "light", design: { preset: "matcha" } },
   },
   location: {
     id: "location",
