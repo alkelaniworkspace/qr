@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { ColorInput } from "@/components/studio/content-form";
 import { safeFilename } from "@/lib/qr/export";
+import { renderMp4, saveBlob } from "@/lib/video/mp4";
 import { cn } from "@/lib/cn";
 
 /**
@@ -398,13 +399,6 @@ function draw(ctx: CanvasRenderingContext2D, W: number, H: number, t: number, im
   }
 }
 
-function pickMime(): { mime: string; ext: string } | null {
-  if (typeof MediaRecorder === "undefined") return null;
-  for (const [mime, ext] of [["video/mp4;codecs=avc1", "mp4"], ["video/mp4", "mp4"], ["video/webm;codecs=vp9", "webm"], ["video/webm", "webm"]] as const) {
-    if (MediaRecorder.isTypeSupported(mime)) return { mime, ext };
-  }
-  return null;
-}
 
 export function MotionStudio({ qrSvg, name, defaults }: { qrSvg: string; name: string; defaults: Texts }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -467,39 +461,26 @@ export function MotionStudio({ qrSvg, name, defaults }: { qrSvg: string; name: s
 
   const restart = () => { start.current = performance.now(); setPlaying(true); };
 
+  /** Frame-by-frame MP4 (WebCodecs), independent of the preview and of tab focus. */
   async function record() {
-    const canvas = canvasRef.current;
-    const kind = pickMime();
-    if (!canvas || !kind) return setError("Dein Browser kann leider keine Videos aufnehmen. Bitte Chrome, Edge oder Safari nutzen.");
+    if (!L) return;
     setError(null);
-    setPlaying(true);
-    start.current = performance.now();
     setProgress(0);
-    const stream = canvas.captureStream(30);
-    const rec = new MediaRecorder(stream, { mimeType: kind.mime, videoBitsPerSecond: 10_000_000 });
-    const chunks: Blob[] = [];
-    rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
-    const done = new Promise<void>((r) => (rec.onstop = () => r()));
-    rec.start();
-    const total = LOOP * loops * 1000;
-    const t0 = performance.now();
-    await new Promise<void>((resolve) => {
-      const iv = setInterval(() => {
-        const e = performance.now() - t0;
-        setProgress(Math.min(1, e / total));
-        if (e >= total) { clearInterval(iv); resolve(); }
-      }, 100);
-    });
-    rec.stop();
-    stream.getTracks().forEach((tr) => tr.stop());
-    await done;
-    const url = URL.createObjectURL(new Blob(chunks, { type: kind.mime }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${safeFilename(name)}-${format}-${style}.${kind.ext}`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-    setProgress(null);
+    try {
+      const blob = await renderMp4({
+        width: f.w,
+        height: f.h,
+        fps: 30,
+        seconds: LOOP * loops,
+        draw: (ctx, t) => draw(ctx, f.w, f.h, t, img, style, bg, x, L),
+        onProgress: setProgress,
+      });
+      saveBlob(blob, `${safeFilename(name)}-${format}-${style}.${blob.type.includes("mp4") ? "mp4" : "webm"}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Das Video konnte nicht erzeugt werden.");
+    } finally {
+      setProgress(null);
+    }
   }
 
   const chip = (active: boolean) => cn("rounded-xl border px-2 py-2.5 text-xs font-semibold transition", active ? "border-brand bg-brand text-on-brand" : "border-edge text-dim hover:border-edge-strong hover:text-fg");
@@ -598,12 +579,12 @@ export function MotionStudio({ qrSvg, name, defaults }: { qrSvg: string; name: s
           <Button type="button" size="lg" onClick={record} disabled={recording} className="relative mt-3 w-full overflow-hidden">
             {recording && <span className="absolute inset-y-0 left-0 bg-lime/35 transition-[width] duration-100" style={{ width: `${(progress ?? 0) * 100}%` }} />}
             <span className="relative inline-flex items-center gap-2">
-              {recording ? <>Nimmt auf … {Math.ceil(LOOP * loops * (1 - (progress ?? 0)))} s</> : <><Download className="size-4" /> Video herunterladen</>}
+              {recording ? <>Video wird erzeugt … {Math.round((progress ?? 0) * 100)} %</> : <><Download className="size-4" /> Als MP4 herunterladen</>}
             </span>
           </Button>
           <p className="mt-3 text-xs leading-relaxed text-faint">
             {f.w} × {f.h} px · {LOOP * loops} Sekunden · nahtlose Schleife. Ideal für Instagram, TikTok, WhatsApp-Status und Bildschirme im Laden.
-            {recording && " Bitte diesen Tab während der Aufnahme geöffnet lassen."}
+            
           </p>
           {error && <p className="mt-2 text-xs text-rose">{error}</p>}
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Download, FileDown, Loader2, RectangleHorizontal, RectangleVertical, Scissors } from "lucide-react";
+import { Download, FileDown, Loader2, Printer, RectangleHorizontal, RectangleVertical, Scissors } from "lucide-react";
 import { Poster } from "./poster";
 import { FORMATS, POSTER_PALETTES, POSTER_TEMPLATES, clampMm, posterSize, type FormatId, type PosterSettings } from "@/lib/print/types";
 import { ColorInput } from "@/components/studio/content-form";
@@ -23,49 +23,92 @@ export function PrintStudio({ settings: p, onChange, qrSvg, name }: Props) {
   const set = (patch: Partial<PosterSettings>) => onChange({ ...p, ...patch });
   const previewRef = useRef<HTMLDivElement>(null);
   const [dpi, setDpi] = useState(300);
-  const [busy, setBusy] = useState<"png" | null>(null);
+  const [busy, setBusy] = useState<"png" | "jpg" | "pdf" | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const { w, h } = posterSize(p);
   const fullW = w + (p.bleed ? 6 : 0);
   const fullH = h + (p.bleed ? 6 : 0);
 
-  async function exportPng() {
+  /** The live preview node (already auto-fitted), rendered at print resolution. */
+  async function renderCanvas(targetDpi: number) {
     const node = previewRef.current?.firstElementChild as HTMLElement | null;
-    if (!node) return;
-    setBusy("png");
+    if (!node) return null;
+    const { toCanvas } = await import("html-to-image");
+    await document.fonts?.ready;
+    let targetW = Math.round((fullW / 25.4) * targetDpi);
+    const longest = Math.max(targetW, Math.round((fullH / 25.4) * targetDpi));
+    const scaleDown = Math.min(1, MAX_SIDE_PX / longest);
+    if (scaleDown < 1) {
+      targetW = Math.round(targetW * scaleDown);
+      setNote(`Für dieses Format wurde die Auflösung auf ${Math.round(targetDpi * scaleDown)} dpi begrenzt. Für Großformate „Drucken“ nutzen (Vektor, beliebig groß).`);
+    }
+    return toCanvas(node, { pixelRatio: targetW / node.offsetWidth, cacheBust: true });
+  }
+
+  const file = `${safeFilename(name)}-${p.format}${p.landscape ? "-quer" : ""}`;
+  const save = (href: string, ext: string) => {
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = `${file}.${ext}`;
+    a.click();
+  };
+
+  async function exportImage(kind: "png" | "jpg") {
+    setBusy(kind);
     setNote(null);
     try {
-      const { toPng } = await import("html-to-image");
-      let targetW = Math.round((fullW / 25.4) * dpi);
-      let targetH = Math.round((fullH / 25.4) * dpi);
-      const scaleDown = Math.min(1, MAX_SIDE_PX / Math.max(targetW, targetH));
-      if (scaleDown < 1) {
-        targetW = Math.round(targetW * scaleDown);
-        targetH = Math.round(targetH * scaleDown);
-        setNote(`Für dieses Format wurde die PNG auf ${Math.round(dpi * scaleDown)} dpi begrenzt. Für Großformate das PDF nutzen (Vektor, beliebig groß).`);
-      }
-      const url = await toPng(node, { pixelRatio: targetW / node.offsetWidth, cacheBust: true });
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${safeFilename(name)}-${p.format}${p.landscape ? "-quer" : ""}.png`;
-      a.click();
+      const canvas = await renderCanvas(dpi);
+      if (canvas) save(canvas.toDataURL(kind === "png" ? "image/png" : "image/jpeg", 0.95), kind);
     } finally {
       setBusy(null);
     }
   }
 
-  function exportPdf() {
-    // The browser prints the poster at its exact size as a vector PDF ("Als PDF speichern").
-    const style = document.createElement("style");
-    style.id = "print-page-size";
-    style.textContent = `@page { size: ${fullW}mm ${fullH}mm; margin: 0; }`;
-    document.head.appendChild(style);
-    const cleanup = () => {
-      style.remove();
-      window.removeEventListener("afterprint", cleanup);
+  /** One-page PDF at the exact paper size (incl. bleed), downloaded directly. */
+  async function exportPdf() {
+    setBusy("pdf");
+    setNote(null);
+    try {
+      const canvas = await renderCanvas(Math.max(dpi, 300));
+      if (!canvas) return;
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ unit: "mm", format: [fullW, fullH], orientation: fullW > fullH ? "landscape" : "portrait", compress: true });
+      doc.addImage(canvas.toDataURL("image/jpeg", 0.96), "JPEG", 0, 0, fullW, fullH, undefined, "FAST");
+      doc.save(`${file}.pdf`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /**
+   * Vector print: only the poster, in its own frame, on exactly one page of the
+   * right size. The whole studio is never part of the print.
+   */
+  function printVector() {
+    const node = previewRef.current?.firstElementChild as HTMLElement | null;
+    if (!node) return;
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map((el) => el.outerHTML).join("");
+    const clone = node.cloneNode(true) as HTMLElement;
+    clone.style.width = `${fullW}mm`;
+    clone.style.height = `${fullH}mm`;
+    clone.style.aspectRatio = "auto";
+    const frame = document.createElement("iframe");
+    frame.setAttribute("aria-hidden", "true");
+    frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+    document.body.appendChild(frame);
+    const doc = frame.contentDocument!;
+    doc.open();
+    doc.write(`<!doctype html><html><head><meta charset="utf-8">${styles}<style>@page{size:${fullW}mm ${fullH}mm;margin:0}html,body{margin:0;padding:0;background:#fff;width:${fullW}mm;height:${fullH}mm;overflow:hidden}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}</style></head><body>${clone.outerHTML}</body></html>`);
+    doc.close();
+    const go = async () => {
+      await frame.contentDocument?.fonts?.ready;
+      await new Promise((r) => setTimeout(r, 250));
+      frame.contentWindow?.focus();
+      frame.contentWindow?.print();
+      setTimeout(() => frame.remove(), 1500);
     };
-    window.addEventListener("afterprint", cleanup);
-    window.print();
+    if (doc.readyState === "complete") void go();
+    else frame.onload = () => void go();
   }
 
   const formatIds = Object.keys(FORMATS) as FormatId[];
@@ -161,27 +204,27 @@ export function PrintStudio({ settings: p, onChange, qrSvg, name }: Props) {
               <Poster settings={p} qrSvg={qrSvg} />
             </div>
           </div>
-          <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto_1fr]">
-            <Button type="button" onClick={exportPdf} size="lg" className="shine"><FileDown className="size-4" /> PDF drucken</Button>
-            <select aria-label="Auflösung" value={dpi} onChange={(e) => setDpi(Number(e.target.value))} className="h-14 rounded-[14px] border border-edge bg-bg px-3 text-sm font-semibold text-fg">
+          <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto]">
+            <Button type="button" onClick={exportPdf} size="lg" disabled={busy !== null}>
+              {busy === "pdf" ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />} PDF herunterladen
+            </Button>
+            <select aria-label="Auflösung" value={dpi} onChange={(e) => setDpi(Number(e.target.value))} className="h-13 rounded-[14px] border border-edge bg-bg px-3 text-sm font-semibold text-fg">
               <option value={150}>150 dpi</option>
               <option value={300}>300 dpi</option>
             </select>
-            <Button type="button" variant="secondary" size="lg" onClick={exportPng} disabled={busy === "png"}>
-              {busy === "png" ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} PNG
-            </Button>
+          </div>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            <Button type="button" variant="secondary" onClick={() => exportImage("png")} disabled={busy !== null}>{busy === "png" ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} PNG</Button>
+            <Button type="button" variant="secondary" onClick={() => exportImage("jpg")} disabled={busy !== null}>{busy === "jpg" ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} JPG</Button>
+            <Button type="button" variant="secondary" onClick={printVector} disabled={busy !== null}><Printer className="size-4" /> Drucken</Button>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-faint">
-            PDF: Im Druckdialog „Als PDF speichern“ wählen. Das Format ({fullW} × {fullH} mm) ist schon eingestellt und bleibt gestochen scharf, auch auf A0.
+            Genau eine Seite in {fullW} × {fullH} mm{p.bleed ? " inklusive 3 mm Beschnitt" : ""}. „Drucken“ erzeugt im Druckdialog eine Vektor-PDF („Als PDF speichern“), gestochen scharf bis A0.
           </p>
           {note && <p className="mt-2 text-xs text-gold">{note}</p>}
         </div>
       </div>
 
-      {/* Exact-size copy used only when printing */}
-      <div className="print-area hidden" aria-hidden>
-        <Poster settings={p} qrSvg={qrSvg} physical />
-      </div>
     </div>
   );
 }

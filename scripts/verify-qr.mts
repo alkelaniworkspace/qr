@@ -36,4 +36,20 @@ for (const [name, style] of variants) {
   console.log(`${ok ? "OK  " : "FAIL"} ${name}`);
 }
 console.log(failed ? `\n${failed} variant(s) failed` : `\nAll ${variants.length} variants decode correctly`);
-process.exit(failed ? 1 : 0);
+if (failed) process.exitCode = 1;
+
+// Sticker SVGs must be strict XML: browsers refuse to rasterise anything else (PNG/PDF/JPG export).
+{
+  const { stickerSvg, STICKERS } = await import("../src/components/print/sticker-studio");
+  const qr = renderQrSvg("https://example.com", { ...DEFAULT_STYLE } as never, { size: 600, id: "poster" });
+  const bad: string[] = [];
+  for (const st of STICKERS) {
+    for (const sub of ["", "Zusatzzeile & mehr <test>"]) {
+      const svg = stickerSvg(st.id, qr, { text: "Jetzt scannen & bestellen", sub, bg: "#191919", fg: "#ffffff", accent: "#bdfb04", cut: true });
+      const dup = svg.match(/<[a-zA-Z]+\s[^>]*>/g)?.find((tag) => { const names = [...tag.matchAll(/\s([a-zA-Z:-]+)=/g)].map((m) => m[1]); return new Set(names).size !== names.length; });
+      if (dup || /&(?!amp;|lt;|gt;|quot;|#)/.test(svg.replace(/<[^>]*>/g, ""))) bad.push(`${st.id}${sub ? "+sub" : ""}`);
+    }
+  }
+  console.log(bad.length ? `FAIL sticker XML: ${bad.join(", ")}` : `OK   ${STICKERS.length} sticker shapes produce valid XML`);
+  if (bad.length) process.exitCode = 1;
+}
