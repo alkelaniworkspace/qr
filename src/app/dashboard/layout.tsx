@@ -21,13 +21,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-5 sm:px-8">
           <div className="flex items-center gap-2.5">
             <Logo href="/dashboard" />
-            <span className="badge bg-lime text-on-lime">{plan.label}</span>
+            <span className="badge bg-brand text-on-brand">{plan.label}</span>
           </div>
           <div className="hidden flex-1 md:block"><DashboardNav /></div>
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden sm:block"><ButtonLink href="/dashboard/new" size="sm"><Plus className="size-4" /> Neuer Code</ButtonLink></span>
             <span className="hidden items-center gap-2 rounded-xl border border-edge bg-surface px-3 py-1.5 text-sm font-semibold lg:flex">
-              <span className="grid size-6 place-items-center rounded-lg bg-lime font-display text-xs text-on-lime">{displayName.charAt(0).toUpperCase()}</span>
+              <span className="grid size-6 place-items-center rounded-lg bg-brand font-display text-xs text-on-brand">{displayName.charAt(0).toUpperCase()}</span>
               {displayName}
             </span>
             <form action="/auth/signout" method="post">

@@ -20,17 +20,17 @@ export function CodeCard({ code }: { code: Row }) {
   const dynamic = code.mode === "dynamic";
   const svg = renderQrSvg(qrData(code), normalizeStyle(code.style), { size: 640, id: `c-${code.slug}` });
   const href = dynamic ? `/dashboard/codes/${code.id}` : `/dashboard/codes/${code.id}/edit`;
-  const accent = code.status === "paused" ? "border-l-amber" : dynamic ? "border-l-lime" : "border-l-violet";
+  const accent = code.status === "paused" ? "border-l-gold" : dynamic ? "border-l-brand" : "border-l-navy-bright";
 
   return (
     <div className={cn("card group relative flex flex-col overflow-visible border-l-[3px] p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20", accent)}>
       <div className="flex items-center justify-between gap-2">
         {code.status === "paused" ? (
-          <span className="badge bg-amber text-on-lime">Pausiert</span>
+          <span className="badge bg-gold text-bg">Pausiert</span>
         ) : dynamic ? (
-          <span className="badge bg-lime text-on-lime">Dynamisch</span>
+          <span className="badge bg-brand text-on-brand">Dynamisch</span>
         ) : (
-          <span className="badge bg-violet text-on-lime">Statisch</span>
+          <span className="badge bg-navy text-white">Statisch</span>
         )}
         <CodeActions id={code.id} name={code.name} svg={svg} status={code.status} dynamic={dynamic} compact />
       </div>
@@ -51,7 +51,7 @@ export function CodeCard({ code }: { code: Row }) {
         ) : (
           <p className="text-xs text-dim">Inhalt steckt im Code</p>
         )}
-        <Link href={href} className="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-bold uppercase tracking-wide transition hover:bg-lime hover:text-on-lime">
+        <Link href={href} className="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-bold uppercase tracking-wide transition hover:bg-brand hover:text-on-brand">
           {dynamic ? <><BarChart3 className="size-3.5" /> Statistik</> : "Bearbeiten"}
         </Link>
       </div>

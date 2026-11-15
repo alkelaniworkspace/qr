@@ -39,7 +39,7 @@ export default async function CodePage({ params, searchParams }: { params: Promi
       <Link href="/dashboard/codes" className="inline-flex items-center gap-1.5 text-sm font-semibold text-dim hover:text-fg"><ArrowLeft className="size-4" /> Alle Codes</Link>
 
       {created && (
-        <div className="mt-5 flex items-center gap-3 rounded-2xl border border-lime/40 bg-lime/10 px-4 py-3 text-sm font-semibold text-lime">
+        <div className="mt-5 flex items-center gap-3 rounded-2xl border border-brand/40 bg-brand/10 px-4 py-3 text-sm font-semibold text-brand">
           <CheckCircle2 className="size-5 shrink-0" /> Dein Code ist fertig. Lade ihn herunter und teste ihn mit dem Handy.
         </div>
       )}
@@ -54,7 +54,7 @@ export default async function CodePage({ params, searchParams }: { params: Promi
 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={cn("badge text-on-lime", code.status === "paused" ? "bg-amber" : dynamic ? "bg-lime" : "bg-violet")}>
+            <span className={cn("badge", code.status === "paused" ? "bg-gold text-bg" : dynamic ? "bg-brand text-on-brand" : "bg-navy text-white")}>
               {code.status === "paused" ? "Pausiert" : dynamic ? "Dynamisch" : "Statisch"}
             </span>
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-dim"><TypeIcon name={def.icon} className="size-3.5" /> {def.label}</span>
@@ -62,12 +62,12 @@ export default async function CodePage({ params, searchParams }: { params: Promi
           <h1 className="mt-3 font-display text-5xl uppercase leading-[0.95]">{code.name}</h1>
           <div className="mt-4 flex flex-wrap gap-2 text-sm">
             {dynamic && (
-              <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-edge bg-surface px-3.5 py-2 font-mono text-[13px] transition hover:border-lime/50">
+              <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-edge bg-surface px-3.5 py-2 font-mono text-[13px] transition hover:border-brand/50">
                 {link.replace(/^https?:\/\//, "")} <ExternalLink className="size-3.5" />
               </a>
             )}
             {dynamic && def.hostedPage && (
-              <a href={`${env.appUrl}/p/${code.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-edge bg-surface px-3.5 py-2 font-semibold transition hover:border-lime/50">
+              <a href={`${env.appUrl}/p/${code.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-edge bg-surface px-3.5 py-2 font-semibold transition hover:border-brand/50">
                 Seite ansehen <ExternalLink className="size-3.5" />
               </a>
             )}
@@ -76,9 +76,9 @@ export default async function CodePage({ params, searchParams }: { params: Promi
 
           {stats ? (
             <div className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
-              <Kpi label="Scans gesamt" color="text-lime glow-text"><CountUp value={code.scan_count} /></Kpi>
+              <Kpi label="Scans gesamt" color="text-brand glow-text"><CountUp value={code.scan_count} /></Kpi>
               <Kpi label="Scans 30 Tage" color="text-mint"><CountUp value={stats.total} /></Kpi>
-              <Kpi label="Eindeutige Besucher" color="text-violet"><CountUp value={stats.unique} /></Kpi>
+              <Kpi label="Eindeutige Besucher" color="text-gold"><CountUp value={stats.unique} /></Kpi>
               <Kpi label="Letzter Scan" small>{code.last_scanned_at ? dtf.format(new Date(code.last_scanned_at)) : "–"}</Kpi>
             </div>
           ) : (

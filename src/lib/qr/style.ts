@@ -63,7 +63,7 @@ export const DEFAULT_STYLE: QrStyle = {
   background: "#ffffff",
   transparent: false,
   logo: null,
-  frame: { style: "none", text: "SCAN MICH", color: "#0f1113", textColor: "#d2ff1f" },
+  frame: { style: "none", text: "SCAN MICH", color: "#d42a4e", textColor: "#ffffff" },
 };
 
 /** Merge a possibly partial / older stored style with the defaults. */
@@ -81,13 +81,27 @@ export function normalizeStyle(input: unknown): QrStyle {
 }
 
 /** Curated starting points shown in the studio. */
+const F = (style: FrameOptions["style"], text: string, color: string, textColor: string): FrameOptions => ({ style, text, color, textColor });
+const NO_FRAME = F("none", "SCAN MICH", "#0f1113", "#ffffff");
+
+/** Curated complete designs. Every one is decode-tested in scripts/verify-qr.mts. */
 export const STYLE_PRESETS: { id: string; name: string; style: Partial<QrStyle> }[] = [
-  { id: "classic", name: "Klassisch", style: { dots: "square", eyeFrame: "square", eyeBall: "square", fill: { type: "solid", color: "#000000" }, background: "#ffffff", eyeColor: null, eyeBallColor: null } },
-  { id: "lime", name: "Lime Noir", style: { dots: "fluid", eyeFrame: "rounded", eyeBall: "circle", fill: { type: "solid", color: "#d2ff1f" }, background: "#0f1113", eyeColor: null, eyeBallColor: null, radius: 8 } },
-  { id: "ink", name: "Tinte", style: { dots: "rounded", eyeFrame: "rounded", eyeBall: "rounded", fill: { type: "solid", color: "#0f1113" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#7fa000" } },
-  { id: "bubble", name: "Bubbles", style: { dots: "bubble", eyeFrame: "circle", eyeBall: "circle", fill: { type: "solid", color: "#1a1d4e" }, background: "#ffffff", eyeColor: "#1a1d4e", eyeBallColor: "#ff5d6c" } },
-  { id: "bars", name: "Barcode", style: { dots: "vertical", eyeFrame: "octagon", eyeBall: "octagon", fill: { type: "solid", color: "#0f1113" }, background: "#d2ff1f", eyeColor: null, eyeBallColor: null, radius: 8 } },
-  { id: "leaf", name: "Organic", style: { dots: "classy", eyeFrame: "leaf", eyeBall: "leaf", fill: { type: "solid", color: "#0b4d3b" }, background: "#f4f1e8", eyeColor: null, eyeBallColor: "#d97706" } },
-  { id: "shield", name: "Wappen", style: { dots: "mini", eyeFrame: "shield", eyeBall: "shield", fill: { type: "solid", color: "#5a1428" }, background: "#ffffff", eyeColor: null, eyeBallColor: null } },
-  { id: "night", name: "Mitternacht", style: { dots: "dots", eyeFrame: "rounded", eyeBall: "circle", fill: { type: "solid", color: "#ffffff" }, background: "#0f1113", eyeColor: null, eyeBallColor: "#d2ff1f", radius: 8 } },
+  { id: "classic", name: "Klassisch", style: { dots: "square", eyeFrame: "square", eyeBall: "square", fill: { type: "solid", color: "#000000" }, background: "#ffffff", eyeColor: null, eyeBallColor: null, radius: 0, frame: NO_FRAME } },
+  { id: "granat", name: "Granat", style: { dots: "fluid", eyeFrame: "rounded", eyeBall: "circle", fill: { type: "solid", color: "#b3173a" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#3b0e1a", radius: 0, frame: NO_FRAME } },
+  { id: "bordeaux", name: "Bordeaux Gold", style: { dots: "classy", eyeFrame: "leaf", eyeBall: "leaf", fill: { type: "solid", color: "#3b0e1a" }, background: "#fbf4e2", eyeColor: null, eyeBallColor: "#b8860b", radius: 6, frame: NO_FRAME } },
+  { id: "marine", name: "Marine", style: { dots: "rounded", eyeFrame: "rounded", eyeBall: "rounded", fill: { type: "solid", color: "#10204d" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#c9971f", radius: 0, frame: NO_FRAME } },
+  { id: "marine-night", name: "Marine Nacht", style: { dots: "dots", eyeFrame: "rounded", eyeBall: "circle", fill: { type: "solid", color: "#ffffff" }, background: "#10204d", eyeColor: null, eyeBallColor: "#e9b949", radius: 8, frame: NO_FRAME } },
+  { id: "noir", name: "Granat Noir", style: { dots: "fluid", eyeFrame: "rounded", eyeBall: "circle", fill: { type: "solid", color: "#ff4d6d" }, background: "#0f1113", eyeColor: null, eyeBallColor: null, radius: 8, frame: NO_FRAME } },
+  { id: "gold", name: "Goldstück", style: { dots: "classy", eyeFrame: "leaf", eyeBall: "circle", fill: { type: "solid", color: "#e9b949" }, background: "#0f1113", eyeColor: null, eyeBallColor: null, radius: 8, frame: NO_FRAME } },
+  { id: "bubble", name: "Bubbles", style: { dots: "bubble", eyeFrame: "circle", eyeBall: "circle", fill: { type: "solid", color: "#1a1d4e" }, background: "#ffffff", eyeColor: "#1a1d4e", eyeBallColor: "#d42a4e", radius: 0, frame: NO_FRAME } },
+  { id: "bars", name: "Barcode", style: { dots: "vertical", eyeFrame: "octagon", eyeBall: "octagon", fill: { type: "solid", color: "#0f1113" }, background: "#e9b949", eyeColor: null, eyeBallColor: null, radius: 8, frame: NO_FRAME } },
+  { id: "leaf", name: "Organic", style: { dots: "classy", eyeFrame: "leaf", eyeBall: "leaf", fill: { type: "solid", color: "#0b4d3b" }, background: "#f4f1e8", eyeColor: null, eyeBallColor: "#d97706", radius: 0, frame: NO_FRAME } },
+  { id: "shield", name: "Wappen", style: { dots: "mini", eyeFrame: "shield", eyeBall: "shield", fill: { type: "solid", color: "#5a1428" }, background: "#ffffff", eyeColor: null, eyeBallColor: null, radius: 0, frame: NO_FRAME } },
+  { id: "pixel", name: "Pixel Marine", style: { dots: "mini", eyeFrame: "square", eyeBall: "square", fill: { type: "solid", color: "#1f3c88" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#d42a4e", radius: 0, frame: NO_FRAME } },
+  { id: "stripes", name: "Streifen", style: { dots: "horizontal", eyeFrame: "rounded", eyeBall: "rounded", fill: { type: "solid", color: "#3b0e1a" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#d42a4e", radius: 0, frame: NO_FRAME } },
+  { id: "diamond", name: "Raute", style: { dots: "diamond", eyeFrame: "octagon", eyeBall: "diamond", fill: { type: "solid", color: "#10204d" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#c9971f", radius: 0, frame: NO_FRAME } },
+  { id: "banner", name: "Banner Granat", style: { dots: "fluid", eyeFrame: "rounded", eyeBall: "rounded", fill: { type: "solid", color: "#0f1113" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#d42a4e", radius: 0, frame: F("label", "SCAN MICH", "#d42a4e", "#ffffff") } },
+  { id: "card", name: "Karte Marine", style: { dots: "rounded", eyeFrame: "rounded", eyeBall: "circle", fill: { type: "solid", color: "#10204d" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#c9971f", radius: 0, frame: F("card", "JETZT SCANNEN", "#10204d", "#e9b949") } },
+  { id: "ticket", name: "Ticket Gold", style: { dots: "classy", eyeFrame: "leaf", eyeBall: "leaf", fill: { type: "solid", color: "#3b0e1a" }, background: "#ffffff", eyeColor: null, eyeBallColor: null, radius: 0, frame: F("ticket", "SPEISEKARTE", "#e9b949", "#3b0e1a") } },
+  { id: "night", name: "Mitternacht", style: { dots: "dots", eyeFrame: "rounded", eyeBall: "circle", fill: { type: "solid", color: "#ffffff" }, background: "#0f1113", eyeColor: null, eyeBallColor: "#e9b949", radius: 8, frame: NO_FRAME } },
 ];

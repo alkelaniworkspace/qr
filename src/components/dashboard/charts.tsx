@@ -29,7 +29,7 @@ export function ScanSeries({ series }: { series: { date: string; scans: number }
           const isPeak = s.scans > 0 && s.date === peak.date;
           return (
             <g key={s.date}>
-              <rect x={i * (bw + gap)} y={H - h} width={bw} height={h} rx={Math.min(4, bw / 2)} fill={isPeak ? "#d2ff1f" : "#3a3f45"} style={isPeak ? { filter: "drop-shadow(0 0 8px rgba(210,255,31,0.7))" } : undefined}>
+              <rect x={i * (bw + gap)} y={H - h} width={bw} height={h} rx={Math.min(4, bw / 2)} fill={isPeak ? "#d42a4e" : "#3a3f45"} style={isPeak ? { filter: "drop-shadow(0 0 8px rgba(212,42,78,0.7))" } : undefined}>
                 <title>{`${dShort.format(new Date(s.date))}: ${s.scans} Scans`}</title>
               </rect>
               {(i === 0 || i === series.length - 1 || i === Math.floor(series.length / 2)) && (
@@ -41,7 +41,7 @@ export function ScanSeries({ series }: { series: { date: string; scans: number }
       </svg>
       {peak.scans > 0 && (
         <p className="mt-3 text-xs text-dim">
-          Stärkster Tag: <span className="font-bold text-lime">{dShort.format(new Date(peak.date))}</span> mit {peak.scans} Scans
+          Stärkster Tag: <span className="font-bold text-brand">{dShort.format(new Date(peak.date))}</span> mit {peak.scans} Scans
         </p>
       )}
     </div>
@@ -59,7 +59,7 @@ export function HourStrip({ hours }: { hours: { hour: number; n: number }[] }) {
             key={h.hour}
             title={`${h.hour}:00 Uhr – ${h.n} Scans`}
             className="aspect-[1/2.2] rounded-md"
-            style={{ backgroundColor: h.n === 0 ? "rgba(255,255,255,0.05)" : `rgb(210 255 31 / ${0.18 + (h.n / max) * 0.82})` }}
+            style={{ backgroundColor: h.n === 0 ? "rgba(255,255,255,0.05)" : `rgb(212 42 78 / ${0.18 + (h.n / max) * 0.82})` }}
           />
         ))}
       </div>
@@ -83,7 +83,7 @@ export function Breakdown({ items, total, empty = "Noch keine Daten" }: { items:
               <span className="tabular-nums text-dim">{it.n} · {pct} %</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-              <div className={cn("h-full rounded-full transition-all duration-700", i === 0 ? "bg-lime shadow-[0_0_10px_rgba(210,255,31,0.6)]" : "bg-white/25")} style={{ width: `${pct}%` }} />
+              <div className={cn("h-full rounded-full transition-all duration-700", i === 0 ? "bg-brand shadow-[0_0_10px_rgba(212,42,78,0.6)]" : "bg-white/25")} style={{ width: `${pct}%` }} />
             </div>
           </li>
         );

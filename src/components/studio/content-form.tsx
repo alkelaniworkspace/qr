@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, ArrowUp, FileUp, GripVertical, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, FileUp, GripVertical, Loader2, Moon, Palette, Plus, Star, Sun, Trash2 } from "lucide-react";
 import type { Field } from "@/lib/codes/types";
 import { FieldShell, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -51,14 +51,14 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
           case "checkbox":
             return (
               <label key={field.name} className="col-span-2 flex items-center gap-2.5 text-sm font-medium">
-                <input type="checkbox" className="size-4 accent-lime" checked={Boolean(value[field.name])} onChange={(e) => set(field.name, e.target.checked)} />
+                <input type="checkbox" className="size-4 accent-brand" checked={Boolean(value[field.name])} onChange={(e) => set(field.name, e.target.checked)} />
                 {field.label}
               </label>
             );
           case "color":
             return (
               <FieldShell key={field.name} label={field.label} htmlFor={id} className={span}>
-                <ColorInput id={id} value={str(value[field.name]) || "#14130f"} onChange={(v) => set(field.name, v)} />
+                <ColorInput id={id} value={str(value[field.name]) || "#d42a4e"} onChange={(v) => set(field.name, v)} />
               </FieldShell>
             );
           case "links":
@@ -74,6 +74,18 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
                 <MenuEditor value={(value[field.name] as MenuSection[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
                 {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}
               </div>
+            );
+          case "review":
+            return (
+              <FieldShell key={field.name} label={field.label + " *"} error={error} className="col-span-2">
+                <ReviewLinkField value={str(value[field.name])} hint={field.hint} onChange={(url, name) => onChange({ ...value, [field.name]: url, ...(name && !str(value.business) ? { business: name } : {}) })} />
+              </FieldShell>
+            );
+          case "theme":
+            return (
+              <FieldShell key={field.name} label={field.label} className="col-span-2">
+                <ThemePicker value={str(value[field.name]) || "light"} onChange={(v) => set(field.name, v)} />
+              </FieldShell>
             );
           case "file":
             return (
@@ -111,7 +123,7 @@ export function ColorInput({ id, value, onChange }: { id?: string; value: string
     setText(value);
   }
   return (
-    <div className="flex h-12 items-center gap-2 rounded-[14px] border border-edge bg-bg/60 pl-2 pr-3 focus-within:border-lime/60">
+    <div className="flex h-12 items-center gap-2 rounded-[14px] border border-edge bg-bg/60 pl-2 pr-3 focus-within:border-brand/60">
       <input
         id={id}
         type="color"
@@ -284,21 +296,104 @@ function FileUpload({ accept, userId, value, onChange }: { accept: string; userI
     onChange({ url: data.publicUrl, name: file.name });
   }
 
+  if (!userId) {
+    return (
+      <div>
+        <Input
+          type="url"
+          placeholder="https://… Link zu deiner PDF (z. B. Google Drive, Dropbox)"
+          value={value?.url ?? ""}
+          onChange={(e) => onChange(e.target.value ? { url: e.target.value, name: e.target.value.split("/").pop() || "Dokument.pdf" } : null)}
+        />
+        <p className="mt-1.5 text-xs text-faint">Hochladen direkt bei uns kommt mit dem Konto. Bis dahin: Link zur PDF einfügen.</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       {value ? (
-        <div className="flex items-center justify-between rounded-[14px] border border-lime/40 bg-lime/10 px-4 py-3 text-sm font-semibold">
+        <div className="flex items-center justify-between rounded-[14px] border border-brand/40 bg-brand/10 px-4 py-3 text-sm font-semibold">
           <span className="truncate">{value.name}</span>
           <button type="button" className="text-dim hover:text-rose" onClick={() => onChange(null)}>Entfernen</button>
         </div>
       ) : (
-        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-edge-strong bg-surface px-4 py-9 text-sm text-dim transition hover:border-lime/60 hover:text-lime">
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-edge-strong bg-surface px-4 py-9 text-sm text-dim transition hover:border-brand/60 hover:text-brand">
           <FileUp className="size-6" strokeWidth={1.5} />
           {busy ? "Wird hochgeladen …" : "Datei auswählen oder hierher ziehen"}
           <input type="file" accept={accept} className="sr-only" disabled={busy} onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
         </label>
       )}
       {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}
+    </div>
+  );
+}
+
+// ───────── Page style ─────────
+const THEMES = [
+  { value: "light", label: "Hell", icon: Sun, swatch: "bg-[#f7f5f0]" },
+  { value: "dark", label: "Dunkel", icon: Moon, swatch: "bg-[#0f1113]" },
+  { value: "color", label: "Farbig", icon: Palette, swatch: "bg-brand" },
+];
+
+function ThemePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="grid grid-cols-3 gap-2.5">
+      {THEMES.map(({ value: v, label, icon: Icon, swatch }) => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChange(v)}
+          aria-pressed={value === v}
+          className={cn("flex items-center gap-3 rounded-2xl border p-3 text-left text-sm font-bold transition", value === v ? "border-brand bg-brand/10 text-fg" : "border-edge bg-bg/60 text-dim hover:border-white/25")}
+        >
+          <span className={cn("grid size-9 place-items-center rounded-xl border border-white/15", swatch)}><Icon className="size-4 text-white mix-blend-difference" /></span>
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ───────── Google review link ─────────
+function ReviewLinkField({ value, hint, onChange }: { value: string; hint?: string; onChange: (url: string, name?: string) => void }) {
+  const [input, setInput] = useState(value);
+  const [state, setState] = useState<{ busy: boolean; error?: string; name?: string }>({ busy: false });
+  const resolved = value.startsWith("https://search.google.com/local/writereview");
+
+  async function resolve() {
+    if (!input.trim()) return setState({ busy: false, error: "Bitte zuerst einen Link einfügen" });
+    setState({ busy: true });
+    try {
+      const res = await fetch("/api/review-link", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url: input.trim() }) });
+      const data = (await res.json()) as { ok: boolean; url?: string; name?: string; message?: string };
+      if (data.ok && data.url) {
+        onChange(data.url, data.name);
+        setState({ busy: false, name: data.name });
+      } else setState({ busy: false, error: data.message ?? "Link konnte nicht erkannt werden" });
+    } catch {
+      setState({ busy: false, error: "Keine Verbindung. Bitte erneut versuchen." });
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input value={input} placeholder="https://maps.app.goo.gl/…" onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), resolve())} />
+        <Button type="button" onClick={resolve} disabled={state.busy} className="shrink-0">
+          {state.busy ? <Loader2 className="size-4 animate-spin" /> : <Star className="size-4" />} Link erzeugen
+        </Button>
+      </div>
+      {state.error ? <p className="mt-2 text-xs text-rose">{state.error}</p> : !resolved && hint ? <p className="mt-2 text-xs text-faint">{hint}</p> : null}
+      {resolved && (
+        <div className="mt-3 flex items-start gap-3 rounded-2xl border border-mint/30 bg-mint/10 p-3.5 text-sm">
+          <Check className="mt-0.5 size-4 shrink-0 text-mint" />
+          <div className="min-w-0">
+            <p className="font-bold text-mint">Bewertungs-Link bereit{state.name ? ` für ${state.name}` : ""}</p>
+            <a href={value} target="_blank" rel="noreferrer" className="mt-0.5 block truncate font-mono text-xs text-dim hover:text-fg">{value}</a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -15,10 +15,12 @@ import { cn } from "@/lib/cn";
 interface Props {
   style: QrStyle;
   onChange: (s: QrStyle) => void;
+  /** the user's real code content, so design previews show their own code */
+  data?: string;
 }
 
 const SAMPLE = "SCANWERK-2026";
-const SWATCHES = ["#0f1113", "#ffffff", "#d2ff1f", "#ff5d6c", "#38d5ff", "#a78bfa", "#3ee6a8", "#ffb020", "#1a1d4e", "#5a1428"];
+const SWATCHES = ["#0f1113", "#ffffff", "#d42a4e", "#ff5d6c", "#38d5ff", "#a78bfa", "#3ee6a8", "#ffb020", "#1a1d4e", "#5a1428"];
 
 const DOTS: { value: DotStyle; label: string }[] = [
   { value: "square", label: "Quadrat" },
@@ -65,7 +67,7 @@ function Section({ title, hint, defaultOpen = false, children }: { title: string
           <span className="block font-display text-base uppercase">{title}</span>
           {hint && <span className="mt-0.5 block text-xs text-faint">{hint}</span>}
         </span>
-        <ChevronDown className={cn("size-4 shrink-0 text-dim transition-transform duration-300", open && "rotate-180 text-lime")} />
+        <ChevronDown className={cn("size-4 shrink-0 text-dim transition-transform duration-300", open && "rotate-180 text-brand")} />
       </button>
       {open && <div className="border-t border-edge px-5 pb-6 pt-5 animate-rise">{children}</div>}
     </div>
@@ -81,7 +83,7 @@ function Tile({ active, onClick, children, label }: { active: boolean; onClick: 
       aria-pressed={active}
       className={cn(
         "group flex flex-col items-center gap-2 rounded-2xl border bg-bg/60 p-2.5 text-[11px] font-semibold transition duration-200 hover:-translate-y-0.5",
-        active ? "border-lime text-lime shadow-[0_0_0_1px_rgba(210,255,31,0.4),0_0_24px_-6px_rgba(210,255,31,0.6)]" : "border-edge text-dim hover:border-white/25 hover:text-fg",
+        active ? "border-brand text-brand shadow-[0_0_0_1px_rgba(212,42,78,0.4),0_0_24px_-6px_rgba(212,42,78,0.6)]" : "border-edge text-dim hover:border-white/25 hover:text-fg",
       )}
     >
       {children}
@@ -102,7 +104,7 @@ function Segmented<T extends string>({ value, options, onChange }: { value: T; o
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
-          className={cn("rounded-[10px] px-4 py-2 text-xs font-bold uppercase tracking-wide transition", value === o.value ? "bg-lime text-on-lime shadow-[0_2px_0_#7fa000]" : "text-dim hover:text-fg")}
+          className={cn("rounded-[10px] px-4 py-2 text-xs font-bold uppercase tracking-wide transition", value === o.value ? "bg-brand text-on-brand shadow-[0_2px_0_#7a1027]" : "text-dim hover:text-fg")}
         >
           {o.label}
         </button>
@@ -116,7 +118,7 @@ function Slider({ label, value, min, max, step, onChange, format }: { label: str
     <div>
       <div className="mb-2 flex justify-between">
         <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">{label}</span>
-        <span className="font-mono text-xs text-lime">{format ? format(value) : value}</span>
+        <span className="font-mono text-xs text-brand">{format ? format(value) : value}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full" />
     </div>
@@ -132,7 +134,7 @@ function Swatches({ value, onChange }: { value: string; onChange: (c: string) =>
           type="button"
           aria-label={`Farbe ${c}`}
           onClick={() => onChange(c)}
-          className={cn("size-6 rounded-lg border transition hover:scale-110", value.toLowerCase() === c ? "border-lime ring-2 ring-lime/40" : "border-white/15")}
+          className={cn("size-6 rounded-lg border transition hover:scale-110", value.toLowerCase() === c ? "border-brand ring-2 ring-brand/40" : "border-white/15")}
           style={{ backgroundColor: c }}
         />
       ))}
@@ -143,8 +145,8 @@ function Swatches({ value, onChange }: { value: string; onChange: (c: string) =>
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <label className="flex cursor-pointer items-center gap-3 text-sm font-medium">
-      <span className={cn("relative h-6 w-11 shrink-0 rounded-full border transition", checked ? "border-lime bg-lime" : "border-edge-strong bg-bg")}>
-        <span className={cn("absolute top-0.5 size-[18px] rounded-full transition-all", checked ? "left-[22px] bg-on-lime" : "left-0.5 bg-dim")} />
+      <span className={cn("relative h-6 w-11 shrink-0 rounded-full border transition", checked ? "border-brand bg-brand" : "border-edge-strong bg-bg")}>
+        <span className={cn("absolute top-0.5 size-[18px] rounded-full transition-all", checked ? "left-[22px] bg-on-brand" : "left-0.5 bg-dim")} />
       </span>
       <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {label}
@@ -152,14 +154,15 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
   );
 }
 
-export function DesignPanel({ style, onChange }: Props) {
+export function DesignPanel({ style, onChange, data }: Props) {
   const set = (patch: Partial<QrStyle>) => onChange({ ...style, ...patch });
   const [logoError, setLogoError] = useState<string | null>(null);
 
   const presetSvgs = useMemo(
-    () => STYLE_PRESETS.map((p) => renderQrSvg(SAMPLE, { ...DEFAULT_STYLE, ...p.style, margin: 2 } as QrStyle, { size: 120, id: `preset-${p.id}` })),
-    [],
+    () => STYLE_PRESETS.map((p) => renderQrSvg(data || SAMPLE, { ...DEFAULT_STYLE, ...p.style, margin: 2, logo: style.logo } as QrStyle, { size: 160, id: `preset-${p.id}` })),
+    [data, style.logo],
   );
+  const activePreset = STYLE_PRESETS.find((p) => (Object.keys(p.style) as (keyof QrStyle)[]).every((k) => JSON.stringify(p.style[k]) === JSON.stringify(style[k])))?.id;
   const dotSvgs = useMemo(() => DOTS.map((d) => patternGlyph(d.value)), []);
 
   const fill = style.fill;
@@ -178,16 +181,16 @@ export function DesignPanel({ style, onChange }: Props) {
 
   return (
     <div className="space-y-3">
-      <Section title="Vorlagen" hint="Ein Klick, fertiger Look" defaultOpen>
-        <div className="grid grid-cols-4 gap-2.5">
+      <Section title="Designs" hint={`${STYLE_PRESETS.length} fertige Looks, mit deinem Code`} defaultOpen>
+        <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-6">
           {STYLE_PRESETS.map((p, i) => (
             <Tile
               key={p.id}
               label={p.name}
-              active={false}
-              onClick={() => onChange({ ...DEFAULT_STYLE, ...p.style, logo: style.logo, frame: style.frame, margin: style.margin, ecc: style.logo ? "H" : DEFAULT_STYLE.ecc } as QrStyle)}
+              active={activePreset === p.id}
+              onClick={() => onChange({ ...DEFAULT_STYLE, ...p.style, logo: style.logo, margin: style.margin, ecc: style.logo ? "H" : DEFAULT_STYLE.ecc } as QrStyle)}
             >
-              <Svg svg={presetSvgs[i]} className="aspect-square w-full overflow-hidden rounded-xl" />
+              <Svg svg={presetSvgs[i]} className="w-full overflow-hidden rounded-xl" />
             </Tile>
           ))}
         </div>
@@ -253,11 +256,11 @@ export function DesignPanel({ style, onChange }: Props) {
           )}
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <Toggle checked={style.eyeColor !== null} onChange={(v) => set({ eyeColor: v ? "#d2ff1f" : null })} label="Eigene Farbe Rahmen" />
+              <Toggle checked={style.eyeColor !== null} onChange={(v) => set({ eyeColor: v ? "#d42a4e" : null })} label="Eigene Farbe Rahmen" />
               {style.eyeColor !== null && <div className="mt-3"><ColorInput value={style.eyeColor} onChange={(c) => set({ eyeColor: c })} /></div>}
             </div>
             <div>
-              <Toggle checked={style.eyeBallColor !== null} onChange={(v) => set({ eyeBallColor: v ? "#d2ff1f" : null })} label="Eigene Farbe Kern" />
+              <Toggle checked={style.eyeBallColor !== null} onChange={(v) => set({ eyeBallColor: v ? "#d42a4e" : null })} label="Eigene Farbe Kern" />
               {style.eyeBallColor !== null && <div className="mt-3"><ColorInput value={style.eyeBallColor} onChange={(c) => set({ eyeBallColor: c })} /></div>}
             </div>
           </div>
@@ -285,7 +288,7 @@ export function DesignPanel({ style, onChange }: Props) {
             <p className="text-xs text-faint">Mit Logo nutzt der Code automatisch die höchste Fehlerkorrektur (H).</p>
           </div>
         ) : (
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-edge-strong bg-bg/60 px-4 py-9 text-sm font-semibold text-dim transition hover:border-lime/60 hover:text-lime">
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-edge-strong bg-bg/60 px-4 py-9 text-sm font-semibold text-dim transition hover:border-brand/60 hover:text-brand">
             <ImagePlus className="size-7" strokeWidth={1.6} />
             Logo hochladen
             <span className="text-xs font-normal text-faint">PNG, JPG, WebP oder SVG</span>

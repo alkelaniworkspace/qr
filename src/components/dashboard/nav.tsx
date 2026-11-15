@@ -27,7 +27,7 @@ export function DashboardNav() {
               active ? "bg-white/[0.07] text-fg" : "text-dim hover:bg-white/5 hover:text-fg",
             )}
           >
-            <Icon className={cn("size-4", active && "text-lime")} strokeWidth={2.2} />
+            <Icon className={cn("size-4", active && "text-brand")} strokeWidth={2.2} />
             {label}
           </Link>
         );

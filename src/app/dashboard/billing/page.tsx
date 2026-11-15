@@ -23,12 +23,12 @@ export default async function BillingPage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-dim">Aktueller Tarif</p>
-            <p className="font-display text-5xl uppercase text-lime glow-text">{PLANS[quota.plan].label}</p>
+            <p className="font-display text-5xl uppercase text-brand glow-text">{PLANS[quota.plan].label}</p>
           </div>
           <p className="text-sm text-dim">{quota.used} von {quota.limit} dynamischen Codes genutzt</p>
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/[0.06]">
-          <div className={cn("h-full rounded-full", pct >= 100 ? "bg-rose" : "bg-lime shadow-[0_0_12px_rgba(210,255,31,0.6)]")} style={{ width: `${pct}%` }} />
+          <div className={cn("h-full rounded-full", pct >= 100 ? "bg-rose" : "bg-brand shadow-[0_0_12px_rgba(212,42,78,0.6)]")} style={{ width: `${pct}%` }} />
         </div>
       </div>
 
@@ -39,13 +39,13 @@ export default async function BillingPage() {
           return (
             <div key={id} className={cn("card flex flex-col p-6", current && "card-glow")}>
               <p className="font-display text-lg uppercase">{p.label}</p>
-              <p className={cn("mt-3 font-display text-5xl", current && "text-lime")}>{p.price} €<span className="font-sans text-sm font-normal text-dim"> / Monat</span></p>
+              <p className={cn("mt-3 font-display text-5xl", current && "text-brand")}>{p.price} €<span className="font-sans text-sm font-normal text-dim"> / Monat</span></p>
               <ul className="mt-6 flex-1 space-y-2.5 text-sm">
                 {p.features.map((f) => (
-                  <li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-lime" /> {f}</li>
+                  <li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-brand" /> {f}</li>
                 ))}
               </ul>
-              <button disabled className={cn("mt-6 h-11 rounded-xl text-xs font-bold uppercase tracking-wide", current ? "bg-lime/15 text-lime" : "border border-edge text-faint")}>
+              <button disabled className={cn("mt-6 h-11 rounded-xl text-xs font-bold uppercase tracking-wide", current ? "bg-brand/15 text-brand" : "border border-edge text-faint")}>
                 {current ? "Aktueller Tarif" : "Online-Zahlung folgt"}
               </button>
             </div>

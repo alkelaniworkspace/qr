@@ -23,7 +23,7 @@ interface Props {
 function ScoreRing({ score, tone }: { score: number; tone: "ok" | "warn" | "bad" }) {
   const r = 22;
   const c = 2 * Math.PI * r;
-  const color = tone === "ok" ? "#d2ff1f" : tone === "warn" ? "#ffb020" : "#ff5d6c";
+  const color = tone === "ok" ? "#3ee6a8" : tone === "warn" ? "#e9b949" : "#ff5d6c";
   return (
     <svg viewBox="0 0 56 56" className="size-14 shrink-0 -rotate-90" aria-hidden>
       <circle cx="28" cy="28" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
@@ -61,7 +61,7 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
       {phone && (
         <div className="mb-4 grid grid-cols-2 gap-1 rounded-[14px] border border-edge bg-bg/60 p-1">
           {([["code", "Code", QrCode], ["phone", "Handy-Seite", Smartphone]] as const).map(([v, label, Icon]) => (
-            <button key={v} type="button" onClick={() => setView(v)} className={cn("inline-flex items-center justify-center gap-1.5 rounded-[10px] py-2 text-xs font-bold uppercase tracking-wide transition", view === v ? "bg-lime text-on-lime" : "text-dim hover:text-fg")}>
+            <button key={v} type="button" onClick={() => setView(v)} className={cn("inline-flex items-center justify-center gap-1.5 rounded-[10px] py-2 text-xs font-bold uppercase tracking-wide transition", view === v ? "bg-brand text-on-brand" : "text-dim hover:text-fg")}>
               <Icon className="size-3.5" /> {label}
             </button>
           ))}
@@ -79,9 +79,9 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
         </div>
       ) : (
         <div className={cn("relative grid aspect-square place-items-center overflow-hidden rounded-2xl p-6", style.transparent ? "checker" : "bg-bg/70")}>
-          <div className="pointer-events-none absolute inset-10 rounded-full bg-lime/10 blur-3xl" />
+          <div className="pointer-events-none absolute inset-10 rounded-full bg-brand/10 blur-3xl" />
           <div className="relative w-full max-w-[330px] transition-all duration-300 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
-          <div className="pointer-events-none absolute inset-x-5 h-0.5 rounded-full bg-lime/80 shadow-[0_0_14px_3px_rgba(210,255,31,0.55)] animate-scan" />
+          <div className="pointer-events-none absolute inset-x-5 h-0.5 rounded-full bg-brand/80 shadow-[0_0_14px_3px_rgba(212,42,78,0.55)] animate-scan" />
         </div>
       )}
 
@@ -91,13 +91,13 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
           <div className="min-w-0 leading-tight">
             <p className="font-display text-xl">
               {score}<span className="text-sm text-faint">/100</span>
-              <span className={cn("badge ml-2 align-middle text-on-lime", tone === "ok" ? "bg-lime" : tone === "warn" ? "bg-amber" : "bg-rose")}>
+              <span className={cn("badge ml-2 align-middle text-bg", tone === "ok" ? "bg-mint" : tone === "warn" ? "bg-gold" : "bg-rose")}>
                 {tone === "ok" ? "Top" : tone === "warn" ? "Riskant" : "Kritisch"}
               </span>
             </p>
             <p className="mt-1 flex items-center gap-1.5 text-xs text-dim">
               {decodeState === "checking" && (<><Loader2 className="size-3 animate-spin" /> Scanner testet …</>)}
-              {decodeState === "ok" && (<><CheckCircle2 className="size-3 text-lime" /> Mit echtem Scanner gelesen</>)}
+              {decodeState === "ok" && (<><CheckCircle2 className="size-3 text-mint" /> Mit echtem Scanner gelesen</>)}
               {decodeState === "fail" && (<><XCircle className="size-3 text-rose" /> Scanner konnte nicht lesen</>)}
             </p>
           </div>
@@ -108,7 +108,7 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
               <li className="flex gap-2 text-xs text-rose"><XCircle className="mt-px size-3.5 shrink-0" /> Kontrast erhöhen oder Logo verkleinern.</li>
             )}
             {check.issues.map((i) => (
-              <li key={i.message} className={cn("flex gap-2 text-xs", i.severity === "error" ? "text-rose" : "text-amber")}>
+              <li key={i.message} className={cn("flex gap-2 text-xs", i.severity === "error" ? "text-rose" : "text-gold")}>
                 <AlertTriangle className="mt-px size-3.5 shrink-0" /> {i.message}
               </li>
             ))}

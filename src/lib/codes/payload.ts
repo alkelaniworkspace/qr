@@ -2,6 +2,7 @@ import { shortLink } from "@/lib/env";
 import type { CodeMode, CodeTypeId } from "./types";
 import { normalizeUrl } from "./types";
 import { buildVCard } from "./vcard";
+import { pageLink } from "./page-link";
 
 const s = (v: unknown) => String(v ?? "").trim();
 const wifiEsc = (v: string) => v.replace(/([\;,:"])/g, "\\$1");
@@ -11,7 +12,7 @@ export function mapsUrl(address: string): string {
 }
 
 /** What a static code contains. Tolerant of half-filled content (live preview). */
-export function staticPayload(type: CodeTypeId, c: Record<string, unknown>): string {
+export function staticPayload(type: CodeTypeId, c: Record<string, unknown>, name?: string): string {
   switch (type) {
     case "url":
       return normalizeUrl(s(c.url)) || "https://";
@@ -37,8 +38,12 @@ export function staticPayload(type: CodeTypeId, c: Record<string, unknown>): str
       return `tel:${s(c.phone).replace(/\s+/g, "")}`;
     case "text":
       return s(c.text) || " ";
+    case "review":
+      // Static review codes open Google's review dialog directly, no page in between.
+      return s(c.googleUrl) || pageLink(type, c);
     default:
-      return " ";
+      // Page types and app links: the page travels inside the code (/v#...).
+      return pageLink(type, c, name);
   }
 }
 

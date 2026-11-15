@@ -1,10 +1,10 @@
 import {
-  CalendarDays, Contact, FileText, Layers, Link2, Mail, MapPin, MessageSquare, Phone, Smartphone, Star,
+  CalendarDays, Contact, FileText, Globe, Layers, Link2, Mail, MapPin, MessageSquare, Phone, Smartphone, Star,
   TicketPercent, Type, UtensilsCrossed, Wifi, type LucideIcon,
 } from "lucide-react";
 
 const ICONS: Record<string, LucideIcon> = {
-  CalendarDays, Contact, FileText, Layers, Link2, Mail, MapPin, MessageSquare, Phone, Smartphone, Star,
+  CalendarDays, Contact, FileText, Globe, Layers, Link2, Mail, MapPin, MessageSquare, Phone, Smartphone, Star,
   TicketPercent, Type, UtensilsCrossed, Wifi,
 };
 

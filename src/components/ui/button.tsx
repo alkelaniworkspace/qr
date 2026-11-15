@@ -8,9 +8,9 @@ const base =
   "relative inline-flex items-center justify-center gap-2 rounded-[14px] font-display font-bold uppercase tracking-[0.03em] transition-all duration-150 select-none whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none";
 
 const variants: Record<Variant, string> = {
-  // Chunky 3D lime button: sits on its own shadow, presses down on click
+  // Chunky 3D brand button: sits on its own shadow, presses down on click
   primary:
-    "bg-lime text-on-lime shadow-[0_4px_0_#7fa000,0_0_32px_-4px_rgba(210,255,31,0.55)] hover:-translate-y-0.5 hover:shadow-[0_6px_0_#7fa000,0_0_44px_-2px_rgba(210,255,31,0.7)] active:translate-y-1 active:shadow-[0_0_0_#7fa000,0_0_20px_-4px_rgba(210,255,31,0.5)]",
+    "bg-brand text-on-brand shadow-[0_4px_0_#7a1027,0_0_32px_-4px_rgba(212,42,78,0.55)] hover:-translate-y-0.5 hover:shadow-[0_6px_0_#7a1027,0_0_44px_-2px_rgba(212,42,78,0.7)] active:translate-y-1 active:shadow-[0_0_0_#7a1027,0_0_20px_-4px_rgba(212,42,78,0.5)]",
   secondary:
     "bg-elevated text-fg border border-edge-strong shadow-[0_4px_0_rgba(0,0,0,0.45)] hover:-translate-y-0.5 hover:border-white/30 active:translate-y-1 active:shadow-none",
   ghost: "text-dim hover:text-fg hover:bg-white/5",

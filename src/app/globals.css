@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* App theme: dark ground, one lime accent (Bedienoo style) */
+  /* App theme: dark ground, pomegranate red as the brand colour, navy and gold as highlights */
   --color-bg: #0f1113;
   --color-surface: #16191c;
   --color-elevated: #1d2125;
@@ -10,13 +10,14 @@
   --color-fg: #f7f7f8;
   --color-dim: #a6abb1;
   --color-faint: #6f757c;
-  --color-lime: #d2ff1f;
-  --color-lime-deep: #a9d600;
-  --color-on-lime: #0f1113;
+  --color-brand: #d42a4e;
+  --color-brand-deep: #a31c3b;
+  --color-on-brand: #ffffff;
+  --color-burgundy: #3b0e1a;
+  --color-gold: #e9b949;
+  --color-navy: #1f3c88;
+  --color-navy-bright: #6b93ff;
   --color-mint: #3ee6a8;
-  --color-amber: #ffb020;
-  --color-violet: #a78bfa;
-  --color-sky: #38d5ff;
   --color-rose: #ff5d6c;
 
   /* Light palette, used only by customer-facing hosted pages (/p/...) */
@@ -47,15 +48,15 @@
     @apply bg-bg text-fg font-sans;
   }
   ::selection {
-    background: var(--color-lime);
-    color: var(--color-on-lime);
+    background: var(--color-brand);
+    color: var(--color-on-brand);
   }
   :focus-visible {
-    outline: 2px solid var(--color-lime);
+    outline: 2px solid var(--color-brand);
     outline-offset: 2px;
   }
   input[type="range"] {
-    accent-color: var(--color-lime);
+    accent-color: var(--color-brand);
   }
 }
 
@@ -68,8 +69,8 @@
 /* Soft corner glows on the page background */
 @utility ambient {
   background-image:
-    radial-gradient(1200px 700px at 0 -10%, rgb(210 255 31 / 0.07), transparent 60%),
-    radial-gradient(900px 600px at 100% 0, rgb(56 213 255 / 0.05), transparent 60%);
+    radial-gradient(1200px 700px at 0 -10%, rgb(212 42 78 / 0.07), transparent 60%),
+    radial-gradient(900px 600px at 100% 0, rgb(31 60 136 / 0.18), transparent 60%);
 }
 
 @utility card {
@@ -80,12 +81,12 @@
 
 /* Lime-glowing card for the one thing that matters most */
 @utility card-glow {
-  border-color: rgb(210 255 31 / 0.55);
-  box-shadow: 0 0 0 1px rgb(210 255 31 / 0.15), 0 0 40px -6px rgb(210 255 31 / 0.35);
+  border-color: rgb(212 42 78 / 0.55);
+  box-shadow: 0 0 0 1px rgb(212 42 78 / 0.15), 0 0 40px -6px rgb(212 42 78 / 0.35);
 }
 
 @utility glow-text {
-  text-shadow: 0 0 28px rgb(210 255 31 / 0.45);
+  text-shadow: 0 0 28px rgb(212 42 78 / 0.45);
 }
 
 /* Slanted italic badge */
@@ -144,8 +145,8 @@
   to { transform: translateX(-50%); }
 }
 @keyframes pulse-dot {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(210 255 31 / 0.6); }
-  70% { box-shadow: 0 0 0 8px rgb(210 255 31 / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgb(212 42 78 / 0.6); }
+  70% { box-shadow: 0 0 0 8px rgb(212 42 78 / 0); }
 }
 
 @utility animate-rise { animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
@@ -196,4 +197,13 @@
 @keyframes draw {
   from { stroke-dashoffset: 1; }
   to { stroke-dashoffset: 0; }
+}
+
+/* Printing a poster: only the exact-size copy is visible, at its real size */
+@media print {
+  html, body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .print-area, .print-area * { visibility: visible !important; }
+  .print-area { display: block !important; position: fixed; left: 0; top: 0; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }

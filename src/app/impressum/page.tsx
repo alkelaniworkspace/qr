@@ -11,7 +11,7 @@ export default function Page() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 sm:px-8">
         <h1 className="font-display text-5xl uppercase">Impressum</h1>
-        <p className="mt-6 rounded-2xl border border-amber/30 bg-amber/10 p-5 text-sm text-amber">
+        <p className="mt-6 rounded-2xl border border-gold/30 bg-gold/10 p-5 text-sm text-gold">
           Platzhalter: Dieser Text muss vor dem Livegang mit den echten Angaben ersetzt werden.
         </p>
       </main>

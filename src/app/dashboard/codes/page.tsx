@@ -9,7 +9,7 @@ import { ButtonLink } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Meine Codes" };
 
-const select = "h-11 rounded-xl border border-edge bg-surface px-4 text-sm font-semibold text-fg outline-none focus:border-lime/60";
+const select = "h-11 rounded-xl border border-edge bg-surface px-4 text-sm font-semibold text-fg outline-none focus:border-brand/60";
 
 export default async function CodesPage({ searchParams }: { searchParams: Promise<{ q?: string; type?: string; status?: string }> }) {
   const { q = "", type = "", status = "" } = await searchParams;
@@ -40,7 +40,7 @@ export default async function CodesPage({ searchParams }: { searchParams: Promis
       <form className="mt-8 flex flex-wrap items-center gap-2">
         <label className="relative min-w-60 flex-1">
           <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-faint" />
-          <input name="q" defaultValue={q} placeholder="Codes durchsuchen" className="h-11 w-full rounded-xl border border-edge bg-surface pl-11 pr-4 text-sm text-fg outline-none placeholder:text-faint focus:border-lime/60" />
+          <input name="q" defaultValue={q} placeholder="Codes durchsuchen" className="h-11 w-full rounded-xl border border-edge bg-surface pl-11 pr-4 text-sm text-fg outline-none placeholder:text-faint focus:border-brand/60" />
         </label>
         <select name="type" defaultValue={type} className={select} aria-label="Typ">
           <option value="">Alle Typen</option>
@@ -53,7 +53,7 @@ export default async function CodesPage({ searchParams }: { searchParams: Promis
           <option value="active">Aktiv</option>
           <option value="paused">Pausiert</option>
         </select>
-        <button className="h-11 rounded-xl bg-white/[0.07] px-5 text-sm font-bold uppercase tracking-wide transition hover:bg-lime hover:text-on-lime">Filtern</button>
+        <button className="h-11 rounded-xl bg-white/[0.07] px-5 text-sm font-bold uppercase tracking-wide transition hover:bg-brand hover:text-on-brand">Filtern</button>
         {filtered && <Link href="/dashboard/codes" className="px-2 text-sm text-dim hover:text-fg">Zurücksetzen</Link>}
       </form>
 

@@ -13,12 +13,33 @@ const s = (v: unknown) => String(v ?? "").trim();
 const onAccent = (accent: string) => (contrastRatio(accent, "#ffffff") >= 3 ? "#ffffff" : "#14130f");
 const ugc = { target: "_blank", rel: "noopener nofollow ugc" } as const;
 
-function Shell({ accent, children }: { accent: string; children: React.ReactNode }) {
+type Theme = "light" | "dark" | "color";
+
+function themeVars(theme: Theme, accent: string): Record<string, string> {
+  const on = onAccent(accent);
+  if (theme === "dark") return { "--pg-bg": "#0f1113", "--pg-fg": "#f7f7f8", "--pg-card": "#1a1d21", "--pg-line": "rgba(255,255,255,0.1)", "--pg-muted": "#a6abb1", "--pg-soft": "#23272c" };
+  if (theme === "color") {
+    const light = on === "#ffffff";
+    return {
+      "--pg-bg": accent,
+      "--pg-fg": on,
+      "--pg-card": light ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.55)",
+      "--pg-line": light ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.12)",
+      "--pg-muted": light ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.6)",
+      "--pg-soft": light ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.06)",
+    };
+  }
+  return { "--pg-bg": "#f7f5f0", "--pg-fg": "#14130f", "--pg-card": "#ffffff", "--pg-line": "#e2ddd1", "--pg-muted": "#6f6a5f", "--pg-soft": "#efebe2" };
+}
+
+function Shell({ accent, theme, children }: { accent: string; theme: Theme; children: React.ReactNode }) {
+  // On a colour page the accent IS the background, so buttons switch to the contrast colour.
+  const btn = theme === "color" ? { "--accent": onAccent(accent), "--on-accent": accent } : { "--accent": accent, "--on-accent": onAccent(accent) };
   return (
-    <div className="min-h-screen bg-paper text-ink [color-scheme:light]" style={{ "--accent": accent, "--on-accent": onAccent(accent) } as React.CSSProperties}>
+    <div className="min-h-screen bg-[var(--pg-bg)] text-[var(--pg-fg)]" style={{ ...themeVars(theme, accent), ...btn, colorScheme: theme === "dark" ? "dark" : "light" } as React.CSSProperties}>
       <main className="mx-auto max-w-md px-5 pb-16 pt-8 animate-rise">{children}</main>
       <footer className="pb-8 text-center">
-        <Link href="/" className="text-xs text-muted/70 hover:text-muted">Erstellt mit {site.name}</Link>
+        <Link href="/" className="text-xs text-[var(--pg-muted)]/70 hover:text-[var(--pg-muted)]">Erstellt mit {site.name}</Link>
       </footer>
     </div>
   );
@@ -38,7 +59,7 @@ function PrimaryButton({ href, children, download }: { href: string; children: R
 
 function SecondaryButton({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a href={href} {...ugc} className="flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl border border-line bg-white py-3.5 text-[15px] font-medium transition active:scale-[0.98]">
+    <a href={href} {...ugc} className="flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)] py-3.5 text-[15px] font-medium transition active:scale-[0.98]">
       {children}
     </a>
   );
@@ -47,14 +68,14 @@ function SecondaryButton({ href, children }: { href: string; children: React.Rea
 function Initials({ text }: { text: string }) {
   const letters = text.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "•";
   return (
-    <span className="grid size-24 place-items-center rounded-full bg-[var(--accent)] font-display text-4xl text-[var(--on-accent)] ring-8 ring-paper">
+    <span className="grid size-24 place-items-center rounded-full bg-[var(--accent)] font-display text-4xl text-[var(--on-accent)] ring-8 ring-[var(--pg-bg)]">
       {letters}
     </span>
   );
 }
 
 // ───────── vCard ─────────
-function VCardPage({ code, c }: { code: PublicCode; c: C }) {
+function VCardPage({ code, c, links }: { code: PublicCode; c: C; links?: PageLinks }) {
   const name = [s(c.firstName), s(c.lastName)].filter(Boolean).join(" ");
   const sub = [s(c.title), s(c.company)].filter(Boolean).join(" · ");
   const address = [s(c.street), s(c.city)].filter(Boolean).join(", ");
@@ -71,32 +92,32 @@ function VCardPage({ code, c }: { code: PublicCode; c: C }) {
       <div className="-mt-12 flex flex-col items-center text-center">
         <Initials text={name} />
         <h1 className="mt-4 font-display text-4xl leading-tight">{name}</h1>
-        {sub && <p className="mt-1 text-muted">{sub}</p>}
+        {sub && <p className="mt-1 text-[var(--pg-muted)]">{sub}</p>}
       </div>
       {quick.length > 0 && (
         <div className="mt-7 grid gap-2" style={{ gridTemplateColumns: `repeat(${quick.length}, minmax(0, 1fr))` }}>
           {quick.map(({ href, label, icon: Icon }) => (
-            <a key={label} href={href} {...ugc} className="flex flex-col items-center gap-1.5 rounded-2xl border border-line bg-white py-3 text-xs transition active:scale-95">
+            <a key={label} href={href} {...ugc} className="flex flex-col items-center gap-1.5 rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)] py-3 text-xs transition active:scale-95">
               <Icon className="size-5" strokeWidth={1.6} /> {label}
             </a>
           ))}
         </div>
       )}
       <div className="mt-4">
-        <PrimaryButton href={`/p/${code.slug}/vcard`} download><UserPlus className="size-5" /> Kontakt speichern</PrimaryButton>
+        <PrimaryButton href={links?.vcard ?? `/p/${code.slug}/vcard`} download><UserPlus className="size-5" /> Kontakt speichern</PrimaryButton>
       </div>
-      <dl className="mt-6 divide-y divide-line rounded-2xl border border-line bg-white">
+      <dl className="mt-6 divide-y divide-[var(--pg-line)] rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)]">
         {[
           ["Telefon", s(c.phone)], ["Mobil", s(c.mobile)], ["E-Mail", s(c.email)],
           ["Website", s(c.website).replace(/^https?:\/\//, "")], ["Adresse", address],
         ].filter(([, v]) => v).map(([k, v]) => (
           <div key={k} className="flex justify-between gap-4 px-4 py-3.5 text-sm">
-            <dt className="text-muted">{k}</dt>
+            <dt className="text-[var(--pg-muted)]">{k}</dt>
             <dd className="truncate text-right font-medium">{v}</dd>
           </div>
         ))}
       </dl>
-      {s(c.note) && <p className="mt-6 whitespace-pre-line text-center text-sm leading-relaxed text-muted">{s(c.note)}</p>}
+      {s(c.note) && <p className="mt-6 whitespace-pre-line text-center text-sm leading-relaxed text-[var(--pg-muted)]">{s(c.note)}</p>}
     </>
   );
 }
@@ -108,14 +129,14 @@ function LinksPage({ c }: { c: C }) {
     <div className="flex flex-col items-center pt-6 text-center">
       <Initials text={s(c.title)} />
       <h1 className="mt-5 font-display text-4xl">{s(c.title)}</h1>
-      {s(c.bio) && <p className="mt-2 max-w-xs whitespace-pre-line text-muted">{s(c.bio)}</p>}
+      {s(c.bio) && <p className="mt-2 max-w-xs whitespace-pre-line text-[var(--pg-muted)]">{s(c.bio)}</p>}
       <ul className="mt-8 w-full space-y-3">
         {links.map((l, i) => (
           <li key={i}>
             <a
               href={l.url}
               {...ugc}
-              className="group flex h-14 w-full items-center justify-between rounded-2xl border border-line bg-white px-5 text-[15px] font-medium transition hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--on-accent)] active:scale-[0.98]"
+              className="group flex h-14 w-full items-center justify-between rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)] px-5 text-[15px] font-medium transition hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--on-accent)] active:scale-[0.98]"
             >
               <span className="w-4" />
               {l.label}
@@ -139,12 +160,12 @@ function MenuPage({ c }: { c: C }) {
       <header className="text-center">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Speisekarte</p>
         <h1 className="mt-2 font-display text-5xl leading-none">{s(c.name)}</h1>
-        {s(c.subtitle) && <p className="mt-2 text-muted">{s(c.subtitle)}</p>}
+        {s(c.subtitle) && <p className="mt-2 text-[var(--pg-muted)]">{s(c.subtitle)}</p>}
       </header>
       {sections.length > 1 && (
-        <nav className="sticky top-0 z-10 -mx-5 mt-6 flex gap-2 overflow-x-auto border-b border-line bg-paper/95 px-5 py-3 backdrop-blur">
+        <nav className="sticky top-0 z-10 -mx-5 mt-6 flex gap-2 overflow-x-auto border-b border-[var(--pg-line)] bg-[var(--pg-bg)]/95 px-5 py-3 backdrop-blur">
           {sections.map((sec, i) => (
-            <a key={i} href={`#${slugify(sec.title, i)}`} className="shrink-0 rounded-full border border-line bg-white px-3.5 py-1.5 text-sm">
+            <a key={i} href={`#${slugify(sec.title, i)}`} className="shrink-0 rounded-full border border-[var(--pg-line)] bg-[var(--pg-card)] px-3.5 py-1.5 text-sm">
               {sec.title}
             </a>
           ))}
@@ -165,11 +186,11 @@ function MenuPage({ c }: { c: C }) {
                     <span className="mb-1 flex-1 border-b border-dotted border-muted/40" />
                     {item.price && <span className="font-medium tabular-nums">{/\d$/.test(item.price) ? `${item.price} €` : item.price}</span>}
                   </div>
-                  {item.description && <p className="mt-0.5 text-sm leading-relaxed text-muted">{item.description}</p>}
+                  {item.description && <p className="mt-0.5 text-sm leading-relaxed text-[var(--pg-muted)]">{item.description}</p>}
                   {item.tags && (
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {item.tags.split(",").map((t) => t.trim()).filter(Boolean).map((t) => (
-                        <span key={t} className="rounded-full bg-sand px-2 py-0.5 text-[11px] text-ink-soft">{t}</span>
+                        <span key={t} className="rounded-full bg-[var(--pg-soft)] px-2 py-0.5 text-[11px] text-[var(--pg-fg)]/80">{t}</span>
                       ))}
                     </div>
                   )}
@@ -179,7 +200,7 @@ function MenuPage({ c }: { c: C }) {
           </section>
         ))}
       </div>
-      {s(c.footer) && <p className="mt-12 whitespace-pre-line border-t border-line pt-6 text-center text-xs leading-relaxed text-muted">{s(c.footer)}</p>}
+      {s(c.footer) && <p className="mt-12 whitespace-pre-line border-t border-[var(--pg-line)] pt-6 text-center text-xs leading-relaxed text-[var(--pg-muted)]">{s(c.footer)}</p>}
     </>
   );
 }
@@ -192,7 +213,7 @@ function ReviewPage({ c }: { c: C }) {
         {Array.from({ length: 5 }, (_, i) => <Star key={i} className="size-8 fill-current" strokeWidth={0} />)}
       </div>
       <h1 className="mt-6 font-display text-5xl leading-tight">{s(c.business)}</h1>
-      <p className="mx-auto mt-3 max-w-xs whitespace-pre-line text-muted">
+      <p className="mx-auto mt-3 max-w-xs whitespace-pre-line text-[var(--pg-muted)]">
         {s(c.message) || "Danke für deinen Besuch! Wir freuen uns sehr über deine ehrliche Bewertung."}
       </p>
       <div className="mt-10 space-y-3">
@@ -209,20 +230,20 @@ function CouponPage({ c }: { c: C }) {
   const expired = valid && new Date(`${valid}T23:59:59`) < new Date();
   return (
     <div className="pt-6">
-      <p className="text-center text-sm text-muted">{s(c.business)}</p>
-      <div className="relative mt-4 overflow-hidden rounded-[28px] bg-white shadow-lift">
+      <p className="text-center text-sm text-[var(--pg-muted)]">{s(c.business)}</p>
+      <div className="relative mt-4 overflow-hidden rounded-[28px] bg-[var(--pg-card)] shadow-lift">
         <div className="bg-[var(--accent)] px-6 py-10 text-center text-[var(--on-accent)]">
           <p className="font-display text-7xl leading-none">{s(c.discount)}</p>
           {s(c.headline) && <p className="mt-3 opacity-80">{s(c.headline)}</p>}
         </div>
-        <div className="relative border-t-2 border-dashed border-line">
-          <span className="absolute -left-4 -top-4 size-8 rounded-full bg-paper" />
-          <span className="absolute -right-4 -top-4 size-8 rounded-full bg-paper" />
+        <div className="relative border-t-2 border-dashed border-[var(--pg-line)]">
+          <span className="absolute -left-4 -top-4 size-8 rounded-full bg-[var(--pg-bg)]" />
+          <span className="absolute -right-4 -top-4 size-8 rounded-full bg-[var(--pg-bg)]" />
         </div>
         <div className="space-y-4 p-6 text-center">
           {s(c.code) && (
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-muted">Dein Code</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--pg-muted)]">Dein Code</p>
               <div className="mt-2 flex items-center justify-center gap-2">
                 <span className="rounded-xl border border-dashed border-ink/30 px-5 py-2.5 font-mono text-xl tracking-widest">{s(c.code)}</span>
                 <CopyButton value={s(c.code)} />
@@ -230,7 +251,7 @@ function CouponPage({ c }: { c: C }) {
             </div>
           )}
           {valid && (
-            <p className={expired ? "text-sm text-danger" : "text-sm text-muted"}>
+            <p className={expired ? "text-sm text-red-600" : "text-sm text-[var(--pg-muted)]"}>
               {expired ? "Abgelaufen am " : "Gültig bis "}
               {new Date(valid).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })}
             </p>
@@ -238,7 +259,7 @@ function CouponPage({ c }: { c: C }) {
         </div>
       </div>
       {s(c.url) && !expired && <div className="mt-5"><PrimaryButton href={s(c.url)}>Jetzt einlösen</PrimaryButton></div>}
-      {s(c.terms) && <p className="mt-6 whitespace-pre-line text-center text-xs leading-relaxed text-muted">{s(c.terms)}</p>}
+      {s(c.terms) && <p className="mt-6 whitespace-pre-line text-center text-xs leading-relaxed text-[var(--pg-muted)]">{s(c.terms)}</p>}
     </div>
   );
 }
@@ -252,11 +273,11 @@ function PdfPage({ c }: { c: C }) {
         <FileText className="size-9" strokeWidth={1.4} />
       </span>
       <h1 className="mt-6 font-display text-4xl leading-tight">{s(c.title)}</h1>
-      {s(c.description) && <p className="mt-3 whitespace-pre-line text-muted">{s(c.description)}</p>}
+      {s(c.description) && <p className="mt-3 whitespace-pre-line text-[var(--pg-muted)]">{s(c.description)}</p>}
       {file && (
         <div className="mt-8 space-y-3">
           <PrimaryButton href={file.url}><ExternalLink className="size-5" /> PDF öffnen</PrimaryButton>
-          <a href={file.url} download={file.name} className="flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl border border-line bg-white py-3.5 text-[15px] font-medium">
+          <a href={file.url} download={file.name} className="flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)] py-3.5 text-[15px] font-medium">
             <Download className="size-5" /> Herunterladen
           </a>
         </div>
@@ -266,55 +287,119 @@ function PdfPage({ c }: { c: C }) {
 }
 
 // ───────── Event ─────────
-function EventPage({ code, c }: { code: PublicCode; c: C }) {
+function EventPage({ code, c, links }: { code: PublicCode; c: C; links?: PageLinks }) {
   const start = s(c.start) ? new Date(s(c.start)) : null;
   const end = s(c.end) ? new Date(s(c.end)) : null;
   const time = (d: Date) => d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
   return (
     <div className="pt-6">
       {start && (
-        <div className="mx-auto w-28 overflow-hidden rounded-3xl bg-white text-center shadow-lift">
+        <div className="mx-auto w-28 overflow-hidden rounded-3xl bg-[var(--pg-card)] text-center shadow-lift">
           <p className="bg-[var(--accent)] py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-[var(--on-accent)]">
             {start.toLocaleDateString("de-DE", { month: "short" })}
           </p>
           <p className="py-2 font-display text-6xl leading-none">{start.getDate()}</p>
-          <p className="pb-2 text-xs text-muted">{start.toLocaleDateString("de-DE", { weekday: "long" })}</p>
+          <p className="pb-2 text-xs text-[var(--pg-muted)]">{start.toLocaleDateString("de-DE", { weekday: "long" })}</p>
         </div>
       )}
       <h1 className="mt-6 text-center font-display text-5xl leading-tight">{s(c.title)}</h1>
       {start && (
-        <p className="mt-2 text-center text-muted">
+        <p className="mt-2 text-center text-[var(--pg-muted)]">
           {start.toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })} · {time(start)}{end ? ` – ${time(end)}` : ""} Uhr
         </p>
       )}
       {s(c.location) && (
-        <a href={mapsUrl(s(c.location))} {...ugc} className="mt-6 flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-sm">
-          <MapPin className="size-5 shrink-0 text-[var(--accent)]" /> <span className="flex-1">{s(c.location)}</span> <Navigation className="size-4 text-muted" />
+        <a href={mapsUrl(s(c.location))} {...ugc} className="mt-6 flex items-center gap-3 rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)] p-4 text-sm">
+          <MapPin className="size-5 shrink-0 text-[var(--accent)]" /> <span className="flex-1">{s(c.location)}</span> <Navigation className="size-4 text-[var(--pg-muted)]" />
         </a>
       )}
-      {s(c.description) && <p className="mt-6 whitespace-pre-line leading-relaxed text-ink-soft">{s(c.description)}</p>}
+      {s(c.description) && <p className="mt-6 whitespace-pre-line leading-relaxed text-[var(--pg-fg)]/80">{s(c.description)}</p>}
       <div className="mt-8 space-y-3">
-        <PrimaryButton href={`/p/${code.slug}/ics`} download><CalendarPlus className="size-5" /> In Kalender speichern</PrimaryButton>
+        <PrimaryButton href={links?.ics ?? `/p/${code.slug}/ics`} download><CalendarPlus className="size-5" /> In Kalender speichern</PrimaryButton>
         {s(c.url) && <SecondaryButton href={s(c.url)}><Smartphone className="size-5" /> Tickets & Infos</SecondaryButton>}
       </div>
     </div>
   );
 }
 
-export function HostedPage({ code }: { code: PublicCode }) {
+
+// ───────── Mini-Website ─────────
+function SitePage({ c }: { c: C }) {
+  const lines = (v: unknown) => s(v).split("\n").map((l) => l.trim()).filter(Boolean);
+  const links = (c.links as { label: string; url: string }[]) ?? [];
+  const services = lines(c.services);
+  const hours = lines(c.hours);
+  return (
+    <div>
+      <header className="-mx-5 -mt-8 bg-[var(--accent)] px-6 pb-12 pt-14 text-center text-[var(--on-accent)]">
+        <h1 className="font-display text-5xl leading-[0.95]">{s(c.name)}</h1>
+        {s(c.tagline) && <p className="mt-3 text-lg opacity-85">{s(c.tagline)}</p>}
+        <div className="mt-7 flex justify-center gap-2">
+          {s(c.phone) && <a href={`tel:${s(c.phone).replace(/\s/g, "")}`} className="inline-flex items-center gap-2 rounded-full bg-[var(--on-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--accent)]"><Phone className="size-4" /> Anrufen</a>}
+          {s(c.address) && <a href={mapsUrl(s(c.address))} {...ugc} className="inline-flex items-center gap-2 rounded-full border border-current px-5 py-2.5 text-sm font-semibold"><Navigation className="size-4" /> Route</a>}
+        </div>
+      </header>
+      {s(c.about) && (
+        <section className="mt-8">
+          <h2 className="font-display text-2xl">Über uns</h2>
+          <p className="mt-2 whitespace-pre-line leading-relaxed text-[var(--pg-fg)]/80">{s(c.about)}</p>
+        </section>
+      )}
+      {services.length > 0 && (
+        <section className="mt-8">
+          <h2 className="font-display text-2xl">Leistungen</h2>
+          <ul className="mt-3 grid gap-2">
+            {services.map((sv) => (
+              <li key={sv} className="flex items-center gap-3 rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)] px-4 py-3 text-[15px] font-medium">
+                <span className="size-2 rounded-full bg-[var(--accent)]" /> {sv}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {hours.length > 0 && (
+        <section className="mt-8 rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)] p-5">
+          <h2 className="font-display text-xl">Öffnungszeiten</h2>
+          <ul className="mt-2 space-y-1 text-sm text-[var(--pg-fg)]/80">{hours.map((h) => <li key={h}>{h}</li>)}</ul>
+        </section>
+      )}
+      {(s(c.email) || s(c.address)) && (
+        <section className="mt-8 space-y-2 text-sm">
+          {s(c.address) && <a href={mapsUrl(s(c.address))} {...ugc} className="flex items-center gap-3 rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)] p-4"><MapPin className="size-5 shrink-0 text-[var(--accent)]" /> {s(c.address)}</a>}
+          {s(c.email) && <a href={`mailto:${s(c.email)}`} className="flex items-center gap-3 rounded-2xl border border-[var(--pg-line)] bg-[var(--pg-card)] p-4"><Mail className="size-5 shrink-0 text-[var(--accent)]" /> {s(c.email)}</a>}
+        </section>
+      )}
+      {links.length > 0 && (
+        <div className="mt-8 space-y-2.5">
+          {links.map((l, i) => <SecondaryButton key={i} href={l.url}>{l.label} <ExternalLink className="size-4 opacity-50" /></SecondaryButton>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Download targets that differ when the page runs without a server (page-in-code). */
+export interface PageLinks {
+  vcard?: string;
+  ics?: string;
+}
+
+export function HostedPage({ code, links }: { code: PublicCode; links?: PageLinks }) {
   const c = code.content;
-  const accent = /^#[0-9a-fA-F]{6}$/.test(s(c.accent)) ? s(c.accent) : "#14130f";
+  const accent = /^#[0-9a-fA-F]{6}$/.test(s(c.accent)) ? s(c.accent) : "#d42a4e";
   let body: React.ReactNode = null;
   switch (code.type) {
-    case "vcard": body = <VCardPage code={code} c={c} />; break;
+    case "vcard": body = <VCardPage code={code} c={c} links={links} />; break;
     case "links": body = <LinksPage c={c} />; break;
     case "menu": body = <MenuPage c={c} />; break;
     case "review": body = <ReviewPage c={c} />; break;
     case "coupon": body = <CouponPage c={c} />; break;
     case "pdf": body = <PdfPage c={c} />; break;
-    case "event": body = <EventPage code={code} c={c} />; break;
+    case "event": body = <EventPage code={code} c={c} links={links} />; break;
+    case "site": body = <SitePage c={c} />; break;
   }
-  return <Shell accent={accent}>{body}</Shell>;
+  const theme: Theme = c.theme === "dark" || c.theme === "color" ? c.theme : "light";
+  return <Shell accent={accent} theme={theme}>{body}</Shell>;
 }
 
 export function hostedTitle(code: PublicCode): string {

@@ -13,7 +13,7 @@ export function AuthForm({ mode, next, initialError }: { mode: "login" | "signup
   if (state?.info) {
     return (
       <div className="card card-glow p-7 text-center">
-        <MailCheck className="mx-auto size-9 text-lime" strokeWidth={1.6} />
+        <MailCheck className="mx-auto size-9 text-brand" strokeWidth={1.6} />
         <p className="mt-3 font-medium">{state.info}</p>
         <p className="mt-1 text-sm text-dim">{state.email}</p>
       </div>
@@ -41,9 +41,9 @@ export function AuthForm({ mode, next, initialError }: { mode: "login" | "signup
       </Button>
       <p className="text-center text-sm text-dim">
         {mode === "login" ? (
-          <>Noch kein Konto? <Link href="/signup" className="font-semibold text-lime underline-offset-4 hover:underline">Registrieren</Link></>
+          <>Noch kein Konto? <Link href="/signup" className="font-semibold text-brand underline-offset-4 hover:underline">Registrieren</Link></>
         ) : (
-          <>Schon dabei? <Link href="/login" className="font-semibold text-lime underline-offset-4 hover:underline">Anmelden</Link></>
+          <>Schon dabei? <Link href="/login" className="font-semibold text-brand underline-offset-4 hover:underline">Anmelden</Link></>
         )}
       </p>
     </form>

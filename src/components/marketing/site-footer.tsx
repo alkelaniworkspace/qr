@@ -13,16 +13,17 @@ export function SiteFooter() {
         <div>
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-faint">Produkt</p>
           <ul className="space-y-2 text-sm text-dim">
-            <li><Link href="/create" className="hover:text-lime">Studio</Link></li>
-            <li><Link href="/#funktionen" className="hover:text-lime">Funktionen</Link></li>
-            <li><Link href="/#preise" className="hover:text-lime">Preise</Link></li>
+            <li><Link href="/studio" className="hover:text-brand">Studio</Link></li>
+            <li><Link href="/codes" className="hover:text-brand">Meine Codes</Link></li>
+            <li><Link href="/#funktionen" className="hover:text-brand">Funktionen</Link></li>
+            <li><Link href="/#preise" className="hover:text-brand">Preise</Link></li>
           </ul>
         </div>
         <div>
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-faint">Rechtliches</p>
           <ul className="space-y-2 text-sm text-dim">
-            <li><Link href="/impressum" className="hover:text-lime">Impressum</Link></li>
-            <li><Link href="/datenschutz" className="hover:text-lime">Datenschutz</Link></li>
+            <li><Link href="/impressum" className="hover:text-brand">Impressum</Link></li>
+            <li><Link href="/datenschutz" className="hover:text-brand">Datenschutz</Link></li>
           </ul>
         </div>
       </div>

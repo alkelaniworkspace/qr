@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 export const inputClass =
-  "w-full h-12 rounded-[14px] border border-edge bg-bg/60 px-4 text-[15px] text-fg placeholder:text-faint transition focus:border-lime/60 focus:outline-none focus:ring-4 focus:ring-lime/10 aria-[invalid=true]:border-rose";
+  "w-full h-12 rounded-[14px] border border-edge bg-bg/60 px-4 text-[15px] text-fg placeholder:text-faint transition focus:border-brand/60 focus:outline-none focus:ring-4 focus:ring-brand/10 aria-[invalid=true]:border-rose";
 
 export function Label({ children, htmlFor, className }: { children: React.ReactNode; htmlFor?: string; className?: string }) {
   return (
