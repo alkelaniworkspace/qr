@@ -21,23 +21,23 @@ export function CodeActions({ id, name, svg, status, dynamic, compact }: Props) 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, start] = useTransition();
 
-  const item = "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-fg/90 hover:bg-white/[0.07]";
+  const item = "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-fg/90 hover:bg-hi/[0.07]";
 
   return (
     <div className="relative flex items-center gap-1.5">
       {!compact && (
         <>
-          <Link href={`/dashboard/codes/${id}/edit`} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-edge-strong bg-elevated px-4 text-xs font-bold uppercase tracking-wide transition hover:border-white/30">
+          <Link href={`/dashboard/codes/${id}/edit`} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-edge-strong bg-elevated px-4 text-xs font-bold uppercase tracking-wide transition hover:border-hi/30">
             <Pencil className="size-3.5" /> Bearbeiten
           </Link>
-          <button onClick={() => downloadPng(svg, name, 2048)} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand px-4 text-xs font-bold uppercase tracking-wide text-on-brand shadow-[0_3px_0_#7a1027] transition hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none">
+          <button onClick={() => downloadPng(svg, name, 2048)} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand px-4 text-xs font-bold uppercase tracking-wide text-on-brand shadow-[0_3px_0_var(--color-brand-shadow)] transition hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none">
             <Download className="size-3.5" /> PNG
           </button>
         </>
       )}
       <button
         onClick={() => { setOpen(!open); setConfirmDelete(false); }}
-        className="grid size-9 place-items-center rounded-xl text-dim transition hover:bg-white/[0.07] hover:text-fg"
+        className="grid size-9 place-items-center rounded-xl text-dim transition hover:bg-hi/[0.07] hover:text-fg"
         aria-label="Weitere Aktionen"
         aria-expanded={open}
       >

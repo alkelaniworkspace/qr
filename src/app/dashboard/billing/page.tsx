@@ -27,8 +27,8 @@ export default async function BillingPage() {
           </div>
           <p className="text-sm text-dim">{quota.used} von {quota.limit} dynamischen Codes genutzt</p>
         </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/[0.06]">
-          <div className={cn("h-full rounded-full", pct >= 100 ? "bg-rose" : "bg-brand shadow-[0_0_12px_rgba(212,42,78,0.6)]")} style={{ width: `${pct}%` }} />
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-hi/[0.06]">
+          <div className={cn("h-full rounded-full", pct >= 100 ? "bg-rose" : "bg-brand shadow-[0_0_12px_rgb(var(--glow)/0.6)]")} style={{ width: `${pct}%` }} />
         </div>
       </div>
 

@@ -63,7 +63,7 @@ export const DEFAULT_STYLE: QrStyle = {
   background: "#ffffff",
   transparent: false,
   logo: null,
-  frame: { style: "none", text: "SCAN MICH", color: "#d42a4e", textColor: "#ffffff" },
+  frame: { style: "none", text: "SCAN MICH", color: "#6e50ff", textColor: "#ffffff" },
 };
 
 /** Merge a possibly partial / older stored style with the defaults. */
@@ -87,6 +87,8 @@ const NO_FRAME = F("none", "SCAN MICH", "#0f1113", "#ffffff");
 /** Curated complete designs. Every one is decode-tested in scripts/verify-qr.mts. */
 export const STYLE_PRESETS: { id: string; name: string; style: Partial<QrStyle> }[] = [
   { id: "classic", name: "Klassisch", style: { dots: "square", eyeFrame: "square", eyeBall: "square", fill: { type: "solid", color: "#000000" }, background: "#ffffff", eyeColor: null, eyeBallColor: null, radius: 0, frame: NO_FRAME } },
+  { id: "ultraviolet", name: "Ultraviolet", style: { dots: "fluid", eyeFrame: "rounded", eyeBall: "circle", fill: { type: "solid", color: "#4f33e6" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#0891b2", radius: 0, frame: NO_FRAME } },
+  { id: "neon", name: "Neon Nacht", style: { dots: "dots", eyeFrame: "rounded", eyeBall: "circle", fill: { type: "solid", color: "#b3a4ff" }, background: "#0b0b12", eyeColor: null, eyeBallColor: "#22d3ee", radius: 8, frame: NO_FRAME } },
   { id: "granat", name: "Granat", style: { dots: "fluid", eyeFrame: "rounded", eyeBall: "circle", fill: { type: "solid", color: "#b3173a" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#3b0e1a", radius: 0, frame: NO_FRAME } },
   { id: "bordeaux", name: "Bordeaux Gold", style: { dots: "classy", eyeFrame: "leaf", eyeBall: "leaf", fill: { type: "solid", color: "#3b0e1a" }, background: "#fbf4e2", eyeColor: null, eyeBallColor: "#b8860b", radius: 6, frame: NO_FRAME } },
   { id: "marine", name: "Marine", style: { dots: "rounded", eyeFrame: "rounded", eyeBall: "rounded", fill: { type: "solid", color: "#10204d" }, background: "#ffffff", eyeColor: null, eyeBallColor: "#c9971f", radius: 0, frame: NO_FRAME } },

@@ -36,7 +36,7 @@ create trigger on_auth_user_created
 
 -- Limit of dynamic codes per plan (null = unlimited). Keep in sync with src/lib/plans.ts
 create function public.plan_dynamic_limit(p_plan text)
-returns integer language sql immutable as $$
+returns integer language sql immutable set search_path = '' as $$
   select case p_plan
     when 'free' then 1
     when 'starter' then 10
@@ -219,8 +219,10 @@ returns jsonb language sql stable security invoker set search_path = '' as $$
   );
 $$;
 
+revoke execute on function public.code_stats(uuid, integer), public.dashboard_summary() from public, anon;
 grant execute on function public.code_stats(uuid, integer) to authenticated;
 grant execute on function public.dashboard_summary() to authenticated;
+revoke execute on function public.handle_new_user(), public.enforce_dynamic_limit() from public, anon, authenticated;
 
 -- ──────────────────────────────── storage ───────────────────────────────
 -- Public bucket for PDFs and images shown on hosted pages. Files live under <user_id>/...

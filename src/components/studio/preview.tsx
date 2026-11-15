@@ -81,7 +81,7 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
         <div className={cn("relative grid aspect-square place-items-center overflow-hidden rounded-2xl p-6", style.transparent ? "checker" : "bg-bg/70")}>
           <div className="pointer-events-none absolute inset-10 rounded-full bg-brand/10 blur-3xl" />
           <div className="relative w-full max-w-[330px] transition-all duration-300 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
-          <div className="pointer-events-none absolute inset-x-5 h-0.5 rounded-full bg-brand/80 shadow-[0_0_14px_3px_rgba(212,42,78,0.55)] animate-scan" />
+          <div className="pointer-events-none absolute inset-x-5 h-0.5 rounded-full bg-brand/80 shadow-[0_0_14px_3px_rgb(var(--glow)/0.55)] animate-scan" />
         </div>
       )}
 
@@ -91,7 +91,7 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
           <div className="min-w-0 leading-tight">
             <p className="font-display text-xl">
               {score}<span className="text-sm text-faint">/100</span>
-              <span className={cn("badge ml-2 align-middle text-bg", tone === "ok" ? "bg-mint" : tone === "warn" ? "bg-gold" : "bg-rose")}>
+              <span className={cn("badge ml-2 align-middle text-night", tone === "ok" ? "bg-mint" : tone === "warn" ? "bg-gold" : "bg-rose")}>
                 {tone === "ok" ? "Top" : tone === "warn" ? "Riskant" : "Kritisch"}
               </span>
             </p>
@@ -132,7 +132,7 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
         <button
           type="button"
           onClick={() => downloadSvg(svg, name)}
-          className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-[14px] border border-edge text-xs font-bold uppercase tracking-wide text-dim transition hover:border-white/25 hover:text-fg"
+          className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-[14px] border border-edge text-xs font-bold uppercase tracking-wide text-dim transition hover:border-hi/25 hover:text-fg"
         >
           SVG für Druck · Vektor
         </button>

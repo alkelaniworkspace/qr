@@ -46,7 +46,7 @@ export default async function CodePage({ params, searchParams }: { params: Promi
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="card card-glow relative overflow-hidden p-5">
-          <div className="relative overflow-hidden rounded-2xl bg-white/[0.04] p-4 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+          <div className="relative overflow-hidden rounded-2xl bg-hi/[0.04] p-4 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
           <div className="mt-4 flex justify-center">
             <CodeActions id={code.id} name={code.name} svg={svg} status={code.status} dynamic={dynamic} />
           </div>
@@ -54,7 +54,7 @@ export default async function CodePage({ params, searchParams }: { params: Promi
 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={cn("badge", code.status === "paused" ? "bg-gold text-bg" : dynamic ? "bg-brand text-on-brand" : "bg-navy text-white")}>
+            <span className={cn("badge", code.status === "paused" ? "bg-gold text-night" : dynamic ? "bg-brand text-on-brand" : "bg-cyan text-night")}>
               {code.status === "paused" ? "Pausiert" : dynamic ? "Dynamisch" : "Statisch"}
             </span>
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-dim"><TypeIcon name={def.icon} className="size-3.5" /> {def.label}</span>

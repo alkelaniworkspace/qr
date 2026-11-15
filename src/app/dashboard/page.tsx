@@ -44,8 +44,8 @@ export default async function TodayPage() {
           </h1>
           <p className="mt-2 text-sm text-dim">{date} · {s.codes} {s.codes === 1 ? "Code" : "Codes"} im Einsatz</p>
         </div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-navy-bright/30 bg-navy-bright/10 px-3.5 py-1.5 text-xs font-semibold text-navy-bright">
-          <span className="size-2 rounded-full bg-navy-bright" /> {s.dynamic} dynamische Codes live
+        <span className="inline-flex items-center gap-2 rounded-full border border-cyan/30 bg-cyan/10 px-3.5 py-1.5 text-xs font-semibold text-cyan">
+          <span className="size-2 rounded-full bg-cyan" /> {s.dynamic} dynamische Codes live
         </span>
       </div>
 
@@ -70,13 +70,13 @@ export default async function TodayPage() {
         <div className="card p-5">
           <p className="text-sm font-semibold text-dim">Dynamische Codes</p>
           <p className="mt-2 font-display text-5xl text-gold">{quota.used}<span className="text-2xl text-faint">/{quota.limit}</span></p>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-hi/[0.06]">
             <div className="h-full rounded-full bg-gold transition-all duration-700" style={{ width: `${pct}%` }} />
           </div>
         </div>
         <div className="card p-5">
           <p className="text-sm font-semibold text-dim">Scans gesamt</p>
-          <p className="mt-2 font-display text-5xl text-navy-bright"><CountUp value={s.scans_total} /></p>
+          <p className="mt-2 font-display text-5xl text-cyan"><CountUp value={s.scans_total} /></p>
           <p className="mt-3 text-xs text-faint">Seit dem ersten Code</p>
         </div>
       </div>

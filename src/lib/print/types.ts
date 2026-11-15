@@ -54,7 +54,7 @@ export const POSTER_PALETTES: { name: string; bg: string; accent: string; text: 
   { name: "Bordeaux", bg: "#3b0e1a", accent: "#e9b949", text: "#fff7ec" },
   { name: "Marine", bg: "#10204d", accent: "#e9b949", text: "#ffffff" },
   { name: "Gold", bg: "#fbf4e2", accent: "#1f3c88", text: "#1a1a1a" },
-  { name: "Nacht", bg: "#0f1113", accent: "#d42a4e", text: "#f7f7f8" },
+  { name: "Nacht", bg: "#0f1113", accent: "#6e50ff", text: "#f7f7f8" },
   { name: "Papier", bg: "#f4f1e8", accent: "#0f1113", text: "#0f1113" },
 ];
 

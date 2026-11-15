@@ -128,7 +128,7 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
                     style={{ animationDelay: `${(gi * 3 + i) * 40}ms` }}
                     className="card group flex items-center gap-4 p-4 text-left transition duration-200 animate-rise hover:-translate-y-1 hover:border-brand/50"
                   >
-                    <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-elevated text-brand transition group-hover:bg-brand group-hover:text-on-brand group-hover:shadow-[0_0_24px_-4px_rgba(212,42,78,0.7)]">
+                    <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-elevated text-brand transition group-hover:bg-brand group-hover:text-on-brand group-hover:shadow-[0_0_24px_-4px_rgb(var(--glow)/0.7)]">
                       <TypeIcon name={d.icon} className="size-5" />
                     </span>
                     <span className="min-w-0 flex-1">
@@ -165,7 +165,7 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
         )}
 
         <div className="flex items-start gap-4">
-          <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-brand text-on-brand shadow-[0_0_32px_-6px_rgba(212,42,78,0.7)]">
+          <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-brand text-on-brand shadow-[0_0_32px_-6px_rgb(var(--glow)/0.7)]">
             <TypeIcon name={def.icon} className="size-6" />
           </span>
           <div className="min-w-0 flex-1">
@@ -196,7 +196,7 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
                 onClick={() => pickType(t)}
                 className={cn(
                   "inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition",
-                  t === type ? "border-brand bg-brand text-on-brand shadow-[0_3px_0_#7a1027]" : "border-edge bg-surface text-dim hover:border-white/25 hover:text-fg",
+                  t === type ? "border-brand bg-brand text-on-brand shadow-[0_3px_0_var(--color-brand-shadow)]" : "border-edge bg-surface text-dim hover:border-hi/25 hover:text-fg",
                 )}
               >
                 <TypeIcon name={CODE_TYPES[t].icon} className="size-4" /> {CODE_TYPES[t].label}
@@ -218,9 +218,9 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={cn("inline-flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold uppercase tracking-wide transition", tab === t ? "bg-brand text-on-brand shadow-[0_3px_0_#7a1027]" : "text-dim hover:text-fg")}
+              className={cn("inline-flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold uppercase tracking-wide transition", tab === t ? "bg-brand text-on-brand shadow-[0_3px_0_var(--color-brand-shadow)]" : "text-dim hover:text-fg")}
             >
-              <span className={cn("grid size-5 place-items-center rounded-md text-[11px]", tab === t ? "bg-on-brand/15" : "bg-white/[0.06]")}>{i + 1}</span>
+              <span className={cn("grid size-5 place-items-center rounded-md text-[11px]", tab === t ? "bg-on-brand/15" : "bg-hi/[0.06]")}>{i + 1}</span>
               <Icon className="size-4" /> {label}
             </button>
           ))}
@@ -296,7 +296,7 @@ function ModeCard({ active, onClick, title, text, icon, locked }: { active: bool
     <button
       type="button"
       onClick={onClick}
-      className={cn("card p-4 text-left transition duration-200", active ? "card-glow" : "hover:border-white/25")}
+      className={cn("card p-4 text-left transition duration-200", active ? "card-glow" : "hover:border-hi/25")}
     >
       <span className={cn("flex items-center gap-2 font-display text-base uppercase", active && "text-brand")}>
         {icon} {title} {locked && <Lock className="size-3.5 text-faint" />}

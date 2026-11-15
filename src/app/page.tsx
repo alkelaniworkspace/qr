@@ -79,7 +79,7 @@ export default function Home() {
               </div>
               <div className="relative mt-4 overflow-hidden rounded-2xl bg-bg p-4 [&>div>svg]:h-auto [&>div>svg]:w-full">
                 <div dangerouslySetInnerHTML={{ __html: HERO_QR }} />
-                <div className="absolute inset-x-3 h-0.5 rounded-full bg-brand shadow-[0_0_16px_4px_rgba(212,42,78,0.7)] animate-scan" />
+                <div className="absolute inset-x-3 h-0.5 rounded-full bg-brand shadow-[0_0_16px_4px_rgb(var(--glow)/0.7)] animate-scan" />
               </div>
             </div>
           </div>
@@ -89,7 +89,7 @@ export default function Home() {
             <Sparkline points={[3, 4, 3, 6, 5, 8, 7, 11, 10, 14]} className="mt-2 h-8 w-full" />
           </div>
           <div className="card absolute -right-2 -top-8 w-40 p-4 shadow-lift sm:-right-12" style={{ animation: "float 8s ease-in-out infinite" }}>
-            <span className="badge bg-gold text-bg">Scan-Test</span>
+            <span className="badge bg-gold text-night">Scan-Test</span>
             <p className="mt-2 font-display text-3xl">100<span className="text-base text-dim">/100</span></p>
             <p className="text-xs text-dim">Lesbarkeit geprüft</p>
           </div>
@@ -113,7 +113,7 @@ export default function Home() {
           ["15", "Code-Typen", "text-brand glow-text"],
           ["10", "Muster", "text-mint"],
           ["42", "Eck-Kombinationen", "text-gold"],
-          ["0", "Cookies beim Scan", "text-navy-bright"],
+          ["0", "Cookies beim Scan", "text-cyan"],
         ].map(([n, label, color], i) => (
           <Reveal key={label} delay={i * 90}>
             <div className="card p-6">
@@ -142,7 +142,7 @@ export default function Home() {
                 {accent && (
                   <div className="mt-6 grid grid-cols-4 gap-3 sm:grid-cols-8">
                     {PRESET_QRS.map((p) => (
-                      <div key={p.id} className="rounded-xl bg-white/5 p-1.5 transition hover:scale-110 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: p.svg }} />
+                      <div key={p.id} className="rounded-xl bg-hi/5 p-1.5 transition hover:scale-110 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: p.svg }} />
                     ))}
                   </div>
                 )}

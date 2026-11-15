@@ -1,5 +1,5 @@
 /** Small animated line, Bedienoo style: draws itself, ends in a glowing dot. */
-export function Sparkline({ points, color = "#d42a4e", className }: { points: number[]; color?: string; className?: string }) {
+export function Sparkline({ points, color = "#7b5cff", className }: { points: number[]; color?: string; className?: string }) {
   const max = Math.max(1, ...points);
   const w = 120;
   const h = 32;

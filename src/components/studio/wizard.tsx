@@ -187,10 +187,10 @@ function WizardEditor({ init }: { init: Init }) {
                 onClick={() => (s.id === 3 && step === 2 ? nextFromContent() : go(s.id as Step))}
                 className={cn(
                   "flex w-full min-w-0 items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition",
-                  active ? "border-brand bg-brand/15 shadow-[0_0_24px_-8px_rgba(212,42,78,0.9)]" : done ? "border-edge bg-surface hover:border-white/25" : "border-transparent opacity-50",
+                  active ? "border-brand bg-brand/15 shadow-[0_0_24px_-8px_rgb(var(--glow)/0.9)]" : done ? "border-edge bg-surface hover:border-hi/25" : "border-transparent opacity-50",
                 )}
               >
-                <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg font-display text-sm", active ? "bg-brand text-on-brand" : done ? "bg-mint/15 text-mint" : "bg-white/5 text-faint")}>
+                <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg font-display text-sm", active ? "bg-brand text-on-brand" : done ? "bg-mint/15 text-mint" : "bg-hi/5 text-faint")}>
                   {done && !active ? <Check className="size-4" /> : <Icon className="size-4" />}
                 </span>
                 <span className={cn("min-w-0", !active && "hidden sm:block")}>
@@ -228,14 +228,14 @@ function WizardEditor({ init }: { init: Init }) {
                       style={{ animationDelay: `${(gi * 4 + i) * 35}ms` }}
                       className={cn("card group flex items-center gap-4 p-4 text-left transition duration-200 animate-rise hover:-translate-y-1 hover:border-brand/50", t === type && reached > 1 && "border-brand/60")}
                     >
-                      <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-elevated text-brand transition group-hover:bg-brand group-hover:text-on-brand group-hover:shadow-[0_0_24px_-4px_rgba(212,42,78,0.7)]">
+                      <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-elevated text-brand transition group-hover:bg-brand group-hover:text-on-brand group-hover:shadow-[0_0_24px_-4px_rgb(var(--glow)/0.7)]">
                         <TypeIcon name={d.icon} className="size-5" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2 font-bold">
                           {d.label}
-                          {t === "review" && <span className="badge bg-gold text-bg">Neu</span>}
-                          {t === "site" && <span className="badge bg-navy text-white">Mini-Website</span>}
+                          {t === "review" && <span className="badge bg-gold text-night">Neu</span>}
+                          {t === "site" && <span className="badge bg-cyan text-night">Mini-Website</span>}
                         </span>
                         <span className="mt-0.5 block text-sm leading-snug text-dim">{d.description}</span>
                       </span>
@@ -254,7 +254,7 @@ function WizardEditor({ init }: { init: Init }) {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-10">
           <div className="min-w-0 animate-rise" key={step}>
             <div className="flex items-start gap-4">
-              <button type="button" onClick={() => go(1)} title="Typ ändern" className="grid size-14 shrink-0 place-items-center rounded-2xl bg-brand text-on-brand shadow-[0_0_32px_-6px_rgba(212,42,78,0.7)] transition hover:scale-105">
+              <button type="button" onClick={() => go(1)} title="Typ ändern" className="grid size-14 shrink-0 place-items-center rounded-2xl bg-brand text-on-brand shadow-[0_0_32px_-6px_rgb(var(--glow)/0.7)] transition hover:scale-105">
                 <TypeIcon name={def.icon} className="size-6" />
               </button>
               <div className="min-w-0 flex-1">
@@ -277,8 +277,8 @@ function WizardEditor({ init }: { init: Init }) {
             {step === 2 ? (
               <div className="mt-8">
                 {def.hostedPage && (
-                  <p className="mb-4 flex gap-2.5 rounded-2xl border border-navy-bright/25 bg-navy/20 px-4 py-3 text-sm text-dim">
-                    <Info className="mt-0.5 size-4 shrink-0 text-navy-bright" />
+                  <p className="mb-4 flex gap-2.5 rounded-2xl border border-cyan/25 bg-cyan/10 px-4 py-3 text-sm text-dim">
+                    <Info className="mt-0.5 size-4 shrink-0 text-cyan" />
                     <span>Die Handy-Seite steckt komplett im Code. Kein Konto, kein Server, sie funktioniert für immer. Rechts siehst du sie live.</span>
                   </p>
                 )}
@@ -355,8 +355,8 @@ function WizardEditor({ init }: { init: Init }) {
                 <div className="card p-4">
                   <p className="text-xs font-bold uppercase tracking-widest text-faint">Link der Handy-Seite</p>
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    <a href={data} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold uppercase text-dim hover:border-white/25 hover:text-fg"><ExternalLink className="size-4" /> Öffnen</a>
-                    <button type="button" onClick={copyLink} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold uppercase text-dim hover:border-white/25 hover:text-fg">{copied ? <Check className="size-4 text-mint" /> : <Copy className="size-4" />} Kopieren</button>
+                    <a href={data} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold uppercase text-dim hover:border-hi/25 hover:text-fg"><ExternalLink className="size-4" /> Öffnen</a>
+                    <button type="button" onClick={copyLink} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold uppercase text-dim hover:border-hi/25 hover:text-fg">{copied ? <Check className="size-4 text-mint" /> : <Copy className="size-4" />} Kopieren</button>
                   </div>
                 </div>
               )}

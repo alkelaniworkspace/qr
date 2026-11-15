@@ -58,7 +58,7 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
           case "color":
             return (
               <FieldShell key={field.name} label={field.label} htmlFor={id} className={span}>
-                <ColorInput id={id} value={str(value[field.name]) || "#d42a4e"} onChange={(v) => set(field.name, v)} />
+                <ColorInput id={id} value={str(value[field.name]) || "#6e50ff"} onChange={(v) => set(field.name, v)} />
               </FieldShell>
             );
           case "links":
@@ -206,7 +206,7 @@ function LinksEditor({ value, onChange, errors, prefix }: { value: LinkItem[]; o
 }
 
 function RowActions({ onUp, onDown, onRemove }: { onUp: () => void; onDown: () => void; onRemove: () => void }) {
-  const btn = "grid size-8 place-items-center rounded-lg text-faint transition hover:bg-white/[0.07] hover:text-fg";
+  const btn = "grid size-8 place-items-center rounded-lg text-faint transition hover:bg-hi/[0.07] hover:text-fg";
   return (
     <div className="flex shrink-0 flex-col sm:flex-row">
       <button type="button" className={btn} onClick={onUp} aria-label="Nach oben"><ArrowUp className="size-4" /></button>
@@ -345,9 +345,9 @@ function ThemePicker({ value, onChange }: { value: string; onChange: (v: string)
           type="button"
           onClick={() => onChange(v)}
           aria-pressed={value === v}
-          className={cn("flex items-center gap-3 rounded-2xl border p-3 text-left text-sm font-bold transition", value === v ? "border-brand bg-brand/10 text-fg" : "border-edge bg-bg/60 text-dim hover:border-white/25")}
+          className={cn("flex items-center gap-3 rounded-2xl border p-3 text-left text-sm font-bold transition", value === v ? "border-brand bg-brand/10 text-fg" : "border-edge bg-bg/60 text-dim hover:border-hi/25")}
         >
-          <span className={cn("grid size-9 place-items-center rounded-xl border border-white/15", swatch)}><Icon className="size-4 text-white mix-blend-difference" /></span>
+          <span className={cn("grid size-9 place-items-center rounded-xl border border-hi/15", swatch)}><Icon className="size-4 text-white mix-blend-difference" /></span>
           {label}
         </button>
       ))}

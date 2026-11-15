@@ -31,7 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               {displayName}
             </span>
             <form action="/auth/signout" method="post">
-              <button className="grid size-9 place-items-center rounded-xl text-dim transition hover:bg-white/5 hover:text-fg" aria-label="Abmelden" title="Abmelden">
+              <button className="grid size-9 place-items-center rounded-xl text-dim transition hover:bg-hi/5 hover:text-fg" aria-label="Abmelden" title="Abmelden">
                 <LogOut className="size-4" />
               </button>
             </form>

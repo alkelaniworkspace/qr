@@ -20,7 +20,7 @@ interface Props {
 }
 
 const SAMPLE = "SCANWERK-2026";
-const SWATCHES = ["#0f1113", "#ffffff", "#d42a4e", "#ff5d6c", "#38d5ff", "#a78bfa", "#3ee6a8", "#ffb020", "#1a1d4e", "#5a1428"];
+const SWATCHES = ["#0f1113", "#ffffff", "#6e50ff", "#d42a4e", "#ff5d6c", "#38d5ff", "#a78bfa", "#3ee6a8", "#ffb020", "#1a1d4e", "#5a1428"];
 
 const DOTS: { value: DotStyle; label: string }[] = [
   { value: "square", label: "Quadrat" },
@@ -62,7 +62,7 @@ function Section({ title, hint, defaultOpen = false, children }: { title: string
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="card overflow-hidden">
-      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-white/[0.02]" aria-expanded={open}>
+      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-hi/[0.02]" aria-expanded={open}>
         <span>
           <span className="block font-display text-base uppercase">{title}</span>
           {hint && <span className="mt-0.5 block text-xs text-faint">{hint}</span>}
@@ -83,7 +83,7 @@ function Tile({ active, onClick, children, label }: { active: boolean; onClick: 
       aria-pressed={active}
       className={cn(
         "group flex flex-col items-center gap-2 rounded-2xl border bg-bg/60 p-2.5 text-[11px] font-semibold transition duration-200 hover:-translate-y-0.5",
-        active ? "border-brand text-brand shadow-[0_0_0_1px_rgba(212,42,78,0.4),0_0_24px_-6px_rgba(212,42,78,0.6)]" : "border-edge text-dim hover:border-white/25 hover:text-fg",
+        active ? "border-brand text-brand shadow-[0_0_0_1px_rgb(var(--glow)/0.4),0_0_24px_-6px_rgb(var(--glow)/0.6)]" : "border-edge text-dim hover:border-hi/25 hover:text-fg",
       )}
     >
       {children}
@@ -104,7 +104,7 @@ function Segmented<T extends string>({ value, options, onChange }: { value: T; o
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
-          className={cn("rounded-[10px] px-4 py-2 text-xs font-bold uppercase tracking-wide transition", value === o.value ? "bg-brand text-on-brand shadow-[0_2px_0_#7a1027]" : "text-dim hover:text-fg")}
+          className={cn("rounded-[10px] px-4 py-2 text-xs font-bold uppercase tracking-wide transition", value === o.value ? "bg-brand text-on-brand shadow-[0_2px_0_var(--color-brand-shadow)]" : "text-dim hover:text-fg")}
         >
           {o.label}
         </button>
@@ -134,7 +134,7 @@ function Swatches({ value, onChange }: { value: string; onChange: (c: string) =>
           type="button"
           aria-label={`Farbe ${c}`}
           onClick={() => onChange(c)}
-          className={cn("size-6 rounded-lg border transition hover:scale-110", value.toLowerCase() === c ? "border-brand ring-2 ring-brand/40" : "border-white/15")}
+          className={cn("size-6 rounded-lg border transition hover:scale-110", value.toLowerCase() === c ? "border-brand ring-2 ring-brand/40" : "border-hi/15")}
           style={{ backgroundColor: c }}
         />
       ))}
@@ -256,11 +256,11 @@ export function DesignPanel({ style, onChange, data }: Props) {
           )}
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <Toggle checked={style.eyeColor !== null} onChange={(v) => set({ eyeColor: v ? "#d42a4e" : null })} label="Eigene Farbe Rahmen" />
+              <Toggle checked={style.eyeColor !== null} onChange={(v) => set({ eyeColor: v ? "#6e50ff" : null })} label="Eigene Farbe Rahmen" />
               {style.eyeColor !== null && <div className="mt-3"><ColorInput value={style.eyeColor} onChange={(c) => set({ eyeColor: c })} /></div>}
             </div>
             <div>
-              <Toggle checked={style.eyeBallColor !== null} onChange={(v) => set({ eyeBallColor: v ? "#d42a4e" : null })} label="Eigene Farbe Kern" />
+              <Toggle checked={style.eyeBallColor !== null} onChange={(v) => set({ eyeBallColor: v ? "#6e50ff" : null })} label="Eigene Farbe Kern" />
               {style.eyeBallColor !== null && <div className="mt-3"><ColorInput value={style.eyeBallColor} onChange={(c) => set({ eyeBallColor: c })} /></div>}
             </div>
           </div>
@@ -326,7 +326,7 @@ export function DesignPanel({ style, onChange, data }: Props) {
             </Select>
           </FieldShell>
           <div className="flex items-end">
-            <button type="button" onClick={() => onChange({ ...DEFAULT_STYLE, logo: style.logo, ecc: style.logo ? "H" : DEFAULT_STYLE.ecc })} className="inline-flex h-12 items-center gap-2 rounded-[14px] border border-edge px-4 text-xs font-bold uppercase tracking-wide text-dim transition hover:border-white/25 hover:text-fg">
+            <button type="button" onClick={() => onChange({ ...DEFAULT_STYLE, logo: style.logo, ecc: style.logo ? "H" : DEFAULT_STYLE.ecc })} className="inline-flex h-12 items-center gap-2 rounded-[14px] border border-edge px-4 text-xs font-bold uppercase tracking-wide text-dim transition hover:border-hi/25 hover:text-fg">
               <RotateCcw className="size-4" /> Zurücksetzen
             </button>
           </div>

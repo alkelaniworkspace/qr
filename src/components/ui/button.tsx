@@ -10,10 +10,10 @@ const base =
 const variants: Record<Variant, string> = {
   // Chunky 3D brand button: sits on its own shadow, presses down on click
   primary:
-    "bg-brand text-on-brand shadow-[0_4px_0_#7a1027,0_0_32px_-4px_rgba(212,42,78,0.55)] hover:-translate-y-0.5 hover:shadow-[0_6px_0_#7a1027,0_0_44px_-2px_rgba(212,42,78,0.7)] active:translate-y-1 active:shadow-[0_0_0_#7a1027,0_0_20px_-4px_rgba(212,42,78,0.5)]",
+    "bg-brand text-on-brand shadow-[0_4px_0_var(--color-brand-shadow),0_0_32px_-4px_rgb(var(--glow)/0.55)] hover:-translate-y-0.5 hover:shadow-[0_6px_0_var(--color-brand-shadow),0_0_44px_-2px_rgb(var(--glow)/0.7)] active:translate-y-1 active:shadow-[0_0_0_var(--color-brand-shadow),0_0_20px_-4px_rgb(var(--glow)/0.5)]",
   secondary:
-    "bg-elevated text-fg border border-edge-strong shadow-[0_4px_0_rgba(0,0,0,0.45)] hover:-translate-y-0.5 hover:border-white/30 active:translate-y-1 active:shadow-none",
-  ghost: "text-dim hover:text-fg hover:bg-white/5",
+    "bg-elevated text-fg border border-edge-strong shadow-[0_4px_0_rgba(0,0,0,0.45)] hover:-translate-y-0.5 hover:border-hi/30 active:translate-y-1 active:shadow-none",
+  ghost: "text-dim hover:text-fg hover:bg-hi/5",
   danger: "bg-rose text-white shadow-[0_4px_0_#a1303b] hover:-translate-y-0.5 active:translate-y-1 active:shadow-none",
 };
 

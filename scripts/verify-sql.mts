@@ -5,14 +5,15 @@
  * Run with: npm run verify:sql
  */
 import { PGlite } from "@electric-sql/pglite";
+import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 import { readdirSync, readFileSync } from "node:fs";
 
-const db = new PGlite();
+const db = new PGlite({ extensions: { pgcrypto } });
 const A = "11111111-1111-1111-1111-111111111111";
 const B = "22222222-2222-2222-2222-222222222222";
 
 const stubs = `
-create role anon; create role authenticated; create role service_role;
+create role anon; create role authenticated; create role service_role; create schema extensions;
 create schema auth; create schema storage;
 create table auth.users (id uuid primary key, raw_user_meta_data jsonb default '{}');
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
@@ -83,3 +84,26 @@ const sum = (await as(A, `select public.dashboard_summary() as s`)).rows[0] as {
 check("dashboard summary", sum.s.codes === 2 && sum.s.scans_total === 3);
 check("dashboard 14-day series", sum.s.series.length === 14 && sum.s.series[13] === 3);
 check("dashboard scans today", sum.s.scans_today === 3);
+
+// ───────── guest codes (no account, secret edit token) ─────────
+const T = "t".repeat(40);
+async function asAnon(sql: string, args: unknown[] = []) {
+  await db.exec(`set role anon;`);
+  try {
+    return await db.query(sql, args);
+  } finally {
+    await db.exec("reset role;");
+  }
+}
+await asAnon(`select public.create_guest_code('tisch01', $1, 'Tisch 1', 'url', '{"url":"https://google.com"}', '{}')`, [T]);
+check("guest can create a dynamic code", true);
+await expectError("guest needs a long token", () => asAnon(`select public.create_guest_code('tisch02', 'short', 'x', 'url', '{}', '{}')`), /BAD_TOKEN/);
+check("guest code is public for scanners", (await asAnon(`select * from public.public_code('tisch01')`)).rows.length === 1);
+check("public lookup hides the token hash", !Object.keys((await asAnon(`select * from public.public_code('tisch01')`)).rows[0] as object).includes("edit_token_hash"));
+check("wrong token cannot read for editing", (await asAnon(`select * from public.get_guest_code('tisch01', $1)`, ["x".repeat(40)])).rows.length === 0);
+const changed = (await asAnon(`select public.update_guest_code('tisch01', $1, 'Tisch 1', 'menu', '{"business":"Dili"}', '{}') as ok`, [T])).rows[0] as { ok: boolean };
+check("owner can switch type url -> menu, slug stays", changed.ok && ((await asAnon(`select type from public.public_code('tisch01')`)).rows[0] as { type: string }).type === "menu");
+const denied = (await asAnon(`select public.update_guest_code('tisch01', $1, 'x', 'url', '{}', '{}') as ok`, ["y".repeat(40)])).rows[0] as { ok: boolean };
+check("wrong token cannot update", !denied.ok);
+await expectError("anon cannot read the table directly", () => asAnon(`select * from public.qr_codes`), /permission denied/);
+check("A still sees only own codes", (await as(A, `select * from public.qr_codes`)).rows.length === 2);
