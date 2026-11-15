@@ -467,35 +467,25 @@
 /* framed printed card */
 .mn-frame { background: var(--pg-card); border: 1px solid var(--pg-line); outline: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: -8px; box-shadow: 0 30px 60px -40px rgb(0 0 0 / .5); }
 
-/* neo-brutalism */
-.mn-brut { border: 2.5px solid var(--pg-fg); border-radius: 8px; box-shadow: 5px 5px 0 var(--pg-fg); }
-.mn-brut-sm { border: 2px solid var(--pg-fg); border-radius: 6px; box-shadow: 3px 3px 0 var(--pg-fg); }
-
-/* neon */
-.mn-glow { color: var(--pg-fg); text-shadow: 0 0 10px var(--accent), 0 0 28px var(--accent), 0 0 60px color-mix(in srgb, var(--accent) 60%, transparent); }
-[data-tpl="neon"] .mn-cta { box-shadow: 0 0 24px -2px var(--accent); }
-
-/* glass */
-.mn-glassbar { background: color-mix(in srgb, var(--pg-bg) 40%, transparent); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%); }
-.mn-glass { background: color-mix(in srgb, var(--pg-card) 45%, transparent); border: 1px solid rgb(255 255 255 / .14); border-radius: calc(var(--pg-radius) * .8 + 6px); -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); }
-
-/* polaroid */
-.mn-polaroid { background: #fff; color: #1b1b1b; padding: 8px 8px 12px; box-shadow: 0 12px 26px -12px rgb(0 0 0 / .35); transform: rotate(var(--tilt, 0deg)); transition: transform .35s cubic-bezier(.2,.7,.2,1); }
-.mn-polaroid:hover, .mn-polaroid:focus-visible { transform: rotate(0) scale(1.03); }
-.mn [data-reveal].mn-polaroid[data-in] { transform: rotate(var(--tilt, 0deg)); }
-
-/* ticket with perforation */
-.mn-ticket { position: relative; background: var(--pg-card); border-radius: calc(var(--pg-radius) * .6 + 4px); box-shadow: 0 1px 0 var(--pg-line), 0 10px 24px -18px rgb(0 0 0 / .4); }
-.mn-ticket-stub { position: relative; border-left: 2px dashed var(--pg-line); background: color-mix(in srgb, var(--accent) 14%, var(--pg-card)); color: var(--pg-fg); border-radius: 0 calc(var(--pg-radius) * .6 + 4px) calc(var(--pg-radius) * .6 + 4px) 0; }
-.mn-ticket-stub::before, .mn-ticket-stub::after { content: ""; position: absolute; left: -9px; width: 16px; height: 16px; border-radius: 50%; background: var(--pg-bg); }
-.mn-ticket-stub::before { top: -8px; } .mn-ticket-stub::after { bottom: -8px; }
-
+/* shop cards (photo first, centred, quiet border) */
+.mn-shop { background: var(--pg-card); border: 1px solid var(--pg-line); border-radius: calc(var(--pg-radius) * .8 + 6px); transition: transform .25s cubic-bezier(.2,.7,.2,1), box-shadow .25s, border-color .25s; }
+.mn-shop:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 35%, var(--pg-line)); box-shadow: 0 18px 36px -24px color-mix(in srgb, var(--pg-fg) 45%, transparent); }
+.mn-shop-img { background: var(--accent-2); border-radius: calc(var(--pg-radius) * .6 + 4px); }
 /* textures */
 .mn-tx-paper { background-image: radial-gradient(color-mix(in srgb, var(--pg-fg) 5%, transparent) 1px, transparent 1px); background-size: 4px 4px; }
 .mn-tx-grain { background-image: radial-gradient(rgb(255 255 255 / .035) 1px, transparent 1px); background-size: 3px 3px; }
-.mn-tx-chalk { background-image: radial-gradient(rgb(255 255 255 / .05) 1px, transparent 1.5px), radial-gradient(rgb(255 255 255 / .03) 1px, transparent 1px); background-size: 5px 5px, 9px 9px; }
-.mn-tx-chalk .pg-display { text-shadow: 0 0 1px rgb(255 255 255 / .5); }
-.mn-tx-dots { background-image: radial-gradient(color-mix(in srgb, var(--pg-fg) 10%, transparent) 1.2px, transparent 1.4px); background-size: 20px 20px; }
-.mn-tx-terrazzo { background-image: radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--accent-2) 70%, transparent) 0 14px, transparent 15px), radial-gradient(circle at 82% 8%, color-mix(in srgb, var(--accent) 22%, transparent) 0 9px, transparent 10px), radial-gradient(circle at 68% 42%, color-mix(in srgb, var(--accent-2) 60%, transparent) 0 7px, transparent 8px), radial-gradient(circle at 22% 72%, color-mix(in srgb, var(--accent) 18%, transparent) 0 11px, transparent 12px), radial-gradient(circle at 90% 85%, color-mix(in srgb, var(--accent-2) 65%, transparent) 0 13px, transparent 14px); background-size: 320px 420px; }
-.mn-tx-mesh { background: radial-gradient(60% 40% at 0% 0%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 70%), radial-gradient(60% 45% at 100% 30%, color-mix(in srgb, var(--accent-2) 40%, transparent), transparent 70%), radial-gradient(70% 50% at 30% 100%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 70%); background-attachment: fixed; }
-.mn-tx-neon { background: radial-gradient(50% 30% at 50% 0%, color-mix(in srgb, var(--accent) 25%, transparent), transparent 70%), radial-gradient(40% 30% at 100% 60%, color-mix(in srgb, var(--accent-2) 15%, transparent), transparent 70%); }
+
+/* ───────── Pricing page (own palette: ember and champagne on near-black) ───────── */
+.pr-page { --pr-a: #ff7a3d; --pr-b: #ffd3a1; }
+.pr-display { font-family: "Plus Jakarta Sans Variable", var(--font-display); font-weight: 800; letter-spacing: -0.035em; }
+.pr-gradient-text { background: linear-gradient(100deg, var(--pr-a) 10%, var(--pr-b) 90%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pr-aurora { background: radial-gradient(42% 38% at 50% 0%, rgb(255 122 61 / .30), transparent 70%), radial-gradient(30% 30% at 82% 12%, rgb(255 211 161 / .14), transparent 70%), radial-gradient(28% 30% at 15% 20%, rgb(255 80 40 / .12), transparent 70%); }
+.pr-grid { background-image: linear-gradient(rgb(255 255 255 / .04) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .04) 1px, transparent 1px); background-size: 64px 64px; -webkit-mask-image: radial-gradient(60% 70% at 50% 0%, #000, transparent 75%); mask-image: radial-gradient(60% 70% at 50% 0%, #000, transparent 75%); }
+@property --pr-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+.pr-ring { background: conic-gradient(from var(--pr-angle), var(--pr-a), var(--pr-b), #ff4d2e, var(--pr-a)); animation: pr-spin 6s linear infinite; }
+.pr-ring::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; filter: blur(22px); opacity: .45; z-index: -1; }
+@keyframes pr-spin { to { --pr-angle: 360deg; } }
+.pr-cta { background: linear-gradient(135deg, var(--pr-a), var(--pr-b)); box-shadow: 0 12px 34px -12px rgb(255 122 61 / .7), inset 0 1px 0 rgb(255 255 255 / .35); transition: transform .15s, box-shadow .25s, filter .2s; }
+.pr-cta:hover { filter: brightness(1.05); box-shadow: 0 16px 44px -10px rgb(255 122 61 / .85), inset 0 1px 0 rgb(255 255 255 / .35); }
+.pr-cta:active { transform: scale(.98); }
+@media (prefers-reduced-motion: reduce) { .pr-ring { animation: none; } }

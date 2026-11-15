@@ -1,5 +1,17 @@
 import "@fontsource/space-grotesk/500.css";
 import "@fontsource/space-grotesk/700.css";
+import "@fontsource-variable/plus-jakarta-sans";
+import "@fontsource/poppins/500.css";
+import "@fontsource/poppins/600.css";
+import "@fontsource/poppins/800.css";
+import "@fontsource/dm-serif-display/400.css";
+import "@fontsource/dm-serif-display/400-italic.css";
+import "@fontsource-variable/fraunces";
+import "@fontsource-variable/playfair-display";
+import "@fontsource-variable/playfair-display/wght-italic.css";
+import "@fontsource/cormorant-garamond/500.css";
+import "@fontsource/cormorant-garamond/600.css";
+import "@fontsource/cormorant-garamond/500-italic.css";
 import Link from "next/link";
 import { CalendarDays, CalendarPlus, ChevronRight, Download, ExternalLink, FileText, Globe, Mail, MapPin, Navigation, Phone, Smartphone, Sparkles, Star, Ticket, UserPlus } from "lucide-react";
 import type { PublicCode } from "@/lib/codes/public";

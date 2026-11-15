@@ -52,7 +52,7 @@ export function Pricing() {
           );
         })}
       </div>
-      <p className="mt-6 text-center text-xs text-faint">Alle Preise inkl. MwSt. Monatlich kündbar. Gedruckte Codes funktionieren auch nach einer Kündigung weiter.</p>
+      <p className="mt-6 text-center text-xs text-faint">Alle Preise inkl. MwSt. Monatlich kündbar. Gedruckte Codes funktionieren auch nach einer Kündigung weiter. <a href="/preise" className="font-semibold text-fg underline underline-offset-4">Alle Funktionen im Vergleich</a></p>
     </div>
   );
 }

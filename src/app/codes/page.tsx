@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/marketing/site-header";
-import { SiteFooter } from "@/components/marketing/site-footer";
+import { AppShell } from "@/components/shell/app-shell";
+import { getShellData } from "@/lib/shell-data";
 import { LocalCodes } from "@/components/studio/local-codes";
 
 export const metadata: Metadata = { title: "Meine Codes" };
 
-export default function CodesPage() {
+export default async function CodesPage() {
+  const { user, plan } = await getShellData();
   return (
-    <>
-      <SiteHeader />
-      <main className="ambient mx-auto w-full max-w-[1600px] flex-1 px-5 pb-24 pt-10 sm:px-8">
+    <AppShell user={user} plan={plan}>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-5 pb-24 pt-8 sm:px-8 lg:pt-10">
         <LocalCodes />
       </main>
-      <SiteFooter />
-    </>
+    </AppShell>
   );
 }

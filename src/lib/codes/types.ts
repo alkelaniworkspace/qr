@@ -234,7 +234,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       layout: "cards",
       style: "modern",
       accent: "#191919",
-      theme: "light", template: "editorial",
+      theme: "light", template: "classic",
     },
   },
   review: {

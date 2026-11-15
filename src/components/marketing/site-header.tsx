@@ -10,7 +10,7 @@ const NAV = [
   { href: "/codes", label: "Meine Codes" },
   { href: "/#designs", label: "Designs" },
   { href: "/#funktionen", label: "Funktionen" },
-  { href: "/#preise", label: "Preise" },
+  { href: "/preise", label: "Preise" },
 ];
 
 /** Everything works without an account; signing in adds the dashboard. */

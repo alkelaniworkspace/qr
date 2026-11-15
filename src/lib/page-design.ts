@@ -12,12 +12,12 @@ import { z } from "zod";
 
 export const FONTS = {
   modern: { label: "Modern", display: "'Inter Variable', Inter, system-ui, sans-serif", weight: 700, tracking: "-0.03em", sample: "Aa" },
-  grotesk: { label: "Grotesk", display: "'Space Grotesk', 'Inter Variable', sans-serif", weight: 700, tracking: "-0.04em", sample: "Aa" },
+  grotesk: { label: "Jakarta", display: "'Plus Jakarta Sans Variable', 'Inter Variable', sans-serif", weight: 800, tracking: "-0.035em", sample: "Aa" },
   editorial: { label: "Editorial", display: "'Fraunces Variable', Georgia, serif", weight: 600, tracking: "-0.02em", sample: "Aa" },
   classic: { label: "Klassisch", display: "'Playfair Display Variable', Georgia, serif", weight: 600, tracking: "-0.01em", sample: "Aa" },
   elegant: { label: "Elegant", display: "'Cormorant Garamond', Garamond, serif", weight: 600, tracking: "0", sample: "Aa" },
-  bold: { label: "Plakativ", display: "'Bebas Neue', Impact, sans-serif", weight: 400, tracking: "0.01em", sample: "AA", upper: true, scale: 1.25 },
-  script: { label: "Handschrift", display: "'Caveat', 'Segoe Script', cursive", weight: 700, tracking: "0", sample: "Aa", scale: 1.3 },
+  bold: { label: "Kräftig", display: "Poppins, 'Inter Variable', sans-serif", weight: 800, tracking: "-0.03em", sample: "Aa" },
+  script: { label: "Display Serif", display: "'DM Serif Display', Georgia, serif", weight: 400, tracking: "-0.01em", sample: "Aa", scale: 1.05 },
 } as const;
 export type FontId = keyof typeof FONTS;
 

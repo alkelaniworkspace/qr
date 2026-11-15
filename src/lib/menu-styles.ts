@@ -35,14 +35,14 @@ export const MENU_STYLES: MenuStyle[] = [
     accent: "#b4532a", display: "'Fraunces Variable', Georgia, serif", headingScale: 1.05, radius: 14,
   },
   {
-    id: "cafe", label: "Café", hint: "Weich, handgeschrieben", layout: "grid", hero: "soft", heading: "script",
+    id: "cafe", label: "Café", hint: "Weich, Display-Serif", layout: "grid", hero: "soft", heading: "script",
     vars: { "--pg-bg": "#f6efe8", "--pg-fg": "#3a2a22", "--pg-card": "#ffffff", "--pg-line": "#eadfd4", "--pg-muted": "#8a7465", "--pg-soft": "#efe4d8" },
-    accent: "#b8714a", display: "'Caveat', 'Segoe Script', cursive", headingScale: 1.45, radius: 24,
+    accent: "#b8714a", display: "'DM Serif Display', Georgia, serif", headingScale: 1.1, radius: 24,
   },
   {
     id: "street", label: "Street Food", hint: "Laut, dunkel, Neon", layout: "grid", hero: "bold", heading: "block",
     vars: { "--pg-bg": "#0d0d0d", "--pg-fg": "#fafafa", "--pg-card": "#181818", "--pg-line": "rgba(255,255,255,0.1)", "--pg-muted": "#a3a3a3", "--pg-soft": "#222222" },
-    accent: "#ffd60a", display: "'Bebas Neue', Impact, sans-serif", headingScale: 1.5, radius: 8, uppercase: true, dark: true,
+    accent: "#ffd60a", display: "Poppins, sans-serif", headingScale: 1.1, radius: 8, dark: true,
   },
   {
     id: "fine", label: "Fine Dining", hint: "Schwarz & Gold", layout: "elegant", hero: "centered", heading: "lines",

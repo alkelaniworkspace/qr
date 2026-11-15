@@ -137,7 +137,7 @@ function SidebarBody({ user }: { user: ShellUser | null }) {
       <Section title="Mehr">
         {user && <NavItem href="/dashboard/billing" icon={CreditCard} label="Tarif & Rechnungen" active={pathname.startsWith("/dashboard/billing")} />}
         <NavItem href="/#funktionen" icon={Sparkles} label="Funktionen" />
-        <NavItem href="/#preise" icon={Zap} label="Preise" />
+        <NavItem href="/preise" icon={Zap} label="Preise" />
         <NavItem href="mailto:hallo@qlick.codes" icon={HelpCircle} label="Hilfe & Kontakt" />
       </Section>
     </nav>
@@ -224,7 +224,7 @@ function SidebarFooter({ user, plan, localCodes }: { user: ShellUser | null; pla
   return (
     <div className="shrink-0 space-y-2 border-t border-edge p-3">
       {plan?.id !== "business" && (
-        <Link href="/#preise" className="group flex items-center gap-2.5 rounded-xl px-3 py-2 text-[14px] font-semibold text-[#ff4f9a] transition hover:bg-[#ff2e88]/10">
+        <Link href="/preise" className="group flex items-center gap-2.5 rounded-xl px-3 py-2 text-[14px] font-semibold text-[#ff4f9a] transition hover:bg-[#ff2e88]/10">
           <Gem className="size-4" /> Preise
           <span className="sale-pill ml-auto rounded-md px-1.5 py-0.5 text-[11px] font-bold text-white">−40 %</span>
         </Link>

@@ -1,10 +1,13 @@
 import "server-only";
+import { connection } from "next/server";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { PLANS, planOf } from "@/lib/plans";
 import type { ShellPlan, ShellUser } from "@/components/shell/app-shell";
 
 /** Account + plan usage for the sidebar (null for guests). */
 export async function getShellData(): Promise<{ user: ShellUser | null; plan: ShellPlan | null }> {
+  // Per request: the sidebar shows the signed-in account (never prerender it as a guest).
+  await connection();
   const session = await getSessionUser().catch(() => null);
   if (!session) return { user: null, plan: null };
   const supabase = await createClient();

@@ -1,16 +1,7 @@
 "use client";
 
-import "@fontsource-variable/fraunces";
-import "@fontsource-variable/playfair-display";
-import "@fontsource-variable/playfair-display/wght-italic.css";
-import "@fontsource/bebas-neue";
-import "@fontsource/caveat/600.css";
-import "@fontsource/caveat/700.css";
-import "@fontsource/cormorant-garamond/500.css";
-import "@fontsource/cormorant-garamond/600.css";
-import "@fontsource/cormorant-garamond/500-italic.css";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, Clock, Flame, Leaf, MapPin, Phone, Search, Sparkles, Star, Wheat, X } from "lucide-react";
+import { ChevronDown, Clock, Flame, Leaf, MapPin, Phone, Plus, Search, Sparkles, Star, Wheat, X } from "lucide-react";
 import type { MenuItemData, MenuSectionData } from "@/lib/codes/types";
 import { mapsUrl } from "@/lib/codes/payload";
 import { menuTemplate, type HeadingKind, type ItemKind, type MenuTemplate, type NavKind } from "@/lib/menu-templates";
@@ -105,7 +96,10 @@ export function MenuPage({ c }: { c: C }) {
       { rootMargin: "-20% 0px -70% 0px" },
     );
     els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    // Back at the top: the first category is the active one.
+    const onScroll = () => { if (els[0].getBoundingClientRect().top > window.innerHeight * 0.3) setActive(0); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { io.disconnect(); window.removeEventListener("scroll", onScroll); };
   }, [sections, query]);
 
   const q = query.trim().toLowerCase();
@@ -267,36 +261,35 @@ function Header({ c, t }: { c: C; t: MenuTemplate }) {
           <Actions c={c} />
         </header>
       );
-    case "brutal":
+    case "shop": {
+      const words = name.split(/\s+/);
+      const last = words.length > 1 ? words.pop() : null;
       return (
-        <header className="px-5 pt-8">
-          <div className="mn-brut mn-in bg-[var(--accent)] p-5 text-[var(--on-accent)]">
-            <p className="text-[12px] font-bold">Speisekarte</p>
-            <p className="pg-display mt-2 leading-[0.95]" style={{ fontSize: "calc(2.8rem * var(--pg-display-scale))" }}>{name}</p>
-            {sub && <p className="mt-2 text-[14px] font-medium opacity-90">{sub}</p>}
+        <header>
+          <div className="flex items-center gap-3 border-b border-[var(--pg-line)] px-5 py-3">
+            <Logo c={c} className="size-10 rounded-full text-lg" />
+            <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{name}</span>
+            {s(c.phone) && <a href={`tel:${s(c.phone).replace(/[^\d+]/g, "")}`} className="mn-cta inline-flex h-9 items-center gap-1.5 px-4 text-[13px] font-semibold"><Phone className="size-3.5" /> Bestellen</a>}
           </div>
-          {cover && <SmartImg src={cover} width={1280} eager className="mn-brut mn-in mt-4 aspect-[16/9] w-full object-cover" />}
-          <Actions c={c} />
+          {cover && (
+            <div className="px-5 pt-5">
+              <SmartImg src={cover} width={1280} eager className="mn-cover aspect-[16/8] w-full rounded-[calc(var(--pg-radius)+4px)] object-cover" />
+            </div>
+          )}
+          <div className="px-6 pt-9 text-center">
+            <Title size={2.6} center>{words.join(" ")}{last && <> <span className="text-[var(--accent)]">{last}</span></>}</Title>
+            {sub && <p className="mn-in mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-[var(--pg-muted)]" style={{ animationDelay: "110ms" }}>{sub}</p>}
+            <Actions c={c} center />
+          </div>
         </header>
       );
+    }
     case "minimal":
       return (
         <header className="px-5 pt-14">
           <Title size={2}>{name}</Title>
           {subEl}
           <Actions c={c} />
-        </header>
-      );
-    case "neon":
-      return (
-        <header className="relative overflow-hidden px-5 pb-6 pt-14 text-center">
-          {cover && <SmartImg src={cover} width={1280} eager className="absolute inset-0 size-full object-cover opacity-30" />}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--pg-bg)]" />
-          <div className="relative">
-            <p className="mn-glow pg-display mn-in leading-none" style={{ fontSize: "calc(3.2rem * var(--pg-display-scale))" }}>{name}</p>
-            {sub && <p className="mn-in mt-3 text-[15px] text-[var(--pg-muted)]">{sub}</p>}
-            <Actions c={c} center />
-          </div>
         </header>
       );
     case "monogram":
@@ -352,15 +345,14 @@ function Nav({ t, sections, active, searching, setSearching, query, setQuery }: 
     switch (kind) {
       case "pills": return `h-9 rounded-full px-4 text-[14px] font-medium transition ${on ? "bg-[var(--accent)] text-[var(--on-accent)]" : "bg-[var(--pg-soft)] text-[var(--pg-muted)]"}`;
       case "boxed": return `h-9 rounded-[calc(var(--pg-radius)*0.5+4px)] border px-3.5 text-[14px] font-semibold transition ${on ? "border-[var(--pg-fg)] bg-[var(--pg-fg)] text-[var(--pg-bg)]" : "border-[var(--pg-line)] text-[var(--pg-muted)]"}`;
-      case "brutal": return `mn-brut-sm h-9 px-3.5 text-[14px] font-bold transition ${on ? "bg-[var(--accent)] text-[var(--on-accent)]" : "bg-[var(--pg-card)]"}`;
-      case "glass": return `h-9 rounded-full px-4 text-[14px] font-medium transition ${on ? "bg-white/20 text-[var(--pg-fg)] shadow-[0_0_20px_-4px_var(--accent)]" : "text-[var(--pg-muted)]"}`;
+      case "chips": return `h-10 rounded-full border px-4 text-[14px] font-semibold transition ${on ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_8px_20px_-10px_var(--accent)]" : "border-[var(--pg-line)] bg-[var(--pg-card)] text-[var(--pg-fg)]"}`;
       case "numbered": return `h-12 text-[14px] transition ${on ? "font-semibold text-[var(--pg-fg)]" : "text-[var(--pg-muted)]"}`;
       default: return `h-12 text-[15px] transition ${on ? "font-semibold text-[var(--pg-fg)]" : "text-[var(--pg-muted)]"}`;
     }
   };
   const lined = kind === "underline" || kind === "numbered";
   return (
-    <nav className={`mn-nav sticky top-0 z-20 mt-8 ${lined ? "border-b border-[var(--pg-line)]" : "py-2.5"} ${kind === "glass" ? "mn-glassbar" : "bg-[var(--pg-bg)]/92 backdrop-blur-md"}`}>
+    <nav className={`mn-nav sticky top-0 z-20 mt-8 ${lined ? "border-b border-[var(--pg-line)]" : "py-2.5"} bg-[color-mix(in_srgb,var(--pg-bg)_92%,transparent)] backdrop-blur-md`}>
       {searching ? (
         <div className="flex h-12 items-center gap-2 px-5">
           <Search className="size-4 text-[var(--pg-muted)]" />
@@ -396,14 +388,13 @@ function Heading({ kind, title, note, index, count, padded }: { kind: HeadingKin
       return wrap(<div className="flex items-baseline gap-3 border-b border-[var(--pg-line)] pb-3"><span className="font-mono text-[13px] text-[var(--accent)]">{pad2(index + 1)}</span><h2 className="pg-display" style={size(1.9)}>{title}</h2><span className="ml-auto text-[12px] text-[var(--pg-muted)]">{count}</span></div>);
     case "lines":
       return wrap(<div className="flex items-center gap-4 text-[var(--accent)]"><span className="h-px flex-1 bg-current opacity-40" /><h2 className="pg-display shrink-0 text-[var(--pg-fg)]" style={size(1.7)}>{title}</h2><span className="h-px flex-1 bg-current opacity-40" /></div>, "text-center");
-    case "script":
-      return wrap(<h2 className="pg-display -rotate-1 text-[var(--accent)]" style={size(2)}>{title}</h2>);
     case "index":
       return wrap(<div className="flex items-end gap-4"><span className="pg-display leading-[0.8] text-[var(--accent)]" style={size(3.6)}>{pad2(index + 1)}</span><div className="pb-1"><h2 className="pg-display leading-none" style={size(1.6)}>{title}</h2><p className="mt-1 text-[12px] text-[var(--pg-muted)]">{count} {count === 1 ? "Gericht" : "Gerichte"}</p></div></div>);
-    case "tag":
-      return wrap(<h2 className="mn-brut-sm pg-display inline-block bg-[var(--accent)] px-3 py-1 text-[var(--on-accent)]" style={size(1.5)}>{title}</h2>);
-    case "glow":
-      return wrap(<h2 className="mn-glow pg-display" style={size(2)}>{title}</h2>);
+    case "accent": {
+      const words = title.trim().split(/\s+/);
+      const last = words.length > 1 ? words.pop() : null;
+      return wrap(<h2 className="pg-display text-center leading-[1.05]" style={size(2)}>{words.join(" ")}{last && <> <span className="text-[var(--accent)]">{last}</span></>}</h2>, "text-center");
+    }
     case "serif-italic":
       return wrap(<h2 className="pg-display italic" style={size(2)}>{title}</h2>);
     default:
@@ -539,32 +530,38 @@ function Items({ kind, items, sectionIndex, open, setOpen }: ItemsProps) {
           ))}
         </div>
       );
-    case "polaroid":
+    case "shop":
       return (
-        <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-7">
+        <div className="mt-6 grid grid-cols-2 gap-3">
           {items.map((it, j) => (
-            <button key={j} id={`it-${keyOf(j)}`} type="button" onClick={() => toggle(keyOf(j))} {...reveal(j % 2)} className={`mn-polaroid text-left ${it.soldOut ? "opacity-50" : ""}`} style={{ "--i": j % 2, "--tilt": `${j % 2 ? 2.2 : -2.4}deg` } as React.CSSProperties}>
-              <Photo it={it} width={600} className="aspect-square w-full" />
-              <span className="pg-display mt-2.5 block text-center leading-tight" style={{ fontSize: "calc(1.05rem * var(--pg-display-scale))" }}>{it.name}</span>
-              {priceOf(it) && <span className="block text-center text-[13px] font-semibold tabular-nums text-[var(--pg-muted)]">{money(priceOf(it))}</span>}
+            <button key={j} id={`it-${keyOf(j)}`} type="button" onClick={() => toggle(keyOf(j))} {...reveal(j % 2)} className={`mn-shop group flex flex-col items-center p-3 pb-4 text-center ${it.soldOut ? "opacity-50" : ""}`}>
+              <span className="mn-shop-img block w-full overflow-hidden"><Photo it={it} width={600} className="aspect-square w-full transition duration-500 group-hover:scale-[1.04]" /></span>
+              <span className="mt-3 block text-[16px] font-bold leading-tight" style={{ fontFamily: "var(--pg-display)" }}>{it.name}{sup(it)}</span>
+              {it.description && <span className="mt-1 line-clamp-2 block text-[12.5px] leading-snug text-[var(--pg-muted)]">{it.description}</span>}
+              {priceOf(it) && <span className="mt-2 block text-[16px] font-bold tabular-nums text-[var(--accent)]">{it.variants.length && !it.price ? "ab " : ""}{money(priceOf(it))}</span>}
+              <Badges it={it} center />
+              <Details it={it} open={open === keyOf(j)} />
             </button>
           ))}
         </div>
       );
-    case "ticket":
+    case "shoplist":
       return (
         <ul className="mt-5 space-y-3">
           {items.map((it, j) => (
             <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={it.soldOut ? "opacity-50" : ""}>
-              <button type="button" onClick={() => toggle(keyOf(j))} className="mn-ticket flex w-full items-stretch text-left">
-                <span className="min-w-0 flex-1 p-4">
-                  <span className="block text-[16px] font-bold">{it.name}{sup(it)}</span>
-                  {it.description && <span className="mt-0.5 block text-[13px] text-[var(--pg-muted)]">{it.description}</span>}
-                  <Badges it={it} /><Variants it={it} /><Details it={it} open={open === keyOf(j)} photo />
+              <button type="button" onClick={() => toggle(keyOf(j))} className="mn-shop flex w-full items-center gap-4 p-3 text-left">
+                <span className="mn-shop-img block size-[92px] shrink-0 overflow-hidden"><Photo it={it} width={320} className="size-full" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[16px] font-bold leading-snug" style={{ fontFamily: "var(--pg-display)" }}>{it.name}{sup(it)}</span>
+                  {it.description && <span className="mt-0.5 line-clamp-2 block text-[13px] leading-snug text-[var(--pg-muted)]">{it.description}</span>}
+                  <span className="mt-2 flex items-center gap-3">
+                    {priceOf(it) && <span className="whitespace-nowrap text-[15px] font-bold tabular-nums">{it.variants.length && !it.price ? "ab " : ""}{money(priceOf(it))}</span>}
+                    <Badges it={it} />
+                  </span>
+                  <Variants it={it} /><Details it={it} open={open === keyOf(j)} />
                 </span>
-                <span className="mn-ticket-stub grid w-24 shrink-0 place-items-center">
-                  <span className="pg-display text-center leading-none" style={{ fontSize: "calc(1.5rem * var(--pg-display-scale))" }}>{priceOf(it) ? money(priceOf(it)) : "—"}</span>
-                </span>
+                <span className="grid size-9 shrink-0 place-items-center self-end rounded-full bg-[var(--accent)] text-[var(--on-accent)]"><Plus className={`size-4 transition ${open === keyOf(j) ? "rotate-45" : ""}`} /></span>
               </button>
             </li>
           ))}
@@ -622,40 +619,6 @@ function Items({ kind, items, sectionIndex, open, setOpen }: ItemsProps) {
             );
           })}
         </div>
-      );
-    case "brutal":
-      return (
-        <ul className="mt-5 space-y-4">
-          {items.map((it, j) => (
-            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={it.soldOut ? "opacity-50" : ""}>
-              <button type="button" onClick={() => toggle(keyOf(j))} className="mn-brut flex w-full gap-3 bg-[var(--pg-card)] p-3 text-left transition active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
-                {it.image && <Photo it={it} width={240} className="mn-brut-sm size-20 shrink-0" />}
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-start gap-2"><span className="flex-1 text-[16px] font-bold leading-snug">{it.name}{sup(it)}</span>{!it.variants.length && it.price && <span className="mn-brut-sm shrink-0 bg-[var(--accent)] px-2 py-0.5 text-[13px] font-bold tabular-nums text-[var(--on-accent)]">{money(it.price)}</span>}</span>
-                  {it.description && <span className="mt-1 block text-[13px] font-medium">{it.description}</span>}
-                  <Badges it={it} /><Variants it={it} /><Details it={it} open={open === keyOf(j)} />
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      );
-    case "glass":
-      return (
-        <ul className="mt-5 space-y-3">
-          {items.map((it, j) => (
-            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={it.soldOut ? "opacity-50" : ""}>
-              <button type="button" onClick={() => toggle(keyOf(j))} className="mn-glass flex w-full gap-3 p-3 text-left">
-                <span className="min-w-0 flex-1 p-1">
-                  <span className="flex items-baseline gap-2"><span className="flex-1 text-[16px] font-semibold">{it.name}{sup(it)}</span>{!it.variants.length && it.price && <span className="text-[15px] font-semibold tabular-nums text-[var(--accent)]">{money(it.price)}</span>}</span>
-                  {it.description && <span className="mt-0.5 block text-[13px] text-[var(--pg-muted)]">{it.description}</span>}
-                  <Badges it={it} /><Variants it={it} /><Details it={it} open={open === keyOf(j)} />
-                </span>
-                {it.image && <Photo it={it} width={240} className="size-20 shrink-0 rounded-[calc(var(--pg-radius)*0.6)]" />}
-              </button>
-            </li>
-          ))}
-        </ul>
       );
     case "mono":
       return (
