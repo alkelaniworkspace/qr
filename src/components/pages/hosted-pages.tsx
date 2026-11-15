@@ -6,6 +6,7 @@ import type { PublicCode } from "@/lib/codes/public";
 import { mapsUrl } from "@/lib/codes/payload";
 import { site } from "@/lib/site";
 import { designVars, resolveDesign, type Design } from "@/lib/page-design";
+import { menuTemplate } from "@/lib/menu-templates";
 import { CopyButton } from "./copy-button";
 import { MenuPage } from "./menu-page";
 import { PollPage } from "./poll-page";
@@ -383,7 +384,9 @@ export interface PageLinks {
 }
 
 export function HostedPage({ code, links }: { code: PublicCode; links?: PageLinks }) {
-  const c = code.content;
+  // Menu templates bring their own colours/fonts unless the owner customised the design.
+  const tpl = code.type === "menu" ? menuTemplate(code.content.template) : null;
+  const c = tpl && !code.content.design ? { ...code.content, design: tpl.design } : code.content;
   const d = resolveDesign(c);
   let body: React.ReactNode = null;
   switch (code.type) {

@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { ImageField, LayoutPicker, MenuBuilder, MenuImport, MenuStylePicker } from "./menu-builder";
 import { DesignEditor } from "./design-editor";
+import { MenuTemplatePicker } from "./menu-template-picker";
 
 type Content = Record<string, unknown>;
 type Errors = Record<string, string>;
@@ -113,6 +114,12 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
             return (
               <FieldShell key={field.name} label={field.label} className="col-span-2">
                 <LayoutPicker value={str(value[field.name]) || "cards"} onChange={(v) => set(field.name, v)} />
+              </FieldShell>
+            );
+          case "menutemplate":
+            return (
+              <FieldShell key={field.name} label="Vorlage für die Speisekarte" hint="20 Vorlagen mit eigenem Aufbau. Die Vorschau zeigt deine Gerichte. Farben und Schriften passt du danach unter „Design der Seite“ an." className="col-span-2">
+                <MenuTemplatePicker value={str(value[field.name])} content={value} onPick={(t) => onChange({ ...value, [field.name]: t.id, design: t.design })} />
               </FieldShell>
             );
           case "design":

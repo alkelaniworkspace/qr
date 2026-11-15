@@ -13,20 +13,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Clock, Flame, Leaf, MapPin, Phone, Search, Sparkles, Star, Wheat, X } from "lucide-react";
 import type { MenuItemData, MenuSectionData } from "@/lib/codes/types";
 import { mapsUrl } from "@/lib/codes/payload";
-import { resolveDesign } from "@/lib/page-design";
+import { menuTemplate, type HeadingKind, type ItemKind, type MenuTemplate, type NavKind } from "@/lib/menu-templates";
 import { SmartImg } from "./smart-img";
 
 /**
- * Restaurant / café menu page. Deliberately calm: one photo at the top,
- * clear typography, text tabs with a sliding underline, simple rows with
- * name, price and an optional photo. Colours and fonts come from the page
- * design; the layout field picks rows, photo cards, a classic price list
- * or a centred fine-dining list.
+ * Menu page engine. A template (src/lib/menu-templates.ts) picks one of each:
+ * header, category navigation, section heading, dish layout and texture.
+ * Colours and fonts come from the page design (CSS variables on the shell).
  */
 
 type C = Record<string, unknown>;
 const s = (v: unknown) => String(v ?? "").trim();
 const money = (p: string) => (p && /\d$/.test(p) ? `${p} €` : p);
+const priceOf = (it: MenuItemData) => it.price || it.variants.find((v) => v.price)?.price || "";
 
 const BADGES: Record<string, { label: string; icon: typeof Star; tone?: string }> = {
   beliebt: { label: "Beliebt", icon: Star },
@@ -36,8 +35,6 @@ const BADGES: Record<string, { label: string; icon: typeof Star; tone?: string }
   scharf: { label: "Scharf", icon: Flame, tone: "red" },
   hausgemacht: { label: "Hausgemacht", icon: Wheat },
 };
-
-/** The 14 EU allergens with the letters German menus commonly use. */
 const ALLERGENS: Record<string, string> = {
   A: "Glutenhaltiges Getreide", B: "Krebstiere", C: "Eier", D: "Fisch", E: "Erdnüsse", F: "Soja", G: "Milch/Laktose",
   H: "Schalenfrüchte", L: "Sellerie", M: "Senf", N: "Sesam", O: "Sulfite", P: "Lupinen", R: "Weichtiere",
@@ -45,6 +42,7 @@ const ALLERGENS: Record<string, string> = {
 const allergenList = (tags: string) => tags.toUpperCase().split(/[\s,;]+/).filter((t) => ALLERGENS[t]);
 const sectionId = (i: number) => `kat-${i}`;
 const itemKey = (i: number, j: number) => `${i}-${j}`;
+const pad2 = (n: number) => String(n).padStart(2, "0");
 
 function normalize(raw: unknown): MenuSectionData[] {
   return ((raw as Partial<MenuSectionData>[]) ?? []).map((sec) => ({
@@ -57,7 +55,12 @@ function normalize(raw: unknown): MenuSectionData[] {
   }));
 }
 
-/** Marks [data-reveal] elements with data-in when they scroll into view (React leaves the attribute alone). */
+/** Pages made before templates existed: map the old layout choice onto the engine. */
+function legacyTemplate(layout: string): MenuTemplate {
+  const items: ItemKind = layout === "grid" ? "grid" : layout === "list" ? "leader" : layout === "elegant" ? "centered" : "row";
+  return { id: "legacy", name: "", mood: "", header: "below", nav: "underline", heading: layout === "elegant" ? "lines" : "plain", items, texture: "none", design: { preset: "studio" } };
+}
+
 function useReveal(root: React.RefObject<HTMLElement | null>, deps: unknown[]) {
   useEffect(() => {
     const el = root.current;
@@ -83,19 +86,14 @@ function useReveal(root: React.RefObject<HTMLElement | null>, deps: unknown[]) {
 
 export function MenuPage({ c }: { c: C }) {
   const sections = useMemo(() => normalize(c.sections), [c.sections]);
-  const d = resolveDesign(c);
-  const layout = s(c.layout) || "cards";
+  const t = menuTemplate(c.template) ?? legacyTemplate(s(c.layout) || "cards");
   const [active, setActive] = useState(0);
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  const navRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const [bar, setBar] = useState<{ left: number; width: number } | null>(null);
+  useReveal(rootRef, [sections, query, t.id]);
 
-  useReveal(rootRef, [sections, query, layout]);
-
-  // Which category is on screen
   useEffect(() => {
     const els = sections.map((_, i) => document.getElementById(sectionId(i))).filter(Boolean) as HTMLElement[];
     if (!els.length) return;
@@ -110,127 +108,38 @@ export function MenuPage({ c }: { c: C }) {
     return () => io.disconnect();
   }, [sections, query]);
 
-  // Sliding underline under the active tab; keep the tab in view
-  useEffect(() => {
-    const nav = navRef.current;
-    const tab = nav?.querySelector<HTMLElement>(`[data-tab="${active}"]`);
-    if (!nav || !tab) return;
-     
-    setBar({ left: tab.offsetLeft, width: tab.offsetWidth });
-    nav.scrollTo({ left: tab.offsetLeft - nav.clientWidth / 2 + tab.clientWidth / 2, behavior: "smooth" });
-  }, [active, sections, searching]);
-
   const q = query.trim().toLowerCase();
   const filtered = q ? sections.map((sec) => ({ ...sec, items: sec.items.filter((it) => `${it.name} ${it.description}`.toLowerCase().includes(q)) })) : sections;
   const usedAllergens = Array.from(new Set(sections.flatMap((sec) => sec.items.flatMap((it) => allergenList(it.tags))))).sort();
-  const highlights = useMemo(() => {
-    const all = sections.flatMap((sec, i) => sec.items.map((it, j) => ({ it, key: itemKey(i, j) }))).filter((x) => !x.it.soldOut && x.it.name && x.it.image);
-    const score = (x: (typeof all)[number]) => (x.it.badges.includes("beliebt") ? 2 : 0) + (x.it.badges.includes("neu") ? 1 : 0);
-    return all.sort((a, b) => score(b) - score(a)).slice(0, 6);
-  }, [sections]);
-  const jumpTo = (key: string) => {
-    setOpen(key);
-    requestAnimationFrame(() => document.getElementById(`it-${key}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
-  };
-  const elegant = layout === "elegant";
+  const frame = t.header === "frame";
 
   return (
-    <div ref={rootRef} className="mn -mx-5 -mt-8" data-font={d.font}>
-      <Header c={c} />
-
-      {highlights.length >= 3 && !q && (
-        <section className="mt-9" aria-label="Empfehlungen">
-          <p className="px-5 text-[15px] font-semibold">Empfehlungen</p>
-          <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-1 [scrollbar-width:none]">
-            {highlights.map(({ it, key }, n) => (
-              <button key={key} type="button" onClick={() => jumpTo(key)} data-reveal style={{ "--i": n } as React.CSSProperties} className="group w-36 shrink-0 snap-start text-left">
-                <span className="block overflow-hidden rounded-[calc(var(--pg-radius)*0.7+4px)] bg-[var(--pg-soft)]">
-                  <SmartImg src={it.image} width={480} className="aspect-square w-full object-cover transition duration-500 group-hover:scale-105" fallback={<span className="block aspect-square" />} />
-                </span>
-                <span className="mt-2 block truncate text-[14px] font-medium">{it.name}</span>
-                <span className="block text-[13px] tabular-nums text-[var(--pg-muted)]">{money(it.price || it.variants[0]?.price || "")}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Category tabs */}
-      <nav className="sticky top-0 z-20 mt-8 border-b border-[var(--pg-line)] bg-[var(--pg-bg)]/92 backdrop-blur-md">
-        {searching ? (
-          <div className="flex h-12 items-center gap-2 px-5">
-            <Search className="size-4 text-[var(--pg-muted)]" />
-            <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Gericht suchen" className="min-w-0 flex-1 bg-transparent py-1 text-[15px] outline-none placeholder:text-[var(--pg-muted)]" />
-            <button type="button" onClick={() => { setQuery(""); setSearching(false); }} aria-label="Suche schließen" className="grid size-8 place-items-center"><X className="size-4" /></button>
-          </div>
-        ) : (
-          <div className="flex items-center">
-            <div ref={navRef} className="relative flex flex-1 gap-6 overflow-x-auto px-5 [scrollbar-width:none]">
-              {sections.map((sec, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  data-tab={i}
-                  onClick={() => document.getElementById(sectionId(i))?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                  className={`h-12 shrink-0 text-[15px] transition-colors ${i === active ? "font-semibold text-[var(--pg-fg)]" : "text-[var(--pg-muted)]"}`}
-                >
-                  {sec.title}
-                </button>
-              ))}
-              {bar && <span className="mn-bar absolute bottom-0 h-[2px] rounded-full bg-[var(--accent)]" style={{ left: bar.left, width: bar.width }} />}
-            </div>
-            <button type="button" onClick={() => setSearching(true)} aria-label="Suchen" className="grid size-12 shrink-0 place-items-center text-[var(--pg-muted)] hover:text-[var(--pg-fg)]">
-              <Search className="size-[18px]" />
-            </button>
-          </div>
+    <div ref={rootRef} className={`mn -mx-5 -mt-8 min-h-screen mn-tx-${t.texture}`} data-tpl={t.id}>
+      <div className={frame ? "mn-frame mx-3 mt-3 pb-6" : ""}>
+        <Header c={c} t={t} />
+        <Nav t={t} sections={sections} active={active} searching={searching} setSearching={setSearching} query={query} setQuery={setQuery} />
+        <div className={t.items === "carousel" ? "" : "px-5"}>
+          {filtered.map((sec, i) =>
+            sec.items.length === 0 && q ? null : (
+              <section key={i} id={sectionId(i)} data-index={i} className="scroll-mt-16 pt-10">
+                <Heading kind={t.heading} title={sec.title} note={sec.note} index={i} count={sec.items.length} padded={t.items === "carousel"} />
+                <Items kind={t.items} items={sec.items} sectionIndex={i} open={open} setOpen={setOpen} />
+              </section>
+            ),
+          )}
+          {q && filtered.every((sec) => sec.items.length === 0) && <p className="py-12 text-center text-[var(--pg-muted)]">Nichts gefunden für „{query}“.</p>}
+        </div>
+        {(usedAllergens.length > 0 || s(c.footer)) && (
+          <footer className="mx-5 mt-14 border-t border-[var(--pg-line)] pt-6 text-[12px] leading-relaxed text-[var(--pg-muted)]">
+            {usedAllergens.length > 0 && <p className="mb-3"><span className="font-semibold text-[var(--pg-fg)]">Allergene:</span> {usedAllergens.map((a) => `${a} ${ALLERGENS[a]}`).join(" · ")}</p>}
+            {s(c.footer) && <p className="whitespace-pre-line">{s(c.footer)}</p>}
+          </footer>
         )}
-      </nav>
-
-      <div className="px-5">
-        {filtered.map((sec, i) =>
-          sec.items.length === 0 && q ? null : (
-            <section key={i} id={sectionId(i)} data-index={i} className="scroll-mt-14 pt-9">
-              <div data-reveal className={elegant ? "text-center" : ""}>
-                <h2 className="pg-display" style={{ fontSize: "calc(1.75rem * var(--pg-display-scale))" }}>{sec.title}</h2>
-                {sec.note && <p className="mt-1 text-[14px] text-[var(--pg-muted)]">{sec.note}</p>}
-              </div>
-              {layout === "grid" ? (
-                <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5">
-                  {sec.items.map((it, j) => <GridItem key={j} it={it} n={j} id={itemKey(i, j)} open={open === itemKey(i, j)} onToggle={setOpen} />)}
-                </div>
-              ) : (
-                <ul className={`mt-2 ${elegant ? "space-y-7 pt-3" : "divide-y divide-[var(--pg-line)]"}`}>
-                  {sec.items.map((it, j) => {
-                    const p = { it, n: j, id: itemKey(i, j), open: open === itemKey(i, j), onToggle: setOpen };
-                    return elegant ? <ElegantItem key={j} {...p} /> : <RowItem key={j} {...p} classic={layout === "list"} />;
-                  })}
-                </ul>
-              )}
-            </section>
-          ),
-        )}
-        {q && filtered.every((sec) => sec.items.length === 0) && <p className="py-12 text-center text-[var(--pg-muted)]">Nichts gefunden für „{query}“.</p>}
       </div>
-
-      {(usedAllergens.length > 0 || s(c.footer)) && (
-        <footer className="mx-5 mt-12 border-t border-[var(--pg-line)] pt-6 text-[12px] leading-relaxed text-[var(--pg-muted)]">
-          {usedAllergens.length > 0 && <p className="mb-3"><span className="font-semibold text-[var(--pg-fg)]">Allergene:</span> {usedAllergens.map((a) => `${a} ${ALLERGENS[a]}`).join(" · ")}</p>}
-          {s(c.footer) && <p className="whitespace-pre-line">{s(c.footer)}</p>}
-        </footer>
-      )}
-
       {(s(c.phone) || s(c.address)) && (
-        <div className="mp-orderbar sticky bottom-3 z-20 mx-5 mt-10 flex gap-2 rounded-full border border-[var(--pg-line)] bg-[var(--pg-card)]/92 p-1.5 shadow-[0_14px_34px_-18px_rgba(0,0,0,0.4)] backdrop-blur-md">
-          {s(c.phone) && (
-            <a href={`tel:${s(c.phone).replace(/[^\d+]/g, "")}`} className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--accent)] text-[14px] font-semibold text-[var(--on-accent)] transition active:scale-[0.97]">
-              <Phone className="size-4" /> Bestellen
-            </a>
-          )}
-          {s(c.address) && (
-            <a href={mapsUrl(s(c.address))} target="_blank" rel="noopener" className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-semibold transition hover:bg-[var(--pg-soft)] active:scale-[0.97]">
-              <MapPin className="size-4" /> Route
-            </a>
-          )}
+        <div className="mp-orderbar mn-orderbar sticky bottom-3 z-20 mx-5 mt-10 flex gap-2 p-1.5">
+          {s(c.phone) && <a href={`tel:${s(c.phone).replace(/[^\d+]/g, "")}`} className="mn-cta flex h-11 flex-1 items-center justify-center gap-2 text-[14px] font-semibold"><Phone className="size-4" /> Bestellen</a>}
+          {s(c.address) && <a href={mapsUrl(s(c.address))} target="_blank" rel="noopener" className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-semibold"><MapPin className="size-4" /> Route</a>}
         </div>
       )}
     </div>
@@ -239,66 +148,281 @@ export function MenuPage({ c }: { c: C }) {
 
 // ───────── header ─────────
 
-function Header({ c }: { c: C }) {
-  const cover = s(c.cover);
-  const logo = s(c.logo);
-  const name = s(c.name) || "Dein Lokal";
+function Actions({ c, center }: { c: C; center?: boolean }) {
   const hours = s(c.hours);
   return (
-    <header>
-      {cover && (
-        <div className="relative h-56 overflow-hidden bg-[var(--pg-soft)]">
-          <SmartImg src={cover} width={1280} eager className="mn-cover size-full object-cover" />
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--pg-bg)] to-transparent" />
-        </div>
-      )}
-      <div className={`relative px-5 ${cover ? "-mt-8" : "pt-10"}`}>
-        {logo && (
-          <SmartImg src={logo} width={240} eager className="mn-in size-[72px] rounded-[calc(var(--pg-radius)*0.6+8px)] border-4 border-[var(--pg-bg)] bg-[var(--pg-card)] object-cover shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]" />
-        )}
-        <h1 className="pg-display mn-in mt-4 leading-[1.02]" style={{ fontSize: "calc(2.4rem * var(--pg-display-scale))", animationDelay: "60ms" }}>{name}</h1>
-        {s(c.subtitle) && <p className="mn-in mt-2 text-[15px] leading-relaxed text-[var(--pg-muted)]" style={{ animationDelay: "120ms" }}>{s(c.subtitle)}</p>}
-        <div className="mn-in mt-5 flex flex-wrap gap-2 text-[14px]" style={{ animationDelay: "180ms" }}>
-          {s(c.phone) && (
-            <a href={`tel:${s(c.phone).replace(/[^\d+]/g, "")}`} className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--accent)] px-4 font-medium text-[var(--on-accent)] transition active:scale-95">
-              <Phone className="size-4" /> Anrufen
-            </a>
-          )}
-          {s(c.address) && (
-            <a href={mapsUrl(s(c.address))} target="_blank" rel="noopener" className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--pg-line)] px-4 font-medium transition hover:bg-[var(--pg-soft)] active:scale-95">
-              <MapPin className="size-4" /> Route
-            </a>
-          )}
-        </div>
-        {hours && (
-          <details className="group mt-4 text-[14px] text-[var(--pg-muted)]">
-            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5"><Clock className="size-4" /> Öffnungszeiten <ChevronDown className="size-3.5 transition group-open:rotate-180" /></summary>
-            <p className="mt-2 whitespace-pre-line leading-relaxed">{hours}</p>
-          </details>
-        )}
+    <>
+      <div className={`mn-in mt-5 flex flex-wrap gap-2 text-[14px] ${center ? "justify-center" : ""}`} style={{ animationDelay: "160ms" }}>
+        {s(c.phone) && <a href={`tel:${s(c.phone).replace(/[^\d+]/g, "")}`} className="mn-cta inline-flex h-10 items-center gap-2 px-4 font-medium"><Phone className="size-4" /> Anrufen</a>}
+        {s(c.address) && <a href={mapsUrl(s(c.address))} target="_blank" rel="noopener" className="mn-ghost inline-flex h-10 items-center gap-2 px-4 font-medium"><MapPin className="size-4" /> Route</a>}
       </div>
-    </header>
+      {hours && (
+        <details className={`group mt-4 text-[14px] text-[var(--pg-muted)] ${center ? "text-center" : ""}`}>
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5"><Clock className="size-4" /> Öffnungszeiten <ChevronDown className="size-3.5 transition group-open:rotate-180" /></summary>
+          <p className="mt-2 whitespace-pre-line leading-relaxed">{hours}</p>
+        </details>
+      )}
+    </>
   );
 }
 
-// ───────── items ─────────
+function Title({ children, size = 2.4, className = "", center }: { children: React.ReactNode; size?: number; className?: string; center?: boolean }) {
+  return <h1 className={`pg-display mn-in leading-[1.0] ${center ? "text-center" : ""} ${className}`} style={{ fontSize: `calc(${size}rem * var(--pg-display-scale))`, animationDelay: "60ms" }}>{children}</h1>;
+}
 
-interface ItemProps { it: MenuItemData; n: number; id: string; open: boolean; onToggle: (k: string | null) => void }
+function Logo({ c, className }: { c: C; className: string }) {
+  const logo = s(c.logo);
+  const name = s(c.name) || "Lokal";
+  return logo
+    ? <SmartImg src={logo} width={240} eager className={`object-cover ${className}`} fallback={<span className={`pg-display grid place-items-center bg-[var(--accent)] text-[var(--on-accent)] ${className}`}>{name.charAt(0)}</span>} />
+    : <span className={`pg-display grid place-items-center bg-[var(--accent)] text-[var(--on-accent)] ${className}`}>{name.charAt(0)}</span>;
+}
+
+function Header({ c, t }: { c: C; t: MenuTemplate }) {
+  const cover = s(c.cover);
+  const name = s(c.name) || "Dein Lokal";
+  const sub = s(c.subtitle);
+  const subEl = sub ? <p className="mn-in mt-2 text-[15px] leading-relaxed text-[var(--pg-muted)]" style={{ animationDelay: "110ms" }}>{sub}</p> : null;
+
+  switch (t.header) {
+    case "editorial":
+      return (
+        <header className="px-5 pt-10">
+          <div className="mn-in flex items-center justify-between border-b border-[var(--pg-fg)] pb-2 text-[12px] font-medium"><span>Speisekarte</span><span>{new Date().getFullYear()}</span></div>
+          <Title size={3.4} className="mt-6">{name}</Title>
+          {subEl}
+          {cover && <SmartImg src={cover} width={1280} eager className="mn-cover mt-7 aspect-[4/3] w-full object-cover" />}
+          <Actions c={c} />
+        </header>
+      );
+    case "frame":
+      return (
+        <header className="px-6 pt-10 text-center">
+          <Logo c={c} className="mx-auto size-16 rounded-full text-2xl" />
+          <p className="mn-in mt-4 text-[var(--accent)]">✦ ✦ ✦</p>
+          <Title size={2.8} center className="mt-2">{name}</Title>
+          {sub && <p className="mn-in mx-auto mt-2 max-w-xs text-[15px] italic text-[var(--pg-muted)]">{sub}</p>}
+          <Actions c={c} center />
+        </header>
+      );
+    case "bento":
+      return (
+        <header className="px-4 pt-6">
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="mn-tile mn-in col-span-2 row-span-2 flex flex-col justify-end overflow-hidden p-4" style={{ minHeight: 190 }}>
+              {cover && <SmartImg src={cover} width={960} eager className="absolute inset-0 size-full object-cover" />}
+              {cover && <span className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />}
+              <span className={`relative ${cover ? "text-white" : ""}`}><span className="pg-display block leading-[1.02]" style={{ fontSize: "calc(1.9rem * var(--pg-display-scale))" }}>{name}</span>{sub && <span className="mt-1 block text-[13px] opacity-80">{sub}</span>}</span>
+            </div>
+            <div className="mn-tile mn-in grid place-items-center p-3" style={{ animationDelay: "60ms" }}><Logo c={c} className="size-14 rounded-2xl text-2xl" /></div>
+            {s(c.phone) ? <a href={`tel:${s(c.phone).replace(/[^\d+]/g, "")}`} className="mn-tile mn-tile-accent mn-in flex flex-col justify-between p-3 text-[13px] font-semibold" style={{ animationDelay: "120ms" }}><Phone className="size-5" /> Anrufen</a> : <div className="mn-tile" />}
+            {s(c.address) && <a href={mapsUrl(s(c.address))} target="_blank" rel="noopener" className="mn-tile mn-in col-span-2 flex items-center gap-2 p-3 text-[13px] font-medium" style={{ animationDelay: "180ms" }}><MapPin className="size-4 shrink-0" /> <span className="truncate">{s(c.address)}</span></a>}
+            {s(c.hours) && <div className="mn-tile mn-in flex flex-col justify-between p-3 text-[12px]" style={{ animationDelay: "240ms" }}><Clock className="size-4" /><span className="line-clamp-2 text-[var(--pg-muted)]">{s(c.hours).split("\n")[0]}</span></div>}
+          </div>
+        </header>
+      );
+    case "hero":
+      return (
+        <header className="relative">
+          <div className="relative h-[360px] overflow-hidden bg-[var(--accent-2)]">
+            {cover && <SmartImg src={cover} width={1280} eager className="mn-cover size-full object-cover" />}
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--pg-bg)] via-[var(--pg-bg)]/40 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 px-5 pb-2">
+              <Logo c={c} className="mn-in mb-4 size-14 rounded-2xl text-2xl shadow-lg" />
+              <Title size={3}>{name}</Title>
+              {subEl}
+            </div>
+          </div>
+          <div className="px-5"><Actions c={c} /></div>
+        </header>
+      );
+    case "gradient":
+      return (
+        <header className="relative overflow-hidden px-5 pb-10 pt-14 text-white">
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,var(--accent),var(--accent-2))]" />
+          <div className="absolute -right-16 -top-16 size-64 rounded-full bg-white/15 blur-2xl mn-float" />
+          <div className="relative">
+            <Logo c={c} className="mn-in size-14 rounded-2xl border-2 border-white/40 text-2xl" />
+            <Title size={2.8} className="mt-5">{name}</Title>
+            {sub && <p className="mn-in mt-2 text-[15px] text-white/85">{sub}</p>}
+            <div className="mn-in mt-5 flex gap-2 text-[14px]">
+              {s(c.phone) && <a href={`tel:${s(c.phone).replace(/[^\d+]/g, "")}`} className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 font-semibold text-black"><Phone className="size-4" /> Anrufen</a>}
+              {s(c.address) && <a href={mapsUrl(s(c.address))} target="_blank" rel="noopener" className="inline-flex h-10 items-center gap-2 rounded-full bg-white/20 px-4 font-semibold backdrop-blur"><MapPin className="size-4" /> Route</a>}
+            </div>
+          </div>
+        </header>
+      );
+    case "split":
+      return (
+        <header className="px-5 pt-10">
+          <div className="grid grid-cols-[1fr_auto] items-start gap-4">
+            <div>
+              <p className="mn-in text-[13px] font-semibold text-[var(--accent)]">Speisekarte</p>
+              <Title size={2.9} className="mt-2">{name}</Title>
+              {subEl}
+            </div>
+            <Logo c={c} className="mn-in size-16 text-2xl" />
+          </div>
+          {cover && <SmartImg src={cover} width={1280} eager className="mn-cover mt-6 aspect-[16/9] w-full object-cover" />}
+          <Actions c={c} />
+        </header>
+      );
+    case "brutal":
+      return (
+        <header className="px-5 pt-8">
+          <div className="mn-brut mn-in bg-[var(--accent)] p-5 text-[var(--on-accent)]">
+            <p className="text-[12px] font-bold">Speisekarte</p>
+            <p className="pg-display mt-2 leading-[0.95]" style={{ fontSize: "calc(2.8rem * var(--pg-display-scale))" }}>{name}</p>
+            {sub && <p className="mt-2 text-[14px] font-medium opacity-90">{sub}</p>}
+          </div>
+          {cover && <SmartImg src={cover} width={1280} eager className="mn-brut mn-in mt-4 aspect-[16/9] w-full object-cover" />}
+          <Actions c={c} />
+        </header>
+      );
+    case "minimal":
+      return (
+        <header className="px-5 pt-14">
+          <Title size={2}>{name}</Title>
+          {subEl}
+          <Actions c={c} />
+        </header>
+      );
+    case "neon":
+      return (
+        <header className="relative overflow-hidden px-5 pb-6 pt-14 text-center">
+          {cover && <SmartImg src={cover} width={1280} eager className="absolute inset-0 size-full object-cover opacity-30" />}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--pg-bg)]" />
+          <div className="relative">
+            <p className="mn-glow pg-display mn-in leading-none" style={{ fontSize: "calc(3.2rem * var(--pg-display-scale))" }}>{name}</p>
+            {sub && <p className="mn-in mt-3 text-[15px] text-[var(--pg-muted)]">{sub}</p>}
+            <Actions c={c} center />
+          </div>
+        </header>
+      );
+    case "monogram":
+      return (
+        <header className="relative px-6 pb-4 pt-14 text-center">
+          {cover && <div className="absolute inset-0 opacity-20"><SmartImg src={cover} width={1280} eager className="size-full object-cover" /><div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--pg-bg)]" /></div>}
+          <div className="relative">
+            <div className="mn-in mx-auto grid size-20 place-items-center rounded-full border border-[var(--accent)] text-[var(--accent)]"><span className="pg-display text-4xl">{name.charAt(0)}</span></div>
+            <Title size={2.6} center className="mt-6">{name}</Title>
+            <div className="mn-in mx-auto mt-4 flex max-w-[200px] items-center gap-3 text-[var(--accent)]"><span className="h-px flex-1 bg-current opacity-50" /><span className="text-xs">✦</span><span className="h-px flex-1 bg-current opacity-50" /></div>
+            {sub && <p className="mn-in pg-display mt-3 text-[18px] italic text-[var(--pg-muted)]">{sub}</p>}
+            <Actions c={c} center />
+          </div>
+        </header>
+      );
+    default:
+      return (
+        <header>
+          {cover && (
+            <div className="relative h-56 overflow-hidden bg-[var(--pg-soft)]">
+              <SmartImg src={cover} width={1280} eager className="mn-cover size-full object-cover" />
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--pg-bg)] to-transparent" />
+            </div>
+          )}
+          <div className={`relative px-5 ${cover ? "-mt-8" : "pt-10"}`}>
+            {s(c.logo) && <Logo c={c} className="mn-in size-[72px] rounded-[calc(var(--pg-radius)*0.6+8px)] border-4 border-[var(--pg-bg)] shadow-md" />}
+            <Title className="mt-4">{name}</Title>
+            {subEl}
+            <Actions c={c} />
+          </div>
+        </header>
+      );
+  }
+}
+
+// ───────── category navigation ─────────
+
+function Nav({ t, sections, active, searching, setSearching, query, setQuery }: { t: MenuTemplate; sections: MenuSectionData[]; active: number; searching: boolean; setSearching: (v: boolean) => void; query: string; setQuery: (v: string) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [bar, setBar] = useState<{ left: number; width: number } | null>(null);
+  useEffect(() => {
+    const nav = ref.current;
+    const tab = nav?.querySelector<HTMLElement>(`[data-tab="${active}"]`);
+    if (!nav || !tab) return;
+     
+    setBar({ left: tab.offsetLeft, width: tab.offsetWidth });
+    nav.scrollTo({ left: tab.offsetLeft - nav.clientWidth / 2 + tab.clientWidth / 2, behavior: "smooth" });
+  }, [active, sections, searching]);
+  const go = (i: number) => document.getElementById(sectionId(i))?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const kind: NavKind = t.nav;
+  const tabClass = (i: number) => {
+    const on = i === active;
+    switch (kind) {
+      case "pills": return `h-9 rounded-full px-4 text-[14px] font-medium transition ${on ? "bg-[var(--accent)] text-[var(--on-accent)]" : "bg-[var(--pg-soft)] text-[var(--pg-muted)]"}`;
+      case "boxed": return `h-9 rounded-[calc(var(--pg-radius)*0.5+4px)] border px-3.5 text-[14px] font-semibold transition ${on ? "border-[var(--pg-fg)] bg-[var(--pg-fg)] text-[var(--pg-bg)]" : "border-[var(--pg-line)] text-[var(--pg-muted)]"}`;
+      case "brutal": return `mn-brut-sm h-9 px-3.5 text-[14px] font-bold transition ${on ? "bg-[var(--accent)] text-[var(--on-accent)]" : "bg-[var(--pg-card)]"}`;
+      case "glass": return `h-9 rounded-full px-4 text-[14px] font-medium transition ${on ? "bg-white/20 text-[var(--pg-fg)] shadow-[0_0_20px_-4px_var(--accent)]" : "text-[var(--pg-muted)]"}`;
+      case "numbered": return `h-12 text-[14px] transition ${on ? "font-semibold text-[var(--pg-fg)]" : "text-[var(--pg-muted)]"}`;
+      default: return `h-12 text-[15px] transition ${on ? "font-semibold text-[var(--pg-fg)]" : "text-[var(--pg-muted)]"}`;
+    }
+  };
+  const lined = kind === "underline" || kind === "numbered";
+  return (
+    <nav className={`mn-nav sticky top-0 z-20 mt-8 ${lined ? "border-b border-[var(--pg-line)]" : "py-2.5"} ${kind === "glass" ? "mn-glassbar" : "bg-[var(--pg-bg)]/92 backdrop-blur-md"}`}>
+      {searching ? (
+        <div className="flex h-12 items-center gap-2 px-5">
+          <Search className="size-4 text-[var(--pg-muted)]" />
+          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Gericht suchen" className="min-w-0 flex-1 bg-transparent py-1 text-[15px] outline-none placeholder:text-[var(--pg-muted)]" />
+          <button type="button" onClick={() => { setQuery(""); setSearching(false); }} aria-label="Suche schließen" className="grid size-8 place-items-center"><X className="size-4" /></button>
+        </div>
+      ) : (
+        <div className="flex items-center">
+          <div ref={ref} className={`relative flex flex-1 items-center overflow-x-auto px-5 [scrollbar-width:none] ${lined ? "gap-6" : "gap-2"}`}>
+            {sections.map((sec, i) => (
+              <button key={i} type="button" data-tab={i} onClick={() => go(i)} className={`shrink-0 ${tabClass(i)}`}>
+                {kind === "numbered" && <span className="mr-1.5 font-mono text-[11px] text-[var(--accent)]">{pad2(i + 1)}</span>}
+                {sec.title}
+              </button>
+            ))}
+            {lined && bar && <span className="mn-bar absolute bottom-0 h-[2px] rounded-full bg-[var(--accent)]" style={{ left: bar.left, width: bar.width }} />}
+          </div>
+          <button type="button" onClick={() => setSearching(true)} aria-label="Suchen" className="grid size-12 shrink-0 place-items-center text-[var(--pg-muted)] hover:text-[var(--pg-fg)]"><Search className="size-[18px]" /></button>
+        </div>
+      )}
+    </nav>
+  );
+}
+
+// ───────── section headings ─────────
+
+function Heading({ kind, title, note, index, count, padded }: { kind: HeadingKind; title: string; note: string; index: number; count: number; padded: boolean }) {
+  const size = (r: number) => ({ fontSize: `calc(${r}rem * var(--pg-display-scale))` });
+  const noteEl = note ? <p className="mt-1 text-[14px] text-[var(--pg-muted)]">{note}</p> : null;
+  const wrap = (child: React.ReactNode, cls = "") => <div data-reveal className={`${padded ? "px-5" : ""} ${cls}`}>{child}{noteEl}</div>;
+  switch (kind) {
+    case "numbered":
+      return wrap(<div className="flex items-baseline gap-3 border-b border-[var(--pg-line)] pb-3"><span className="font-mono text-[13px] text-[var(--accent)]">{pad2(index + 1)}</span><h2 className="pg-display" style={size(1.9)}>{title}</h2><span className="ml-auto text-[12px] text-[var(--pg-muted)]">{count}</span></div>);
+    case "lines":
+      return wrap(<div className="flex items-center gap-4 text-[var(--accent)]"><span className="h-px flex-1 bg-current opacity-40" /><h2 className="pg-display shrink-0 text-[var(--pg-fg)]" style={size(1.7)}>{title}</h2><span className="h-px flex-1 bg-current opacity-40" /></div>, "text-center");
+    case "script":
+      return wrap(<h2 className="pg-display -rotate-1 text-[var(--accent)]" style={size(2)}>{title}</h2>);
+    case "index":
+      return wrap(<div className="flex items-end gap-4"><span className="pg-display leading-[0.8] text-[var(--accent)]" style={size(3.6)}>{pad2(index + 1)}</span><div className="pb-1"><h2 className="pg-display leading-none" style={size(1.6)}>{title}</h2><p className="mt-1 text-[12px] text-[var(--pg-muted)]">{count} {count === 1 ? "Gericht" : "Gerichte"}</p></div></div>);
+    case "tag":
+      return wrap(<h2 className="mn-brut-sm pg-display inline-block bg-[var(--accent)] px-3 py-1 text-[var(--on-accent)]" style={size(1.5)}>{title}</h2>);
+    case "glow":
+      return wrap(<h2 className="mn-glow pg-display" style={size(2)}>{title}</h2>);
+    case "serif-italic":
+      return wrap(<h2 className="pg-display italic" style={size(2)}>{title}</h2>);
+    default:
+      return wrap(<h2 className="pg-display" style={size(1.75)}>{title}</h2>);
+  }
+}
+
+// ───────── dishes ─────────
 
 function Badges({ it, center }: { it: MenuItemData; center?: boolean }) {
   if (!it.badges.length && !it.soldOut) return null;
   return (
     <div className={`mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[12px] font-medium ${center ? "justify-center" : ""}`}>
-      {it.soldOut && <span className="text-[var(--pg-fg)]">Ausverkauft</span>}
+      {it.soldOut && <span>Ausverkauft</span>}
       {it.badges.map((b) => {
         const def = BADGES[b];
         if (!def) return null;
         const Icon = def.icon;
-        return (
-          <span key={b} className={`inline-flex items-center gap-1 ${def.tone === "green" ? "text-[#2f7d4a]" : def.tone === "red" ? "text-[#c23b2e]" : "text-[var(--accent)]"}`}>
-            <Icon className="size-3.5" /> {def.label}
-          </span>
-        );
+        return <span key={b} className={`inline-flex items-center gap-1 ${def.tone === "green" ? "mn-green" : def.tone === "red" ? "mn-red" : "text-[var(--accent)]"}`}><Icon className="size-3.5" /> {def.label}</span>;
       })}
     </div>
   );
@@ -309,16 +433,14 @@ function Variants({ it, center }: { it: MenuItemData; center?: boolean }) {
   if (!v.length) return null;
   return (
     <div className={`mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[13px] ${center ? "justify-center" : ""}`}>
-      {v.map((x, k) => (
-        <span key={k}><span className="text-[var(--pg-muted)]">{x.label}</span> <span className="font-semibold tabular-nums">{money(x.price)}</span></span>
-      ))}
+      {v.map((x, k) => <span key={k}><span className="text-[var(--pg-muted)]">{x.label}</span> <span className="font-semibold tabular-nums">{money(x.price)}</span></span>)}
     </div>
   );
 }
 
 const sup = (it: MenuItemData) => (it.tags ? <sup className="ml-1 text-[10px] font-normal text-[var(--pg-muted)]">{it.tags}</sup> : null);
 
-function Details({ it, open, photo }: { it: MenuItemData; open: boolean; photo: boolean }) {
+function Details({ it, open, photo }: { it: MenuItemData; open: boolean; photo?: boolean }) {
   const al = allergenList(it.tags);
   if (!al.length && !(photo && it.image)) return null;
   return (
@@ -331,71 +453,243 @@ function Details({ it, open, photo }: { it: MenuItemData; open: boolean; photo: 
   );
 }
 
-const canOpen = (it: MenuItemData) => allergenList(it.tags).length > 0 || !!it.image;
+/** Photo or a designed placeholder (initial on the second accent). */
+function Photo({ it, width, className }: { it: MenuItemData; width: number; className: string }) {
+  const fb = <span className={`pg-display grid place-items-center bg-[var(--accent-2)] text-[var(--pg-muted)] ${className}`}><span className="text-[2.2em] opacity-60">{it.name.charAt(0)}</span></span>;
+  return it.image ? <SmartImg src={it.image} width={width} className={`object-cover ${className}`} fallback={fb} /> : fb;
+}
 
-/** Default row: name + price on one line, description below, photo on the right. */
-function RowItem({ it, n, id, open, onToggle, classic }: ItemProps & { classic: boolean }) {
-  const single = !it.variants.length;
-  const showThumb = !!it.image && !classic;
-  return (
-    <li id={`it-${id}`} data-reveal style={{ "--i": n } as React.CSSProperties} className={it.soldOut ? "opacity-50" : ""}>
-      <button type="button" disabled={!canOpen(it)} onClick={() => onToggle(open ? null : id)} aria-expanded={canOpen(it) ? open : undefined} className="flex w-full gap-4 py-4 text-left">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2">
-            <p className="min-w-0 text-[16px] font-semibold leading-snug">{it.name}{sup(it)}</p>
-            {classic && <span className="mb-1 flex-1 border-b border-dotted border-[var(--pg-muted)]/40" />}
-            {single && it.price && <span className={`shrink-0 text-[15px] font-semibold tabular-nums ${classic ? "" : "ml-auto"}`}>{money(it.price)}</span>}
-          </div>
-          {it.description && <p className="mt-1 text-[14px] leading-relaxed text-[var(--pg-muted)]">{it.description}</p>}
-          <Badges it={it} />
-          <Variants it={it} />
-          <Details it={it} open={open} photo={classic} />
+interface ItemsProps { kind: ItemKind; items: MenuItemData[]; sectionIndex: number; open: string | null; setOpen: (k: string | null) => void }
+
+function Items({ kind, items, sectionIndex, open, setOpen }: ItemsProps) {
+  const toggle = (id: string) => setOpen(open === id ? null : id);
+  const reveal = (n: number) => ({ "data-reveal": true, style: { "--i": n } as React.CSSProperties });
+  const keyOf = (j: number) => itemKey(sectionIndex, j);
+
+  switch (kind) {
+    case "leader":
+      return (
+        <ul className="mt-5 space-y-5">
+          {items.map((it, j) => (
+            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={it.soldOut ? "opacity-50" : ""}>
+              <button type="button" onClick={() => toggle(keyOf(j))} className="block w-full text-left">
+                <span className="flex items-baseline gap-2"><span className="text-[16px] font-semibold">{it.name}{sup(it)}</span><span className="mb-1 flex-1 border-b border-dotted border-[var(--pg-muted)]/50" />{priceOf(it) && !it.variants.length && <span className="font-semibold tabular-nums">{money(it.price)}</span>}</span>
+                {it.description && <span className="mt-0.5 block text-[14px] italic leading-relaxed text-[var(--pg-muted)]">{it.description}</span>}
+                <Badges it={it} /><Variants it={it} /><Details it={it} open={open === keyOf(j)} photo />
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
+    case "centered":
+      return (
+        <ul className="mt-6 space-y-8">
+          {items.map((it, j) => (
+            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={`text-center ${it.soldOut ? "opacity-50" : ""}`}>
+              <button type="button" onClick={() => toggle(keyOf(j))} className="block w-full">
+                <p className="pg-display text-[21px] leading-snug">{it.name}{sup(it)}</p>
+                {it.description && <p className="pg-display mx-auto mt-1 max-w-xs text-[16px] italic text-[var(--pg-muted)]">{it.description}</p>}
+                {!it.variants.length && it.price && <p className="mt-2 text-[15px] tabular-nums text-[var(--accent)]">{money(it.price)}</p>}
+                <Badges it={it} center /><Variants it={it} center /><Details it={it} open={open === keyOf(j)} photo />
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
+    case "grid":
+      return (
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          {items.map((it, j) => (
+            <button key={j} id={`it-${keyOf(j)}`} type="button" onClick={() => toggle(keyOf(j))} {...reveal(j % 2)} className={`mn-card group overflow-hidden text-left ${open === keyOf(j) ? "col-span-2" : ""} ${it.soldOut ? "opacity-50" : ""}`}>
+              <span className="block overflow-hidden"><Photo it={it} width={600} className={`w-full transition duration-500 group-hover:scale-105 ${open === keyOf(j) ? "aspect-[16/10]" : "aspect-square"}`} /></span>
+              <span className="block p-3">
+                <span className="block text-[15px] font-semibold leading-snug">{it.name}{sup(it)}</span>
+                {open === keyOf(j) && it.description && <span className="mt-1 block text-[14px] text-[var(--pg-muted)]">{it.description}</span>}
+                {priceOf(it) && <span className="mt-1 block text-[14px] font-semibold tabular-nums text-[var(--accent)]">{money(priceOf(it))}</span>}
+                <Badges it={it} /><Details it={it} open={open === keyOf(j)} />
+              </span>
+            </button>
+          ))}
         </div>
-        {showThumb && (
-          <span className="relative size-[88px] shrink-0 overflow-hidden rounded-[calc(var(--pg-radius)*0.6+4px)] bg-[var(--pg-soft)]">
-            <SmartImg src={it.image} width={320} className="size-full object-cover" fallback={<span className="block size-full" />} />
-          </span>
-        )}
-      </button>
-    </li>
-  );
-}
-
-function GridItem({ it, n, id, open, onToggle }: ItemProps) {
-  return (
-    <div id={`it-${id}`} data-reveal style={{ "--i": n % 2 } as React.CSSProperties} className={`${open ? "col-span-2" : ""} ${it.soldOut ? "opacity-50" : ""}`}>
-      <button type="button" onClick={() => onToggle(open ? null : id)} aria-expanded={open} className="group block w-full text-left">
-        <span className="block overflow-hidden rounded-[calc(var(--pg-radius)*0.7+4px)] bg-[var(--pg-soft)]">
-          {it.image ? (
-            <SmartImg src={it.image} width={open ? 1080 : 480} className={`w-full object-cover transition duration-500 group-hover:scale-[1.03] ${open ? "aspect-[16/10]" : "aspect-square"}`} fallback={<span className="block aspect-square" />} />
-          ) : (
-            <span className="pg-display grid aspect-square place-items-center text-4xl text-[var(--pg-muted)] opacity-40">{it.name.slice(0, 1)}</span>
-          )}
-        </span>
-        <span className="mt-2 flex items-baseline gap-2">
-          <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug">{it.name}{sup(it)}</span>
-          {!it.variants.length && it.price && <span className="shrink-0 text-[14px] font-semibold tabular-nums">{money(it.price)}</span>}
-        </span>
-        {open && it.description && <span className="mt-1 block text-[14px] leading-relaxed text-[var(--pg-muted)]">{it.description}</span>}
-        <Badges it={it} />
-        <Variants it={it} />
-        <Details it={it} open={open} photo={false} />
-      </button>
-    </div>
-  );
-}
-
-function ElegantItem({ it, n, id, open, onToggle }: ItemProps) {
-  return (
-    <li id={`it-${id}`} data-reveal style={{ "--i": n } as React.CSSProperties} className={`text-center ${it.soldOut ? "opacity-50" : ""}`}>
-      <button type="button" disabled={!canOpen(it)} onClick={() => onToggle(open ? null : id)} className="block w-full">
-        <p className="pg-display text-[20px] leading-snug">{it.name}{sup(it)}</p>
-        {it.description && <p className="mx-auto mt-1 max-w-xs text-[14px] italic leading-relaxed text-[var(--pg-muted)]">{it.description}</p>}
-        {!it.variants.length && it.price && <p className="mt-1.5 text-[15px] font-semibold tabular-nums text-[var(--accent)]">{money(it.price)}</p>}
-        <Badges it={it} center />
-        <Variants it={it} center />
-        <Details it={it} open={open} photo />
-      </button>
-    </li>
-  );
+      );
+    case "masonry":
+      return (
+        <div className="mt-5 columns-2 gap-3 [column-fill:_balance]">
+          {items.map((it, j) => (
+            <button key={j} id={`it-${keyOf(j)}`} type="button" onClick={() => toggle(keyOf(j))} {...reveal(j % 2)} className={`group relative mb-3 block w-full break-inside-avoid overflow-hidden rounded-[calc(var(--pg-radius)*0.8+4px)] text-left ${it.soldOut ? "opacity-50" : ""}`}>
+              <Photo it={it} width={600} className={`w-full transition duration-700 group-hover:scale-105 ${j % 3 === 0 ? "aspect-[3/4]" : "aspect-square"}`} />
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 pt-12 text-white">
+                <span className="block text-[15px] font-semibold leading-snug">{it.name}</span>
+                {priceOf(it) && <span className="mt-1 inline-block rounded-full bg-white/90 px-2 py-0.5 text-[12px] font-semibold tabular-nums text-black">{money(priceOf(it))}</span>}
+              </span>
+            </button>
+          ))}
+        </div>
+      );
+    case "carousel":
+      return (
+        <div className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-2 [scrollbar-width:none]">
+          {items.map((it, j) => (
+            <button key={j} id={`it-${keyOf(j)}`} type="button" onClick={() => toggle(keyOf(j))} {...reveal(j)} className={`group w-[72%] shrink-0 snap-start text-left ${it.soldOut ? "opacity-50" : ""}`}>
+              <span className="block overflow-hidden rounded-[calc(var(--pg-radius)*0.8+4px)]"><Photo it={it} width={800} className="aspect-[4/5] w-full transition duration-700 group-hover:scale-105" /></span>
+              <span className="mt-3 flex items-baseline gap-2"><span className="flex-1 text-[16px] font-semibold">{it.name}</span>{priceOf(it) && <span className="text-[15px] font-semibold tabular-nums text-[var(--accent)]">{money(priceOf(it))}</span>}</span>
+              {it.description && <span className="mt-0.5 line-clamp-2 block text-[14px] text-[var(--pg-muted)]">{it.description}</span>}
+              <Badges it={it} />
+            </button>
+          ))}
+        </div>
+      );
+    case "polaroid":
+      return (
+        <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-7">
+          {items.map((it, j) => (
+            <button key={j} id={`it-${keyOf(j)}`} type="button" onClick={() => toggle(keyOf(j))} {...reveal(j % 2)} className={`mn-polaroid text-left ${it.soldOut ? "opacity-50" : ""}`} style={{ "--i": j % 2, "--tilt": `${j % 2 ? 2.2 : -2.4}deg` } as React.CSSProperties}>
+              <Photo it={it} width={600} className="aspect-square w-full" />
+              <span className="pg-display mt-2.5 block text-center leading-tight" style={{ fontSize: "calc(1.05rem * var(--pg-display-scale))" }}>{it.name}</span>
+              {priceOf(it) && <span className="block text-center text-[13px] font-semibold tabular-nums text-[var(--pg-muted)]">{money(priceOf(it))}</span>}
+            </button>
+          ))}
+        </div>
+      );
+    case "ticket":
+      return (
+        <ul className="mt-5 space-y-3">
+          {items.map((it, j) => (
+            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={it.soldOut ? "opacity-50" : ""}>
+              <button type="button" onClick={() => toggle(keyOf(j))} className="mn-ticket flex w-full items-stretch text-left">
+                <span className="min-w-0 flex-1 p-4">
+                  <span className="block text-[16px] font-bold">{it.name}{sup(it)}</span>
+                  {it.description && <span className="mt-0.5 block text-[13px] text-[var(--pg-muted)]">{it.description}</span>}
+                  <Badges it={it} /><Variants it={it} /><Details it={it} open={open === keyOf(j)} photo />
+                </span>
+                <span className="mn-ticket-stub grid w-24 shrink-0 place-items-center">
+                  <span className="pg-display text-center leading-none" style={{ fontSize: "calc(1.5rem * var(--pg-display-scale))" }}>{priceOf(it) ? money(priceOf(it)) : "—"}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
+    case "circle":
+      return (
+        <ul className="mt-5 space-y-4">
+          {items.map((it, j) => (
+            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={it.soldOut ? "opacity-50" : ""}>
+              <button type="button" onClick={() => toggle(keyOf(j))} className="mn-card flex w-full items-center gap-4 p-3 text-left">
+                <Photo it={it} width={240} className="size-20 shrink-0 rounded-full" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[16px] font-semibold">{it.name}{sup(it)}</span>
+                  {it.description && <span className="mt-0.5 line-clamp-2 block text-[13px] text-[var(--pg-muted)]">{it.description}</span>}
+                  <Badges it={it} /><Variants it={it} /><Details it={it} open={open === keyOf(j)} />
+                </span>
+                {!it.variants.length && it.price && <span className="shrink-0 rounded-full bg-[var(--accent)] px-3 py-1.5 text-[13px] font-semibold tabular-nums text-[var(--on-accent)]">{money(it.price)}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
+    case "pricecol":
+      return (
+        <ul className="mt-5 divide-y divide-[var(--pg-line)] border-y border-[var(--pg-line)]">
+          {items.map((it, j) => (
+            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={it.soldOut ? "opacity-50" : ""}>
+              <button type="button" onClick={() => toggle(keyOf(j))} className="grid w-full grid-cols-[1fr_auto] gap-4 py-4 text-left">
+                <span className="min-w-0">
+                  <span className="block text-[16px] font-semibold">{it.name}{sup(it)}</span>
+                  {it.description && <span className="mt-0.5 block text-[14px] text-[var(--pg-muted)]">{it.description}</span>}
+                  <Badges it={it} /><Variants it={it} /><Details it={it} open={open === keyOf(j)} photo />
+                </span>
+                <span className="pg-display self-start tabular-nums text-[var(--accent)]" style={{ fontSize: "calc(1.7rem * var(--pg-display-scale))", lineHeight: 1 }}>{!it.variants.length && it.price ? it.price.replace(/,00$/, "") : ""}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
+    case "bento":
+      return (
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
+          {items.map((it, j) => {
+            const big = j % 3 === 0;
+            return (
+              <button key={j} id={`it-${keyOf(j)}`} type="button" onClick={() => toggle(keyOf(j))} {...reveal(j % 2)} className={`mn-tile group relative overflow-hidden text-left ${big ? "col-span-2" : ""} ${it.soldOut ? "opacity-50" : ""}`}>
+                {big && <Photo it={it} width={960} className="aspect-[16/9] w-full transition duration-700 group-hover:scale-105" />}
+                <span className="block p-3.5">
+                  <span className="flex items-baseline gap-2"><span className="flex-1 text-[15px] font-semibold leading-snug">{it.name}{sup(it)}</span>{priceOf(it) && <span className="rounded-full bg-[var(--accent)] px-2 py-0.5 text-[12px] font-semibold tabular-nums text-[var(--on-accent)]">{money(priceOf(it))}</span>}</span>
+                  {it.description && <span className="mt-1 line-clamp-2 block text-[13px] text-[var(--pg-muted)]">{it.description}</span>}
+                  <Badges it={it} /><Details it={it} open={open === keyOf(j)} />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      );
+    case "brutal":
+      return (
+        <ul className="mt-5 space-y-4">
+          {items.map((it, j) => (
+            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={it.soldOut ? "opacity-50" : ""}>
+              <button type="button" onClick={() => toggle(keyOf(j))} className="mn-brut flex w-full gap-3 bg-[var(--pg-card)] p-3 text-left transition active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
+                {it.image && <Photo it={it} width={240} className="mn-brut-sm size-20 shrink-0" />}
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-start gap-2"><span className="flex-1 text-[16px] font-bold leading-snug">{it.name}{sup(it)}</span>{!it.variants.length && it.price && <span className="mn-brut-sm shrink-0 bg-[var(--accent)] px-2 py-0.5 text-[13px] font-bold tabular-nums text-[var(--on-accent)]">{money(it.price)}</span>}</span>
+                  {it.description && <span className="mt-1 block text-[13px] font-medium">{it.description}</span>}
+                  <Badges it={it} /><Variants it={it} /><Details it={it} open={open === keyOf(j)} />
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
+    case "glass":
+      return (
+        <ul className="mt-5 space-y-3">
+          {items.map((it, j) => (
+            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={it.soldOut ? "opacity-50" : ""}>
+              <button type="button" onClick={() => toggle(keyOf(j))} className="mn-glass flex w-full gap-3 p-3 text-left">
+                <span className="min-w-0 flex-1 p-1">
+                  <span className="flex items-baseline gap-2"><span className="flex-1 text-[16px] font-semibold">{it.name}{sup(it)}</span>{!it.variants.length && it.price && <span className="text-[15px] font-semibold tabular-nums text-[var(--accent)]">{money(it.price)}</span>}</span>
+                  {it.description && <span className="mt-0.5 block text-[13px] text-[var(--pg-muted)]">{it.description}</span>}
+                  <Badges it={it} /><Variants it={it} /><Details it={it} open={open === keyOf(j)} />
+                </span>
+                {it.image && <Photo it={it} width={240} className="size-20 shrink-0 rounded-[calc(var(--pg-radius)*0.6)]" />}
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
+    case "mono":
+      return (
+        <ul className="mt-4">
+          {items.map((it, j) => (
+            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={`border-t border-[var(--pg-line)] ${it.soldOut ? "opacity-50" : ""}`}>
+              <button type="button" onClick={() => toggle(keyOf(j))} className="grid w-full grid-cols-[1fr_auto] gap-6 py-3.5 text-left">
+                <span className="min-w-0">
+                  <span className="block text-[15px] font-medium">{it.name}{sup(it)}</span>
+                  {it.description && <span className="mt-0.5 block text-[13px] text-[var(--pg-muted)]">{it.description}</span>}
+                  <Variants it={it} /><Details it={it} open={open === keyOf(j)} photo />
+                </span>
+                <span className="font-mono text-[13px] tabular-nums">{!it.variants.length ? money(it.price) : ""}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
+    default:
+      return (
+        <ul className="mt-2 divide-y divide-[var(--pg-line)]">
+          {items.map((it, j) => (
+            <li key={j} id={`it-${keyOf(j)}`} {...reveal(j)} className={it.soldOut ? "opacity-50" : ""}>
+              <button type="button" onClick={() => toggle(keyOf(j))} className="flex w-full gap-4 py-4 text-left">
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-baseline gap-2"><span className="text-[16px] font-semibold leading-snug">{it.name}{sup(it)}</span>{!it.variants.length && it.price && <span className="ml-auto shrink-0 text-[15px] font-semibold tabular-nums">{money(it.price)}</span>}</span>
+                  {it.description && <span className="mt-1 block text-[14px] leading-relaxed text-[var(--pg-muted)]">{it.description}</span>}
+                  <Badges it={it} /><Variants it={it} /><Details it={it} open={open === keyOf(j)} />
+                </span>
+                {it.image && <Photo it={it} width={320} className="size-[88px] shrink-0 rounded-[calc(var(--pg-radius)*0.6+4px)]" />}
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
+  }
 }
