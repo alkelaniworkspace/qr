@@ -162,7 +162,7 @@ function WizardEditor({ init }: { init: Init }) {
   const [publishedSig, setPublishedSig] = useState<string | null>(init.token ? signature : null);
   const live = mode === "dynamic" && !!token;
   const dirty = live && publishedSig !== signature;
-  const locked = mode === "dynamic" && !!init.token; // printed already: stays dynamic
+  const locked = mode === "dynamic" && !!token; // live (maybe printed): stays dynamic
 
   const def = CODE_TYPES[type];
   const data = useMemo(() => (mode === "dynamic" ? shortLink(slug) : staticPayload(type, content, name || undefined)), [mode, slug, type, content, name]);
