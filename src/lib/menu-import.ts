@@ -269,33 +269,105 @@ ${text.slice(0, 90000)}`;
 // ───────── 4. plain text ─────────
 export { fromJsonLd, fromEmbedded, extractBlobs };
 
+const NOISE = /^(schmeckt mir!?|merken!?|bild lädt noch.*|item info|produktinfo|hinzufügen|add|\+|in den warenkorb|mehr anzeigen|einem gaumenfreund.*|.*gaumenfreunde.*|klassisch sortiert|speisekarte filtern|zuletzt aktualisiert.*|beliebt|popular|from|ab|vegetarisch|vegan)$/i;
+const PRICE_ONLY = /^(?:ab\s+|from\s+)?(?:€\s*)?(\d{1,3}(?:[.,]\d{2}))\s*(?:€|eur|euro)?$/i;
+const PRICE_END = /(?:ab\s+|from\s+)?(?:€\s*)?(\d{1,3}(?:[.,]\d{2}))\s*(?:€|eur|euro)?\s*$/i;
+const SIZE_HEADER = /^([\wÄÖÜäöüß.Ø ]{1,14})(\s*\/\s*[\wÄÖÜäöüß.Ø ]{1,14}){1,4}$/;
+
+function splitName(raw: string): { name: string; tags: string } {
+  const m = raw.replace(/[.\-–—_·\s]+$/, "").trim().match(/^(?:\d+[.)]?\s+)?(.+?)(?:\s*[(\[]([A-Z0-9,\s]+)[)\]])?$/);
+  return { name: (m?.[1] ?? raw).slice(0, 120), tags: (m?.[2] ?? "").replace(/\s+/g, " ").trim() };
+}
+
+/** Parses menus copied from web pages or PDFs: "Name … 7,50", or name / description / price on separate lines. */
 export function fromText(text: string): ImportedMenu | null {
-  const lines = text.split(/\r?\n/).map((l) => l.replace(/\s+/g, " ").trim()).filter(Boolean);
+  const lines = text.split(/\r?\n/).map((l) => l.replace(/\s+/g, " ").trim()).filter((l) => l && l !== "€" && !NOISE.test(l));
   const sections: MenuSectionData[] = [];
-  let current: MenuSectionData | null = null;
-  const priceRe = /(?:€\s*)?(\d{1,3}(?:[.,]\d{2}))\s*(?:€|eur|euro)?\s*$/i;
-  for (const line of lines) {
-    const m = line.match(priceRe);
-    if (m) {
-      if (!current) {
-        current = { title: "Karte", note: "", items: [] };
-        sections.push(current);
-      }
-      const before = line.slice(0, m.index).replace(/[.\-–—_·\s]+$/, "").trim();
-      const nameMatch = before.match(/^(?:\d+[.)]?\s+)?(.+?)(?:\s*[(\[]([A-Z0-9,\s]+)[)\]])?$/);
-      const item = emptyItem();
-      item.name = (nameMatch?.[1] ?? before).slice(0, 120);
-      item.tags = (nameMatch?.[2] ?? "").replace(/\s+/g, " ").trim();
-      item.price = formatPrice(parseFloat(m[1].replace(",", ".")));
-      if (item.name) current.items.push(item);
-    } else if (current && current.items.length && line.length > 25 && !current.items.at(-1)!.description) {
-      current.items.at(-1)!.description = line.slice(0, 300);
-    } else if (line.length <= 40) {
-      current = { title: line.replace(/[:\s]+$/, ""), note: "", items: [] };
-      sections.push(current);
+  let section: MenuSectionData | null = null;
+  let sizes: string[] = [];
+  let pendingSizes: string[] | null = null;
+  let buffer: string[] = [];
+  let item: MenuItemData | null = null;
+  let prices: string[] = [];
+
+  const open = (title: string) => {
+    section = { title: title.replace(/[:\s]+$/, "").slice(0, 80), note: "", items: [] };
+    sections.push(section);
+    sizes = pendingSizes ?? [];
+    pendingSizes = null;
+  };
+  const finish = () => {
+    if (item && prices.length) {
+      if (prices.length > 1) item.variants = prices.slice(0, 8).map((p, i) => ({ label: sizes[i] ?? `Größe ${i + 1}`, price: p }));
+      else item.price = prices[0];
+      if (!section) open("Karte");
+      section!.items.push(item);
     }
+    item = null;
+    prices = [];
+  };
+  const start = (lead: string[]) => {
+    // lead = lines before the price: [..., category?, name, description?]
+    let nameIdx = lead.length - 1;
+    const last = lead[nameIdx];
+    if (lead.length >= 2 && (last.length > 32 || last.includes(",") || /^(mit|with|aus|und|in|auf|dazu|serviert)\b/i.test(last) || /^[a-zäöü]/.test(last) || /[(\[][A-Z0-9,\s]+[)\]]\s*$/.test(lead[nameIdx - 1]))) nameIdx -= 1;
+    for (let i = nameIdx - 1; i >= 0; i--) {
+      if (lead[i].length <= 40 && !SIZE_HEADER.test(lead[i])) {
+        open(lead[i]);
+        break;
+      }
+    }
+    const { name, tags } = splitName(lead[nameIdx]);
+    item = emptyItem();
+    item.name = name;
+    item.tags = tags;
+    item.description = lead.slice(nameIdx + 1).join(" ").slice(0, 300);
+  };
+
+  for (const line of lines) {
+    const only = line.match(PRICE_ONLY);
+    if (only) {
+      const p = formatPrice(parseFloat(only[1].replace(",", ".")));
+      if (!item && buffer.length) {
+        start(buffer);
+        buffer = [];
+      }
+      if (item) prices.push(p);
+      continue;
+    }
+    if (item && prices.length) finish();
+    if (SIZE_HEADER.test(line) && line.includes("/")) {
+      const labels = line.split("/").map((x) => x.trim());
+      if (buffer.length) pendingSizes = labels;
+      else sizes = labels;
+      continue;
+    }
+    const end = line.match(PRICE_END);
+    if (end && end.index! > 2) {
+      if (buffer.length) {
+        const title = buffer.filter((l) => l.length <= 40).at(-1);
+        if (title) open(title);
+        buffer = [];
+      }
+      const { name, tags } = splitName(line.slice(0, end.index));
+      item = emptyItem();
+      item.name = name;
+      item.tags = tags;
+      prices = [formatPrice(parseFloat(end[1].replace(",", ".")))];
+      finish();
+      continue;
+    }
+    // a description line right after an inline-priced dish
+    const lastItem = (section as MenuSectionData | null)?.items.at(-1);
+    if (!buffer.length && lastItem && !lastItem.description && line.length > 25) {
+      lastItem.description = line.slice(0, 300);
+      continue;
+    }
+    buffer.push(line);
+    if (buffer.length > 6) buffer.shift();
   }
-  const filled = sections.filter((s) => s.items.length);
+  finish();
+  const filled = sections.filter((x) => x.items.length);
   return filled.length ? { sections: filled, source: "text" } : null;
 }
 

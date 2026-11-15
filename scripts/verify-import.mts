@@ -46,3 +46,33 @@ check("text: two sections", text?.sections.length === 2, text);
 check("text: allergens from brackets", text?.sections[0].items[0].tags === "G" && text.sections[0].items[0].price === "4,50", text?.sections[0].items[0]);
 check("text: description attached", text?.sections[0].items[0].description.startsWith("Hausgemachter"), text?.sections[0].items[0]);
 check("text: numbered dish", text?.sections[1].items[0].name === "Gyros Teller" && text.sections[1].items[0].tags === "A, G", text?.sections[1].items[0]);
+
+// Copied from a menu website: name / description / price lines, size header, noise
+const site = fromText(`Speisekarte von Antalya Grill
+Klassisch sortiert
+Grillspezialitäten
+klein / mittel / groß
+Döner Tasche
+Kalb o. Hähnchen Dönerfleisch Im Fladenbrot mit gemischtem Salat und Sauce
+5,00
+€
+7,00
+€
+9,00
+€
+Schmeckt mir!
+Merken!
+Döner Schale
+Kalb o. Hähnchen Dönerfleisch mit Pommes o. Reis und Sauce
+7,00 €
+Pizzen
+Margherita (A, G)
+Tomatensauce, Käse
+8,50 €`);
+const grill = site?.sections.find((s) => s.title === "Grillspezialitäten");
+check("site text: category found", !!grill, site);
+check("site text: sizes from header", grill?.items[0].variants.map((v) => `${v.label}=${v.price}`).join("|") === "klein=5,00|mittel=7,00|groß=9,00", grill?.items[0]);
+check("site text: description", grill?.items[0].description.startsWith("Kalb") === true, grill?.items[0]);
+check("site text: second dish single price", grill?.items[1].name === "Döner Schale" && grill.items[1].price === "7,00", grill?.items[1]);
+const pz = site?.sections.find((s) => s.title === "Pizzen");
+check("site text: next category + allergens", pz?.items[0].name === "Margherita" && pz.items[0].tags === "A, G" && pz.items[0].price === "8,50", pz);
