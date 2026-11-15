@@ -73,7 +73,7 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
           <div className="relative h-[640px] w-[300px] overflow-hidden rounded-[40px] border-[6px] border-[#2a2e33] bg-black shadow-lift">
             <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-black" />
             <div className="h-full overflow-y-auto overflow-x-hidden pt-7 [scrollbar-width:none]">
-              <div className="origin-top-left" style={{ width: 390, transform: "scale(0.738)" }}>{phone}</div>
+              <div className="mp-preview origin-top-left" style={{ width: 390, transform: "scale(0.738)" }}>{phone}</div>
             </div>
           </div>
         </div>

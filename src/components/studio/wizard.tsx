@@ -370,11 +370,11 @@ function WizardEditor({ init }: { init: Init }) {
               <h2 className="font-display text-xl">Mit Vorlage starten</h2>
               <span className="text-sm text-faint">Fertige Mini-Website mit passendem QR-Design. Alles danach frei änderbar.</span>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
               {STARTERS.map((st, i) => (
                 <button key={st.id} type="button" onClick={() => applyStarter(st)} style={{ animationDelay: `${i * 50}ms` }} className="card group overflow-hidden p-0 text-left transition duration-300 animate-rise hover:-translate-y-1 hover:border-edge-strong">
                   <div className="pointer-events-none relative h-56 overflow-hidden border-b border-edge bg-bg/40">
-                    <div className="absolute left-1/2 top-3 w-[390px] origin-top -translate-x-1/2 scale-[0.46] overflow-hidden rounded-[36px] border-[10px] border-[#111] shadow-lift transition duration-500 group-hover:scale-[0.48]">
+                    <div className="mp-preview absolute left-1/2 top-3 w-[390px] origin-top -translate-x-1/2 scale-[0.46] overflow-hidden rounded-[36px] border-[10px] border-[#111] shadow-lift transition duration-500 group-hover:scale-[0.48]">
                       <HostedPage code={{ id: st.id, slug: st.id, name: String(st.content.name), type: st.type, mode: "static", status: "active", content: st.content }} />
                     </div>
                   </div>

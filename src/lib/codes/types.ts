@@ -29,6 +29,7 @@ export type Field =
   | { kind: "file"; name: string; label: string; accept: string; hint?: string }
   | { kind: "image"; name: string; label: string; hint?: string; shape?: "square" | "wide"; half?: boolean }
   | { kind: "layout"; name: string; label: string }
+  | { kind: "menustyle"; name: string; label: string }
   | { kind: "review"; name: string; label: string; hint?: string }
   | { kind: "theme"; name: string; label: string };
 
@@ -181,7 +182,8 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       { kind: "text", name: "address", label: "Adresse", placeholder: "Hauptstraße 1, 46282 Dorsten", half: true },
       { kind: "textarea", name: "hours", label: "Öffnungszeiten (eine Zeile pro Tag)", placeholder: "Mo–Fr 11–22 Uhr\nSa–So 12–23 Uhr" },
       { kind: "textarea", name: "footer", label: "Hinweis unten", placeholder: "Allergene und Zusatzstoffe erfragen Sie bitte beim Personal." },
-      { kind: "layout", name: "layout", label: "Darstellung der Karte" },
+      { kind: "menustyle", name: "style", label: "Design" },
+      { kind: "layout", name: "layout", label: "Darstellung der Gerichte" },
       ACCENT,
       THEME,
     ],
@@ -196,6 +198,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       hours: str(400),
       footer: str(600),
       layout: z.enum(["cards", "list", "grid", "elegant"]).default("cards"),
+      style: z.enum(["modern", "bistro", "cafe", "street", "fine", "trattoria"]).default("modern"),
       accent: color,
       theme,
     }),
@@ -213,6 +216,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       hours: "",
       footer: "",
       layout: "cards",
+      style: "modern",
       accent: "#191919",
       theme: "light",
     },

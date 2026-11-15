@@ -28,10 +28,141 @@ export type ImportResult = { ok: true; menu: ImportedMenu } | { ok: false; messa
 type J = Record<string, unknown>;
 const isObj = (v: unknown): v is J => typeof v === "object" && v !== null && !Array.isArray(v);
 const str = (v: unknown) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim() : typeof v === "number" ? String(v) : "");
-const https = (v: unknown) => {
-  const s = str(Array.isArray(v) ? v[0] : isObj(v) ? (v.url ?? v.contentUrl) : v);
-  return /^https:\/\/[^\s"'<>]+$/.test(s) ? s.slice(0, 600) : "";
-};
+// ───────── images ─────────
+const IMAGE_KEYS = ["image", "imageUrl", "image_url", "imageURL", "images", "photo", "photoUrl", "photos", "picture", "pictureUrl", "img", "imgUrl", "imageSrc", "thumbnail", "thumbnailUrl", "thumb", "media", "mainImage", "heroImage", "coverImage", "assets"];
+const URL_KEYS = ["url", "src", "href", "contentUrl", "original", "large", "full", "medium", "path", "uri", "imageUrl", "default", "sizes", "formats", "variants"];
+
+/** First image-like string inside any common shape: "…", ["…"], [{url}], {src}, {sizes:{large}} … (not validated yet). */
+function rawImage(v: unknown, depth = 0): string {
+  if (depth > 4 || v == null) return "";
+  if (typeof v === "string") return v.trim();
+  if (Array.isArray(v)) {
+    for (const x of v) {
+      const r = rawImage(x, depth + 1);
+      if (r) return r;
+    }
+    return "";
+  }
+  if (isObj(v)) {
+    for (const k of URL_KEYS) {
+      const r = rawImage(v[k], depth + 1);
+      if (r) return r;
+    }
+    for (const k of IMAGE_KEYS) {
+      const r = rawImage(v[k], depth + 1);
+      if (r) return r;
+    }
+  }
+  return "";
+}
+
+function itemImage(o: J): string {
+  for (const k of IMAGE_KEYS) {
+    const r = rawImage(o[k]);
+    if (r) return r;
+  }
+  return "";
+}
+
+const NOT_A_DISH = /(logo|icon|sprite|favicon|placeholder|blank|spacer|pixel|tracking|avatar|badge|flag|payment|paypal|visa|mastercard|loader|spinner|emoji|arrow|social|facebook|instagram|twitter|tiktok|whatsapp|\.svg(\?|$)|\.gif(\?|$))/i;
+
+/** Turns any image reference into an absolute https URL, or "" if unusable. */
+export function resolveImage(raw: string, base?: string): string {
+  let v = raw.trim().replace(/&amp;/g, "&");
+  if (!v || /^(data|blob|javascript):/i.test(v)) return "";
+  // srcset: take the largest candidate
+  if (/\s\d+(w|x)\s*(,|$)/.test(v)) {
+    const best = v.split(",").map((c) => c.trim().split(/\s+/)).map(([u, d]) => ({ u, n: parseFloat(d ?? "1") || 1 })).sort((a, b) => b.n - a.n)[0];
+    v = best?.u ?? "";
+  }
+  // size templates used by delivery platforms
+  v = v.replace(/\{(w|width|size|imageWidth)\}/gi, "800").replace(/\{(h|height|imageHeight)\}/gi, "600").replace(/\{[a-z_]+\}/gi, "").replace(/%s/g, "800");
+  if (v.startsWith("//")) v = `https:${v}`;
+  try {
+    const u = new URL(v, base);
+    if (u.protocol === "http:") u.protocol = "https:";
+    if (u.protocol !== "https:") return "";
+    const out = u.toString();
+    if (out.length > 600 || /[\s"'<>]/.test(out) || NOT_A_DISH.test(u.pathname)) return "";
+    return out;
+  } catch {
+    return "";
+  }
+}
+
+const decodeEntities = (s: string) => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+
+/** All <img>/<source>/background images in the HTML with their position. */
+function htmlImages(html: string, base: string): { at: number; url: string; small: boolean }[] {
+  const out: { at: number; url: string; small: boolean }[] = [];
+  const attr = (tag: string, name: string) => tag.match(new RegExp(`\\s${name}\\s*=\\s*["']([^"']+)["']`, "i"))?.[1] ?? "";
+  for (const m of html.matchAll(/<(img|source)\b[^>]*>/gi)) {
+    const tag = m[0];
+    const cand = attr(tag, "data-srcset") || attr(tag, "srcset") || attr(tag, "data-src") || attr(tag, "data-lazy-src") || attr(tag, "data-original") || attr(tag, "data-lazy") || attr(tag, "src");
+    const url = resolveImage(cand, base);
+    if (!url) continue;
+    const w = parseInt(attr(tag, "width") || "0", 10);
+    const h = parseInt(attr(tag, "height") || "0", 10);
+    out.push({ at: m.index!, url, small: (w > 0 && w < 64) || (h > 0 && h < 64) || /\b(logo|icon)\b/i.test(attr(tag, "alt") + attr(tag, "class")) });
+  }
+  for (const m of html.matchAll(/background(?:-image)?\s*:\s*url\(\s*["']?([^"')]+)["']?\s*\)/gi)) {
+    const url = resolveImage(decodeEntities(m[1]), base);
+    if (url) out.push({ at: m.index!, url, small: false });
+  }
+  return out.filter((i) => !i.small).sort((a, b) => a.at - b.at);
+}
+
+/**
+ * Restaurant websites rarely put images into structured data. For every dish
+ * still without a photo, find its name in the HTML and take the closest image
+ * in the same card. Images that would land on many dishes (logo, banner) are dropped.
+ */
+function attachHtmlImages(menu: ImportedMenu, html: string, base: string) {
+  const imgs = htmlImages(html, base);
+  if (!imgs.length) return;
+  const lower = decodeEntities(html).toLowerCase();
+  const dishes: { item: MenuItemData; at: number }[] = [];
+  let from = 0;
+  for (const section of menu.sections) {
+    for (const item of section.items) {
+      if (item.image) continue;
+      const needle = item.name.toLowerCase().slice(0, 60);
+      if (needle.length < 3) continue;
+      // menus are in page order: search after the previous dish first, then anywhere
+      let at = lower.indexOf(needle, from);
+      if (at < 0) at = lower.indexOf(needle);
+      if (at < 0) continue;
+      from = at + needle.length;
+      dishes.push({ item, at });
+    }
+  }
+  // One photo per dish and one dish per photo, closest pairs first.
+  // Images above the name (card layout) count as closer than images below it.
+  const pairs: { d: number; dish: number; img: number }[] = [];
+  dishes.forEach((dish, di) => imgs.forEach((img, ii) => {
+    const d = img.at < dish.at ? (dish.at - img.at) * 0.8 : (img.at - dish.at) * 1.25;
+    if (d >= 1800) return;
+    // same card only: no other dish name between the photo and this dish
+    const lo = Math.min(img.at, dish.at);
+    const hi = Math.max(img.at, dish.at);
+    if (dishes.some((o, oi) => oi !== di && o.at > lo && o.at < hi)) return;
+    pairs.push({ d, dish: di, img: ii });
+  }));
+  pairs.sort((x, y) => x.d - y.d);
+  const usedDish = new Set<number>();
+  const usedImg = new Set<string>();
+  const picks: { item: MenuItemData; url: string }[] = [];
+  for (const p of pairs) {
+    const url = imgs[p.img].url;
+    if (usedDish.has(p.dish) || usedImg.has(url)) continue;
+    usedDish.add(p.dish);
+    usedImg.add(url);
+    picks.push({ item: dishes[p.dish].item, url });
+  }
+  // A single match on a long menu is usually a banner, not a dish photo.
+  if (dishes.length >= 4 && picks.length < 2) return;
+  for (const p of picks) p.item.image = p.url;
+}
 
 // ───────── allergens → German menu letters ─────────
 const ALLERGEN_WORDS: [RegExp, string][] = [
@@ -108,7 +239,7 @@ function toItem(o: J): MenuItemData | null {
   const item = emptyItem();
   item.name = name;
   item.description = str(o.description ?? o.desc ?? o.subtitle ?? o.shortDescription).slice(0, 300);
-  item.image = https(o.image ?? o.imageUrl ?? o.images ?? o.photo ?? o.picture);
+  item.image = itemImage(o);
 
   // sizes / variants
   const variants = (o.variants ?? o.sizes ?? o.options ?? (isObj(o.offers) ? null : o.offers)) as unknown;
@@ -158,8 +289,8 @@ function fromJsonLd(blobs: unknown[]): ImportedMenu | null {
   const addr = restaurant?.address;
   return {
     name: str(restaurant?.name),
-    logo: https(restaurant?.logo),
-    cover: https(restaurant?.image),
+    logo: rawImage(restaurant?.logo),
+    cover: rawImage(restaurant?.image),
     phone: str(restaurant?.telephone),
     address: isObj(addr) ? [str(addr.streetAddress), [str(addr.postalCode), str(addr.addressLocality)].filter(Boolean).join(" ")].filter(Boolean).join(", ") : str(addr),
     sections,
@@ -223,7 +354,8 @@ async function fromAi(text: string, url?: string): Promise<ImportedMenu | null> 
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return null;
   const prompt = `Extract the restaurant menu from this ${url ? `web page (${url})` : "text"}. Return ONLY JSON:
-{"name":"","phone":"","address":"","sections":[{"title":"","items":[{"name":"","description":"","price":"7,50","sizes":[{"label":"","price":""}],"allergens":"A, G, 3","vegan":false,"vegetarian":false,"spicy":false}]}]}
+{"name":"","phone":"","address":"","sections":[{"title":"","items":[{"name":"","description":"","price":"7,50","image":"","sizes":[{"label":"","price":""}],"allergens":"A, G, 3","vegan":false,"vegetarian":false,"spicy":false}]}]}
+Images appear in the text as [Bild: URL]. Put the photo that belongs to a dish (usually right before or after its name) into "image", copied exactly; leave it empty when unsure. Never use logos, icons or banners.
 Keep the original language. Prices with comma decimals, no currency sign. Allergens as the letters/numbers printed on the menu, or mapped to German letters (A Gluten, B Krebstiere, C Ei, D Fisch, E Erdnuss, F Soja, G Milch, H Nüsse, L Sellerie, M Senf, N Sesam, O Sulfite, P Lupinen, R Weichtiere). Skip anything that is not a dish or drink.
 
 ${text.slice(0, 90000)}`;
@@ -251,6 +383,7 @@ ${text.slice(0, 90000)}`;
       item.name = str(it.name).slice(0, 120);
       if (!item.name) continue;
       item.description = str(it.description).slice(0, 300);
+      item.image = str(it.image);
       const sizes = [it.sizes].flat().filter(isObj).map((v) => ({ label: str(v.label).slice(0, 40), price: readPrice(v.price) })).filter((v) => v.price);
       if (sizes.length > 1) item.variants = sizes.slice(0, 8);
       else item.price = readPrice(it.price);
@@ -267,7 +400,7 @@ ${text.slice(0, 90000)}`;
 }
 
 // ───────── 4. plain text ─────────
-export { fromJsonLd, fromEmbedded, extractBlobs };
+export { fromJsonLd, fromEmbedded, extractBlobs, finishImages };
 
 const NOISE = /^(schmeckt mir!?|merken!?|bild lädt noch.*|item info|produktinfo|hinzufügen|add|\+|in den warenkorb|mehr anzeigen|einem gaumenfreund.*|.*gaumenfreunde.*|klassisch sortiert|speisekarte filtern|zuletzt aktualisiert.*|beliebt|popular|from|ab|vegetarisch|vegan)$/i;
 const PRICE_ONLY = /^(?:ab\s+|from\s+)?(?:€\s*)?(\d{1,3}(?:[.,]\d{2}))\s*(?:€|eur|euro)?$/i;
@@ -447,6 +580,16 @@ function extractBlobs(html: string): { ld: unknown[]; embedded: unknown[] } {
   return { ld, embedded };
 }
 
+/** Page text for the AI, with dish photos kept as [Bild: URL] markers. */
+function pageTextWithImages(html: string, base: string): string {
+  const marked = html.replace(/<img\b[^>]*>/gi, (tag) => {
+    const a = (n: string) => tag.match(new RegExp(`\\s${n}\\s*=\\s*["']([^"']+)["']`, "i"))?.[1] ?? "";
+    const url = resolveImage(a("data-srcset") || a("srcset") || a("data-src") || a("data-lazy-src") || a("data-original") || a("src"), base);
+    return url ? `\n[Bild: ${url}]\n` : " ";
+  });
+  return pageText(marked);
+}
+
 function pageText(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/gi, " ")
@@ -462,10 +605,19 @@ function meta(html: string, prop: string): string {
   return m ? m[1] : "";
 }
 
+/** Makes every image absolute + https, then fills gaps from the page HTML. */
+function finishImages(menu: ImportedMenu, html?: string, base?: string) {
+  for (const section of menu.sections) for (const item of section.items) item.image = item.image ? resolveImage(item.image, base) : "";
+  if (menu.logo) menu.logo = resolveImage(menu.logo, base);
+  if (menu.cover) menu.cover = resolveImage(menu.cover, base);
+  if (html && base) attachHtmlImages(menu, html, base);
+}
+
 export async function importMenu(input: { url?: string; text?: string }): Promise<ImportResult> {
   if (input.text?.trim()) {
     const text = input.text.slice(0, 120000);
     const menu = (await fromAi(text)) ?? fromText(text);
+    if (menu) finishImages(menu);
     return menu ? { ok: true, menu } : { ok: false, message: "In diesem Text wurden keine Gerichte mit Preisen gefunden." };
   }
   if (!input.url?.trim()) return { ok: false, message: "Bitte einen Link einfügen." };
@@ -479,10 +631,11 @@ export async function importMenu(input: { url?: string; text?: string }): Promis
     };
   }
   const { ld, embedded } = extractBlobs(page.html);
-  const base = { name: meta(page.html, "og:site_name") || "", cover: https(meta(page.html, "og:image")) };
-  const menu = fromJsonLd(ld) ?? fromEmbedded([...embedded, ...ld]) ?? (await fromAi(pageText(page.html), page.url)) ?? fromText(pageText(page.html));
+  const base = { name: meta(page.html, "og:site_name") || "", cover: resolveImage(decodeEntities(meta(page.html, "og:image")), page.url) };
+  const menu = fromJsonLd(ld) ?? fromEmbedded([...embedded, ...ld]) ?? (await fromAi(pageTextWithImages(page.html, page.url), page.url)) ?? fromText(pageText(page.html));
   if (!menu) {
     return { ok: false, message: "Auf dieser Seite wurde keine Speisekarte erkannt. Kopiere den Text der Karte und füge ihn unten ein." };
   }
+  finishImages(menu, page.html, page.url);
   return { ok: true, menu: { ...base, ...Object.fromEntries(Object.entries(menu).filter(([, v]) => v)) } as ImportedMenu };
 }

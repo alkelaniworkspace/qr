@@ -8,6 +8,7 @@ import { mapsUrl } from "@/lib/codes/payload";
 import { site } from "@/lib/site";
 import { CopyButton } from "./copy-button";
 import { MenuPage } from "./menu-page";
+import { DEFAULT_ACCENT, menuStyle } from "@/lib/menu-styles";
 
 type C = Record<string, unknown>;
 const s = (v: unknown) => String(v ?? "").trim();
@@ -33,11 +34,12 @@ function themeVars(theme: Theme, accent: string): Record<string, string> {
   return { "--pg-bg": "#f7f5f0", "--pg-fg": "#14130f", "--pg-card": "#ffffff", "--pg-line": "#e2ddd1", "--pg-muted": "#6f6a5f", "--pg-soft": "#efebe2" };
 }
 
-function Shell({ accent, theme, children, branding = true }: { accent: string; theme: Theme; children: React.ReactNode; branding?: boolean }) {
+function Shell({ accent, theme, children, branding = true, vars, dark }: { accent: string; theme: Theme; children: React.ReactNode; branding?: boolean; vars?: Record<string, string> | null; dark?: boolean }) {
   // On a colour page the accent IS the background, so buttons switch to the contrast colour.
-  const btn = theme === "color" ? { "--accent": onAccent(accent), "--on-accent": accent } : { "--accent": accent, "--on-accent": onAccent(accent) };
+  const btn = theme === "color" && !vars ? { "--accent": onAccent(accent), "--on-accent": accent } : { "--accent": accent, "--on-accent": onAccent(accent) };
+  const scheme = vars ? (dark ? "dark" : "light") : theme === "dark" ? "dark" : "light";
   return (
-    <div className="min-h-screen bg-[var(--pg-bg)] text-[var(--pg-fg)]" style={{ ...themeVars(theme, accent), ...btn, colorScheme: theme === "dark" ? "dark" : "light" } as React.CSSProperties}>
+    <div className="min-h-screen bg-[var(--pg-bg)] text-[var(--pg-fg)]" style={{ ...(vars ?? themeVars(theme, accent)), ...btn, colorScheme: scheme } as React.CSSProperties}>
       <main className="mx-auto max-w-md px-5 pb-16 pt-8 animate-rise">{children}</main>
       {branding && (
         <footer className="pb-8 text-center">
@@ -347,6 +349,12 @@ export function HostedPage({ code, links }: { code: PublicCode; links?: PageLink
     case "site": body = <SitePage c={c} />; break;
   }
   const theme: Theme = c.theme === "dark" || c.theme === "color" ? c.theme : "light";
+  if (code.type === "menu") {
+    // Design presets bring their own palette; a custom accent still wins.
+    const ms = menuStyle(c.style);
+    const a = ms.accent && accent.toLowerCase() === DEFAULT_ACCENT ? ms.accent : accent;
+    return <Shell accent={a} theme={theme} vars={ms.vars} dark={ms.dark} branding={code.branding !== false}>{body}</Shell>;
+  }
   return <Shell accent={accent} theme={theme} branding={code.branding !== false}>{body}</Shell>;
 }
 

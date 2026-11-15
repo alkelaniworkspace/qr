@@ -1,5 +1,5 @@
 /** Menu import parsers against small fixtures. Run: npm run verify:import */
-import { extractBlobs, fromEmbedded, fromJsonLd, fromText } from "../src/lib/menu-import";
+import { extractBlobs, finishImages, fromEmbedded, fromJsonLd, fromText, resolveImage } from "../src/lib/menu-import";
 
 function check(name: string, ok: boolean | undefined, info?: unknown) {
   console.log(`${ok ? "OK  " : "FAIL"} ${name}`, ok ? "" : JSON.stringify(info).slice(0, 400));
@@ -76,3 +76,31 @@ check("site text: description", grill?.items[0].description.startsWith("Kalb") =
 check("site text: second dish single price", grill?.items[1].name === "Döner Schale" && grill.items[1].price === "7,00", grill?.items[1]);
 const pz = site?.sections.find((s) => s.title === "Pizzen");
 check("site text: next category + allergens", pz?.items[0].name === "Margherita" && pz.items[0].tags === "A, G" && pz.items[0].price === "8,50", pz);
+
+// ───────── images ─────────
+check("image: relative path resolved", resolveImage("/img/pizza.jpg", "https://pizzeria.de/karte") === "https://pizzeria.de/img/pizza.jpg");
+check("image: protocol-relative + http upgraded", resolveImage("//cdn.x.de/a.jpg") === "https://cdn.x.de/a.jpg" && resolveImage("http://x.de/a.jpg") === "https://x.de/a.jpg");
+check("image: srcset takes largest", resolveImage("/a-400.jpg 400w, /a-1200.jpg 1200w", "https://x.de/") === "https://x.de/a-1200.jpg");
+check("image: size template filled", resolveImage("https://cdn.x.de/{width}/p.jpg") === "https://cdn.x.de/800/p.jpg");
+check("image: logo and svg skipped", resolveImage("/logo.png", "https://x.de/") === "" && resolveImage("/i/plate.svg", "https://x.de/") === "");
+
+const woltLike = { menu: { categories: [{ name: "Burger", items: [
+  { name: "Cheeseburger", price: 990, images: [{ url: "/media/cheese.jpg", blurhash: "x" }] },
+  { name: "Veggie Burger", price: 1090, image: { sizes: { large: "https://cdn.x.de/veg.jpg" } } },
+] }] } };
+const wolt = fromEmbedded(extractBlobs(`<script type="application/json">${JSON.stringify(woltLike)}</script>`).embedded);
+if (wolt) finishImages(wolt, "", "https://shop.x.de/menu");
+check("image: array of objects + relative", wolt?.sections[0].items[0].image === "https://shop.x.de/media/cheese.jpg", wolt?.sections[0].items[0]);
+check("image: nested size object", wolt?.sections[0].items[1].image === "https://cdn.x.de/veg.jpg", wolt?.sections[0].items[1]);
+
+// Plain restaurant website: no structured data, photos sit in the dish cards (lazy-loaded)
+const siteHtml = `<header><img src="/logo.png" alt="Logo"></header><img src="/banner.jpg">
+<div class="card"><img data-src="/fotos/margherita.jpg" src="data:image/gif;base64,R0"><h3>Pizza Margherita</h3><p>Tomate, Mozzarella</p><span>8,90 €</span></div>
+<div class="card"><img src="/fotos/salami.webp" width="400"><h3>Pizza Salami</h3><span>9,90 €</span></div>
+<div class="card"><h3>Tiramisu</h3><span>5,50 €</span></div>`;
+const plain = fromText("Pizza Margherita\nTomate, Mozzarella\n8,90 €\nPizza Salami\n9,90 €\nTiramisu\n5,50 €");
+if (plain) finishImages(plain, siteHtml, "https://pizzeria.de/karte");
+const dish = (n: string) => plain?.sections.flatMap((s) => s.items).find((i) => i.name === n);
+check("html: lazy image matched to dish", dish("Pizza Margherita")?.image === "https://pizzeria.de/fotos/margherita.jpg", dish("Pizza Margherita"));
+check("html: second dish gets its own photo", dish("Pizza Salami")?.image === "https://pizzeria.de/fotos/salami.webp", dish("Pizza Salami"));
+check("html: dish without photo gets none (no banner, no neighbour)", dish("Tiramisu")?.image === "", dish("Tiramisu"));

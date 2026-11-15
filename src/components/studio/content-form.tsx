@@ -7,7 +7,7 @@ import { FieldShell, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
-import { ImageField, LayoutPicker, MenuBuilder, MenuImport } from "./menu-builder";
+import { ImageField, LayoutPicker, MenuBuilder, MenuImport, MenuStylePicker } from "./menu-builder";
 
 type Content = Record<string, unknown>;
 type Errors = Record<string, string>;
@@ -105,6 +105,12 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
             return (
               <FieldShell key={field.name} label={field.label} className="col-span-2">
                 <LayoutPicker value={str(value[field.name]) || "cards"} onChange={(v) => set(field.name, v)} />
+              </FieldShell>
+            );
+          case "menustyle":
+            return (
+              <FieldShell key={field.name} label={field.label} hint="Farben, Schriften und Animationen. Eine eigene Akzentfarbe weiter unten überschreibt die der Vorlage." className="col-span-2">
+                <MenuStylePicker value={str(value[field.name])} onChange={(st, layout) => onChange({ ...value, [field.name]: st, layout })} />
               </FieldShell>
             );
           case "theme":

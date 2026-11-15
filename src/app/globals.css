@@ -279,3 +279,48 @@
 
 /* Lime is rare: only the one word or element that should stand out */
 :root:not([data-theme="light"]) .glow-text { color: var(--color-lime); text-shadow: 0 0 28px rgb(189 251 4 / 0.35); }
+
+/* ───────── Menu pages (hosted /p/… restaurant & café menus) ───────── */
+.mp .mp-display { font-family: var(--mp-display); }
+.mp[data-style="street"] .mp-display, .mp[data-style="cafe"] .mp-display { font-weight: 400; letter-spacing: 0.01em; }
+.mp[data-style="cafe"] .mp-display { font-weight: 700; }
+.mp[data-style="fine"] .mp-display { font-weight: 500; }
+.mp .mp-card { border-radius: var(--mp-radius); }
+.mp .mp-pill { border-radius: 999px; }
+.mp[data-style="street"] .mp-pill { border-radius: 6px; }
+.mp[data-style="fine"] .mp-pill { border-radius: 0; letter-spacing: 0.12em; text-transform: uppercase; font-size: 12px; }
+
+/* Scaled previews (studio phone, template cards): sticky positioning breaks inside transforms */
+.mp-preview .mp-orderbar { display: none; }
+
+@keyframes mp-kenburns { from { transform: scale(1.02) translate(0, 0); } to { transform: scale(1.14) translate(-2%, -2%); } }
+@keyframes mp-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes mp-pop { 0% { opacity: 0; transform: scale(0.6) rotate(-6deg); } 70% { transform: scale(1.06) rotate(1deg); } 100% { opacity: 1; transform: none; } }
+@keyframes mp-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes mp-marquee { to { transform: translateX(-50%); } }
+@keyframes mp-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes mp-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+.mp .mp-kenburns { animation: mp-kenburns 18s ease-in-out infinite alternate; }
+.mp .mp-rise { animation: mp-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.mp .mp-pop { animation: mp-pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.mp .mp-float { animation: mp-float 6s ease-in-out infinite; }
+.mp .mp-marquee { animation: mp-marquee 22s linear infinite; }
+
+/* Scroll reveal. Hidden only via .mp-js plus a <noscript> override, so pages without JS stay readable. */
+.mp.mp-js [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: calc(min(var(--i, 0), 6) * 60ms);
+}
+.mp.mp-js [data-reveal][data-in] { opacity: 1; transform: none; }
+.mp.mp-js [data-reveal] .mp-grow { transform: scaleX(0); }
+.mp.mp-js [data-reveal][data-in] .mp-grow { animation: mp-grow 0.9s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.mp.mp-js [data-reveal] .mp-draw path { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.mp.mp-js [data-reveal][data-in] .mp-draw path { animation: mp-draw 1s 0.2s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mp .mp-kenburns, .mp .mp-marquee, .mp .mp-float { animation: none !important; }
+  .mp.mp-js [data-reveal] { opacity: 1; transform: none; }
+}

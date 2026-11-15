@@ -7,6 +7,7 @@ import { uploadImage } from "@/lib/upload-image";
 import { Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { MENU_STYLES } from "@/lib/menu-styles";
 
 type Errors = Record<string, string>;
 
@@ -95,6 +96,35 @@ const LAYOUTS = [
   { id: "list", label: "Klassisch", hint: "Liste mit Preislinie", icon: LayoutList },
   { id: "elegant", label: "Elegant", hint: "Zentriert, fein", icon: Sparkles },
 ] as const;
+
+/** Design presets with a live mini preview of palette + typography. */
+export function MenuStylePicker({ value, onChange }: { value: string; onChange: (style: string, layout: string) => void }) {
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {MENU_STYLES.map((st) => {
+        const bg = st.vars?.["--pg-bg"] ?? "var(--color-elevated)";
+        const fg = st.vars?.["--pg-fg"] ?? "var(--color-fg)";
+        const active = (value || "modern") === st.id;
+        return (
+          <button key={st.id} type="button" onClick={() => onChange(st.id, st.layout)} aria-pressed={active} className={cn("group overflow-hidden rounded-2xl border text-left transition", active ? "border-brand ring-2 ring-brand/25" : "border-edge hover:-translate-y-0.5 hover:border-hi/25")}>
+            <span className="relative block h-20 overflow-hidden" style={{ background: bg, color: fg }}>
+              <span className="absolute left-3 top-2.5 text-[28px] leading-none" style={{ fontFamily: st.display, fontWeight: st.id === "cafe" ? 700 : st.id === "street" ? 400 : 600, textTransform: st.uppercase ? "uppercase" : undefined }}>Aa</span>
+              <span className="absolute bottom-2.5 left-3 right-3 space-y-1">
+                <span className="block h-1.5 w-3/4 rounded-full opacity-25" style={{ background: fg }} />
+                <span className="flex items-center gap-1.5"><span className="block h-1.5 w-1/2 rounded-full opacity-15" style={{ background: fg }} /><span className="ml-auto block h-1.5 w-6 rounded-full" style={{ background: st.accent ?? fg }} /></span>
+              </span>
+              <span className="absolute right-3 top-3 size-4 rounded-full ring-2 ring-white/40" style={{ background: st.accent ?? "var(--color-brand)" }} />
+            </span>
+            <span className="block px-3 py-2">
+              <span className="block text-sm font-bold">{st.label}</span>
+              <span className="block truncate text-[11px] text-faint">{st.hint}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function LayoutPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
@@ -307,6 +337,7 @@ export function MenuImport({ onImport }: { onImport: (menu: ImportedMenuData, mo
   }
 
   const count = result?.sections.reduce((n, s) => n + s.items.length, 0) ?? 0;
+  const photos = result?.sections.flatMap((s) => s.items.map((i) => i.image)).filter(Boolean) ?? [];
 
   if (!open) {
     return (
@@ -356,7 +387,16 @@ export function MenuImport({ onImport }: { onImport: (menu: ImportedMenuData, mo
       {result && (
         <div className="mt-4 rounded-2xl border border-edge-strong bg-hi/5 p-4">
           <p className="font-semibold">{count} Gerichte in {result.sections.length} Kategorien gefunden{result.name ? ` · ${result.name}` : ""}</p>
-          <p className="mt-1 text-sm text-dim">{result.sections.slice(0, 8).map((s) => `${s.title} (${s.items.length})`).join(" · ")}{result.sections.length > 8 ? " …" : ""}</p>
+          <p className="mt-1 text-sm text-dim">{photos.length ? `${photos.length} mit Foto · ` : "Keine Fotos gefunden · "}{result.sections.slice(0, 8).map((s) => `${s.title} (${s.items.length})`).join(" · ")}{result.sections.length > 8 ? " …" : ""}</p>
+          {photos.length > 0 && (
+            <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
+              {photos.slice(0, 12).map((src) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={src} src={src} alt="" loading="lazy" referrerPolicy="no-referrer" className="size-14 shrink-0 rounded-xl border border-edge object-cover" />
+              ))}
+              {photos.length > 12 && <span className="grid size-14 shrink-0 place-items-center rounded-xl border border-edge text-xs font-bold text-dim">+{photos.length - 12}</span>}
+            </div>
+          )}
           <div className="mt-3 flex flex-wrap gap-2">
             <Button type="button" onClick={() => { onImport(result, "replace"); setOpen(false); setResult(null); }}>Karte ersetzen</Button>
             <Button type="button" variant="secondary" onClick={() => { onImport(result, "append"); setOpen(false); setResult(null); }}>Anhängen</Button>
