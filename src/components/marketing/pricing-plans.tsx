@@ -155,13 +155,13 @@ function Calculator({ step, setStep, need, fit, yearly }: { step: number; setSte
   const last = STOPS.length - 1;
   const pct = (step / last) * 100;
   const quote = fit === "quote";
-  const red = quote || fit === "business";
+  const red = fit === "business";
   const plan = quote ? null : PLANS[fit];
   const price = plan ? (yearly ? plan.yearly : plan.price) : 0;
   const label = (n: number) => (n === QUOTE_FROM ? "150+" : String(n));
 
   return (
-    <div className={cn("pr-calc relative mt-6 grid overflow-hidden rounded-[28px] border lg:grid-cols-[1.45fr_1fr]", red ? "pr-calc-red" : "")}>
+    <div className={cn("pr-calc relative mt-6 grid overflow-hidden rounded-[28px] border lg:grid-cols-[1.45fr_1fr]", red ? "pr-calc-red" : quote ? "pr-calc-gold" : "")}>
       {/* left: the ruler */}
       <div className="relative p-6 sm:p-8">
         <div className="flex items-start gap-3">
@@ -217,9 +217,9 @@ function Calculator({ step, setStep, need, fit, yearly }: { step: number; setSte
             <p className="text-[13px] text-dim">{quote ? T("Dein Angebot", "Your offer") : T("Dein Tarif", "Your plan")}</p>
             {quote ? (
               <>
-                <p className="mt-2 font-display text-[46px] leading-none tracking-[-0.04em]">{T("Individuell", "Custom")}</p>
+                <p className="pr-gold-text mt-2 font-display text-[46px] leading-none tracking-[-0.04em]">{T("Individuell", "Custom")}</p>
                 <p className="mt-3 text-[14px] text-dim">{T("Ab 150 Codes: Mengenpreis, eigene Domain, Rechnung, persönliche Einrichtung.", "From 150 codes: volume pricing, custom domain, invoicing, personal onboarding.")}</p>
-                <a href={`mailto:${SALES_EMAIL}?subject=${encodeURIComponent(T("Angebot für mehr als 150 QR-Codes", "Quote for more than 150 QR codes"))}`} className="pr-cta-biz mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-semibold">
+                <a href={`mailto:${SALES_EMAIL}?subject=${encodeURIComponent(T("Angebot für mehr als 150 QR-Codes", "Quote for more than 150 QR codes"))}`} className="pr-cta-gold mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-semibold">
                   <Mail className="size-4" /> {T("Angebot anfragen", "Request a quote")}
                 </a>
               </>
