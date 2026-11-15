@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/i18n/lang-provider";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
@@ -13,6 +14,7 @@ const EYES: [EyeFrameStyle, EyeBallStyle][] = [["square", "square"], ["rounded",
 
 /** Try-it-yourself: one live code, every knob one click away. */
 export function DesignPlayground() {
+  const T = useT();
   const [style, setStyle] = useState<QrStyle>(normalizeStyle({ ...DEFAULT_STYLE, ...STYLE_PRESETS[1].style }));
   const [preset, setPreset] = useState(STYLE_PRESETS[1].id);
   const svg = useMemo(() => renderQrSvg("https://qlick.codes/r/design", style, { size: 420, id: "play" }), [style]);
@@ -27,7 +29,7 @@ export function DesignPlayground() {
       </div>
       <div className="space-y-6">
         <div>
-          <p className="mb-2.5 text-sm font-semibold text-dim">Fertige Looks</p>
+          <p className="mb-2.5 text-sm font-semibold text-dim">{T("Fertige Looks", "Ready-made looks")}</p>
           <div className="flex flex-wrap gap-2">
             {STYLE_PRESETS.slice(0, 12).map((p) => (
               <button key={p.id} type="button" onClick={() => { setPreset(p.id); setStyle(normalizeStyle({ ...DEFAULT_STYLE, ...p.style })); }} className={cn("flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition", preset === p.id ? "border-brand bg-brand text-on-brand" : "border-edge hover:border-edge-strong")}>
@@ -38,7 +40,7 @@ export function DesignPlayground() {
           </div>
         </div>
         <div>
-          <p className="mb-2.5 text-sm font-semibold text-dim">Muster</p>
+          <p className="mb-2.5 text-sm font-semibold text-dim">{T("Muster", "Pattern")}</p>
           <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
             {DOTS.map((d) => (
               <button key={d} type="button" title={d} onClick={() => setStyle({ ...style, dots: d })} className={cn("grid aspect-square place-items-center rounded-xl border bg-white p-1.5 transition", style.dots === d ? "border-brand ring-2 ring-brand/40" : "border-edge hover:scale-105")} dangerouslySetInnerHTML={{ __html: patternGlyph(d, ink === "#ffffff" ? "#191919" : ink) }} />
@@ -46,14 +48,14 @@ export function DesignPlayground() {
           </div>
         </div>
         <div>
-          <p className="mb-2.5 text-sm font-semibold text-dim">Ecken</p>
+          <p className="mb-2.5 text-sm font-semibold text-dim">{T("Ecken", "Corners")}</p>
           <div className="grid grid-cols-6 gap-2">
             {EYES.map(([f, b]) => (
               <button key={f} type="button" onClick={() => setStyle({ ...style, eyeFrame: f, eyeBall: b })} className={cn("grid aspect-square place-items-center rounded-xl border bg-white p-2 transition", style.eyeFrame === f ? "border-brand ring-2 ring-brand/40" : "border-edge hover:scale-105")} dangerouslySetInnerHTML={{ __html: eyeGlyph(f, b, "#191919") }} />
             ))}
           </div>
         </div>
-        <Link href="/studio" className="inline-flex items-center gap-2 font-semibold hover:underline">Mit Logo, Farbverlauf und Rahmen weiter im Studio <ArrowRight className="size-4" /></Link>
+        <Link href="/studio" className="inline-flex items-center gap-2 font-semibold hover:underline">{T("Mit Logo, Farbverlauf und Rahmen weiter im Studio", "Continue in the studio with logo, gradient and frame")} <ArrowRight className="size-4" /></Link>
       </div>
     </div>
   );

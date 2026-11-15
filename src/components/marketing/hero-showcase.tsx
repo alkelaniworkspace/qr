@@ -1,11 +1,13 @@
 "use client";
 
+import { useT } from "@/components/i18n/lang-provider";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, ScanLine } from "lucide-react";
 
 /** The hero: one printed link, many looks. Cycles real QR designs with a soft morph. */
 export function HeroShowcase({ designs }: { designs: { id: string; name: string; svg: string }[] }) {
+  const T = useT();
   const [i, setI] = useState(0);
   const [scans, setScans] = useState(1284);
   useEffect(() => {
@@ -55,8 +57,8 @@ export function HeroShowcase({ designs }: { designs: { id: string; name: string;
       </motion.div>
 
       <motion.div className="card absolute right-0 top-[44%] rounded-2xl px-4 py-3" animate={{ y: [0, 12, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
-        <p className="flex items-center gap-1.5 text-xs text-dim"><ScanLine className="size-3.5" /> Scans gesamt</p>
-        <motion.p key={scans} initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="font-display text-3xl tabular-nums">{scans.toLocaleString("de-DE")}</motion.p>
+        <p className="flex items-center gap-1.5 text-xs text-dim"><ScanLine className="size-3.5" /> {T("Scans gesamt", "Total scans")}</p>
+        <motion.p key={scans} initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="font-display text-3xl tabular-nums">{scans.toLocaleString(T("de-DE", "en-US"))}</motion.p>
       </motion.div>
 
       <motion.div className="card absolute bottom-[4%] left-[8%] flex items-center gap-3 rounded-2xl px-4 py-3" animate={{ y: [0, -8, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}>
@@ -65,7 +67,7 @@ export function HeroShowcase({ designs }: { designs: { id: string; name: string;
           <AnimatePresence mode="wait">
             <motion.p key={d.name} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="text-sm font-semibold">{d.name}</motion.p>
           </AnimatePresence>
-          <p className="text-xs text-dim">Gleicher Link, neuer Look</p>
+          <p className="text-xs text-dim">{T("Gleicher Link, neuer Look", "Same link, new look")}</p>
         </div>
       </motion.div>
     </div>

@@ -58,8 +58,10 @@ check("profile created by trigger", (await db.query(`select * from public.profil
 
 await as(A, `insert into public.qr_codes (name, slug, type, mode) values ('Menü', 'menuA1', 'menu', 'dynamic')`);
 check("user A can create a code", true);
+await expectError("free plan blocks a 2nd dynamic code", () => as(A, `insert into public.qr_codes (name, slug, type, mode) values ('x', 'second', 'url', 'dynamic')`), /PLAN_LIMIT_REACHED/);
+await db.exec(`update public.profiles set plan = 'start' where id = '${A}'`);
 await as(A, `insert into public.qr_codes (name, slug, type, mode) values ('x', 'second', 'url', 'dynamic'), ('y', 'third1', 'url', 'dynamic')`);
-await expectError("free plan blocks a 4th dynamic code", () => as(A, `insert into public.qr_codes (name, slug, type, mode) values ('x', 'fourth', 'url', 'dynamic')`), /PLAN_LIMIT_REACHED/);
+check("start plan allows more dynamic codes", true);
 await as(A, `insert into public.qr_codes (name, slug, type, mode) values ('WLAN', 'wifiA1', 'wifi', 'static')`);
 check("static codes are not limited", true);
 
@@ -119,7 +121,8 @@ check("claim needs the right token", !wrong.ok);
 const right = (await as(C, `select public.claim_guest_code('claim01', '${T}') as ok`)).rows[0] as { ok: boolean };
 check("claim with token moves code into the account", right.ok && (await as(C, `select slug from public.qr_codes`)).rows.length === 1);
 await expectError("anon cannot claim", () => asAnon(`select public.claim_guest_code('claim01', $1)`, [T]), /permission denied|NOT_SIGNED_IN/);
-check("plan limits: free=3, business unlimited", ((await db.query(`select public.plan_dynamic_limit('free') a, public.plan_dynamic_limit('business') b`)).rows[0] as { a: number; b: number | null }).a === 3);
+const lim = (await db.query(`select public.plan_dynamic_limit('free') f, public.plan_dynamic_limit('start') s, public.plan_dynamic_limit('pro') p, public.plan_dynamic_limit('business') b`)).rows[0] as Record<string, number>;
+check("plan limits: 1 / 15 / 50 / 150", lim.f === 1 && lim.s === 15 && lim.p === 50 && lim.b === 150);
 
 // ───────── forms ─────────
 await as(B, `insert into public.forms (slug, title, fields) values ('feedB1', 'Feedback', '[{"id":"q1","type":"rating","label":"Wie war es?"}]')`);

@@ -1,18 +1,21 @@
 "use client";
 
+import { useT } from "@/components/i18n/lang-provider";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useInView } from "motion/react";
 import { Globe, Lock, PenLine, Printer, Smartphone, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-const STEPS = [
-  { icon: Printer, title: "Einmal drucken", text: "Code auf Tisch, Fenster oder Flyer." },
-  { icon: PenLine, title: "Jederzeit ändern", text: "Preise, Inhalt, sogar den Typ." },
-  { icon: Smartphone, title: "Gäste sehen es sofort", text: "Gleicher Code. Neuer Inhalt." },
+const steps = (T: (de: string, en: string) => string) => [
+  { icon: Printer, title: T("Einmal drucken", "Print once"), text: T("Code auf Tisch, Fenster oder Flyer.", "Code on a table, window or flyer.") },
+  { icon: PenLine, title: T("Jederzeit ändern", "Change any time"), text: T("Preise, Inhalt, sogar den Typ.", "Prices, content, even the type.") },
+  { icon: Smartphone, title: T("Gäste sehen es sofort", "Guests see it instantly"), text: T("Gleicher Code. Neuer Inhalt.", "Same code. New content.") },
 ];
 
 /** Auto-playing story: printed code stays, content behind it changes. */
 export function ForeverStory({ qrSvg }: { qrSvg: string }) {
+  const T = useT();
+  const STEPS = steps(T);
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount: 0.4 });
   const [step, setStep] = useState(0);
@@ -61,13 +64,13 @@ export function ForeverStory({ qrSvg }: { qrSvg: string }) {
           transition={{ type: "spring", stiffness: 120, damping: 18 }}
         >
           <div className="rounded-[22px] bg-white p-4 shadow-lift">
-            <p className="text-center text-[11px] font-bold text-[#191919]">Tisch 7</p>
+            <p className="text-center text-[11px] font-bold text-[#191919]">{T("Tisch 7", "Table 7")}</p>
             <div className="mt-2 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: qrSvg }} />
-            <p className="mt-2 text-center text-sm font-bold text-[#191919]">Scan für die Karte</p>
+            <p className="mt-2 text-center text-sm font-bold text-[#191919]">{T("Scan für die Karte", "Scan for the menu")}</p>
           </div>
           <div className="mx-auto h-3 w-[86%] rounded-b-xl bg-black/30 blur-sm" />
           <motion.p className="mt-4 flex items-center justify-center gap-1.5 text-xs font-semibold text-dim" animate={{ opacity: step === 2 ? 1 : 0.6 }}>
-            <Lock className="size-3.5 text-lime-ink" /> Gedruckt. Bleibt so.
+            <Lock className="size-3.5 text-lime-ink" /> {T("Gedruckt. Bleibt so.", "Printed. Stays that way.")}
           </motion.p>
         </motion.div>
 
@@ -81,10 +84,10 @@ export function ForeverStory({ qrSvg }: { qrSvg: string }) {
               exit={{ opacity: 0, x: 40, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 140, damping: 18 }}
             >
-              <p className="text-xs font-semibold text-dim">Inhalt bearbeiten</p>
+              <p className="text-xs font-semibold text-dim">{T("Inhalt bearbeiten", "Edit content")}</p>
               <div className="mt-3 flex gap-1.5 rounded-full bg-hi/5 p-1 text-xs font-semibold">
                 <span className={cn("flex-1 rounded-full px-2 py-1.5 text-center transition", !menu && "bg-brand text-on-brand")}><Globe className="mr-1 inline size-3" />Website</span>
-                <motion.span className={cn("flex-1 rounded-full px-2 py-1.5 text-center", menu && "bg-brand text-on-brand")} layout><UtensilsCrossed className="mr-1 inline size-3" />Karte</motion.span>
+                <motion.span className={cn("flex-1 rounded-full px-2 py-1.5 text-center", menu && "bg-brand text-on-brand")} layout><UtensilsCrossed className="mr-1 inline size-3" />{T("Karte", "Menu")}</motion.span>
               </div>
               <div className="mt-3 space-y-2">
                 <div className="flex items-center justify-between rounded-xl border border-edge px-3 py-2 text-sm"><span>Pizza Margherita</span>
@@ -92,7 +95,7 @@ export function ForeverStory({ qrSvg }: { qrSvg: string }) {
                 </div>
                 <div className="flex items-center justify-between rounded-xl border border-edge px-3 py-2 text-sm"><span>Döner im Brot</span><span className="tabular-nums text-dim">7,50 €</span></div>
               </div>
-              <motion.div className="mt-3 rounded-full bg-brand py-2 text-center text-xs font-semibold text-on-brand" initial={{ scale: 1 }} animate={{ scale: [1, 0.94, 1] }} transition={{ delay: 1.4, duration: 0.4 }}>Veröffentlichen</motion.div>
+              <motion.div className="mt-3 rounded-full bg-brand py-2 text-center text-xs font-semibold text-on-brand" initial={{ scale: 1 }} animate={{ scale: [1, 0.94, 1] }} transition={{ delay: 1.4, duration: 0.4 }}>{T("Veröffentlichen", "Publish")}</motion.div>
             </motion.div>
           )}
         </AnimatePresence>

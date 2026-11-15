@@ -5,6 +5,9 @@ import "@fontsource/space-grotesk/700.css";
 import "./globals.css";
 import { env } from "@/lib/env";
 import { site } from "@/lib/site";
+import { getLang } from "@/lib/i18n-server";
+import { LangProvider } from "@/components/i18n/lang-provider";
+import { CardLight } from "@/components/motion/card-light";
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.appUrl),
@@ -23,13 +26,14 @@ export const viewport: Viewport = {
 // Sets the theme before first paint (saved choice, else the system setting), so there is no flash.
 const THEME_SCRIPT = `try{var t=localStorage.getItem("scanwerk.theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t}catch(e){}`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const lang = await getLang();
   return (
-    <html lang="de" className="h-full bg-bg" suppressHydrationWarning>
+    <html lang={lang} className="h-full bg-bg" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col"><LangProvider lang={lang}>{children}<CardLight /></LangProvider></body>
     </html>
   );
 }

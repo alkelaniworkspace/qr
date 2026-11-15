@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/i18n/lang-provider";
 import { useEffect, useMemo, useState } from "react";
 import { motion, useInView } from "motion/react";
 import { useRef } from "react";
@@ -12,6 +13,7 @@ const STYLE: QrStyle = { ...DEFAULT_STYLE, dots: "rounded", fill: { type: "solid
 
 /** Same edit, two kinds of code: the static one changes its pattern, the dynamic one never does. */
 export function StaticVsDynamic() {
+  const T = useT();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount: 0.4 });
   const [i, setI] = useState(0);
@@ -26,16 +28,17 @@ export function StaticVsDynamic() {
 
   return (
     <div ref={ref} className="grid gap-4 md:grid-cols-2">
-      <Card title="Statisch" note="Inhalt steckt im Muster" svg={staticSvg} changes i={i} target={target} />
+      <Card title={T("Statisch", "Static")} note={T("Inhalt steckt im Muster", "Content is baked into the pattern")} svg={staticSvg} changes i={i} target={target} />
       <div className="relative">
-        <span className="badge absolute -top-3 left-1/2 z-10 -translate-x-1/2 bg-lime text-night">Qlick dynamisch</span>
-        <Card title="Dynamisch" note="Muster zeigt auf deinen festen Link" svg={dynamicSvg} changes={false} i={i} target={target} />
+        <span className="badge absolute -top-3 left-1/2 z-10 -translate-x-1/2 bg-lime text-night">{T("Qlick dynamisch", "Qlick dynamic")}</span>
+        <Card title={T("Dynamisch", "Dynamic")} note={T("Muster zeigt auf deinen festen Link", "Pattern points to your fixed link")} svg={dynamicSvg} changes={false} i={i} target={target} />
       </div>
     </div>
   );
 }
 
 function Card({ title, note, svg, changes, i, target }: { title: string; note: string; svg: string; changes: boolean; i: number; target: string }) {
+  const T = useT();
   return (
     <div className="card flex flex-col items-center p-6 text-center">
       <p className="font-display text-2xl">{title}</p>
@@ -48,7 +51,7 @@ function Card({ title, note, svg, changes, i, target }: { title: string; note: s
         <motion.span key={target} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>→ {target}</motion.span>
       </div>
       <p className={`mt-4 flex items-center gap-1.5 text-sm font-semibold ${changes ? "text-rose" : "text-mint"}`}>
-        {changes ? <><RefreshCw className="size-4" /> Neuer Code. Alter Druck veraltet.</> : <><Lock className="size-4" /> Code bleibt. Druck bleibt gültig.</>}
+        {changes ? <><RefreshCw className="size-4" /> {T("Neuer Code. Alter Druck veraltet.", "New code. Old print outdated.")}</> : <><Lock className="size-4" /> {T("Code bleibt. Druck bleibt gültig.", "Code stays. Print stays valid.")}</>}
       </p>
     </div>
   )
