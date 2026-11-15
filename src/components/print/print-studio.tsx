@@ -71,11 +71,11 @@ export function PrintStudio({ settings: p, onChange, qrSvg, name }: Props) {
   const formatIds = Object.keys(FORMATS) as FormatId[];
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
-      <div className="space-y-4">
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-6">
+      <div className="order-2 min-w-0 space-y-4 lg:order-1">
         <div className="card p-5">
           <p className="mb-3 font-display text-base">Format</p>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {formatIds.map((id) => (
               <button
                 key={id}
@@ -154,10 +154,10 @@ export function PrintStudio({ settings: p, onChange, qrSvg, name }: Props) {
         </div>
       </div>
 
-      <div className="min-w-0 lg:sticky lg:top-40 lg:self-start">
-        <div className="card card-glow p-5">
+      <div className="order-1 min-w-0 lg:order-2 lg:sticky lg:top-40 lg:self-start">
+        <div className="card card-glow p-4 sm:p-5">
           <div className="grid place-items-center rounded-2xl bg-[repeating-linear-gradient(45deg,var(--color-bg),var(--color-bg)_12px,var(--color-elevated)_12px,var(--color-elevated)_24px)] p-6 sm:p-10">
-            <div ref={previewRef} className="w-full shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)]" style={{ maxWidth: `min(100%, calc(62vh * ${fullW / fullH}))` }}>
+            <div ref={previewRef} className="w-full shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)]" style={{ maxWidth: `min(100%, calc(min(62vh, 680px) * ${fullW / fullH}))` }}>
               <Poster settings={p} qrSvg={qrSvg} />
             </div>
           </div>

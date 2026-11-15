@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Copy, ExternalLink, Infinity as InfinityIcon, KeyRound, Loader2, Lock, PenLine, Printer, Palette, RefreshCw, Save, Shapes, ShieldCheck, TriangleAlert } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Clapperboard, Sticker as StickerIcon, Copy, ExternalLink, Infinity as InfinityIcon, KeyRound, Loader2, Lock, PenLine, Printer, Palette, RefreshCw, Save, Shapes, ShieldCheck, TriangleAlert } from "lucide-react";
 import { CODE_TYPES, TYPE_ORDER, validateContent, type CodeTypeId } from "@/lib/codes/types";
 import { staticPayload } from "@/lib/codes/payload";
 import { renderQrSvg } from "@/lib/qr/render";
@@ -550,12 +550,15 @@ function WizardEditor({ init }: { init: Init }) {
             </p>
           )}
 
-          <div className="mt-6 grid gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0">
-              <div className="mb-5 inline-flex rounded-full border border-edge bg-hi/5 p-1 text-sm font-semibold">
-                {([["print", "Poster & Druck"], ["sticker", "Sticker"], ["motion", "Animation & Video"]] as const).map(([k, label]) => (
-                  <button key={k} type="button" onClick={() => setOutput(k)} className={cn("rounded-full px-4 py-2 transition", output === k ? "bg-brand text-on-brand" : "text-dim hover:text-fg")}>
-                    {label}{k === "motion" && <span className="badge ml-1.5 bg-lime text-night">Neu</span>}
+              <div role="tablist" aria-label="Ausgabe" className="mb-5 grid w-full grid-cols-3 rounded-2xl border border-edge bg-hi/5 p-1 text-sm font-semibold sm:inline-grid sm:w-auto sm:rounded-full">
+                {([["print", "Poster & Druck", "Poster", Printer], ["sticker", "Sticker", "Sticker", StickerIcon], ["motion", "Animation & Video", "Video", Clapperboard]] as const).map(([k, label, short, Icon]) => (
+                  <button key={k} type="button" role="tab" aria-selected={output === k} onClick={() => setOutput(k)} className={cn("inline-flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 transition sm:rounded-full sm:px-4 sm:py-2", output === k ? "bg-brand text-on-brand shadow-sm" : "text-dim hover:text-fg")}>
+                    <Icon className="size-4 shrink-0" />
+                    <span className="sm:hidden">{short}</span>
+                    <span className="hidden sm:inline">{label}</span>
+                    {k === "motion" && <span className="badge ml-0.5 hidden bg-lime text-night md:inline-flex">Neu</span>}
                   </button>
                 ))}
               </div>
@@ -563,7 +566,7 @@ function WizardEditor({ init }: { init: Init }) {
               {output === "sticker" && <StickerStudio qrSvg={posterQr} name={name || def.label} defaults={{ text: posterSettings.cta || "SCAN MICH", bg: "#191919", fg: "#ffffff", accent: "#bdfb04" }} />}
               {output === "motion" && <MotionStudio qrSvg={posterQr} name={name || def.label} defaults={{ headline: posterSettings.headline, sub: posterSettings.subline, cta: posterSettings.cta, footer: posterSettings.footer, bg: "#191919", fg: "#ffffff", accent: "#bdfb04" }} />}
             </div>
-            <aside className="grid gap-4 sm:grid-cols-2 2xl:block 2xl:space-y-4 2xl:sticky 2xl:top-40 2xl:self-start">
+            <aside className="grid gap-4 sm:grid-cols-2 xl:block xl:space-y-4 xl:sticky xl:top-40 xl:self-start">
               <Preview svg={svg} data={data} style={style} name={name || def.label} />
               {(isPageLink || live) && (
                 <div className="card p-4">

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { env, supabaseConfigured } from "@/lib/env";
+import { findProvider } from "@/lib/auth-providers";
 
 const NOT_READY = "Die Anmeldung ist gleich verfügbar. Wir richten gerade die Datenbank ein.";
 
@@ -79,13 +80,16 @@ export async function magicLink(_: AuthState, form: FormData): Promise<AuthState
   return { info: "Prüfe dein Postfach. Wir haben dir einen Anmelde-Link geschickt.", email };
 }
 
-export async function googleSignIn(form: FormData) {
-  if (!supabaseConfigured) redirect("/login?error=google");
+/** Social sign-in. Only providers marked `enabled` in src/lib/auth-providers.ts are accepted. */
+export async function oauthSignIn(form: FormData) {
+  const provider = findProvider(form.get("provider"));
+  if (!provider || !provider.enabled) redirect("/login?error=provider");
+  if (!supabaseConfigured) redirect(`/login?error=provider&p=${provider.id}`);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
+    provider: provider.supabase,
     options: { redirectTo: `${env.appUrl}/auth/confirm?next=${encodeURIComponent(safeNext(form.get("next")))}` },
   });
-  if (error || !data.url) redirect("/login?error=google");
+  if (error || !data.url) redirect(`/login?error=provider&p=${provider.id}`);
   redirect(data.url);
 }

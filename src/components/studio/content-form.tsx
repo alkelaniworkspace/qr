@@ -149,13 +149,13 @@ export function ColorInput({ id, value, onChange }: { id?: string; value: string
     setText(value);
   }
   return (
-    <div className="flex h-12 items-center gap-2 rounded-[14px] border border-edge bg-bg/60 pl-2 pr-3 focus-within:border-brand/60">
+    <div className="flex h-12 min-w-0 items-center gap-1.5 rounded-[14px] border border-edge bg-bg/60 pl-2 pr-1.5 focus-within:border-brand/60">
       <input
         id={id}
         type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="size-8 cursor-pointer rounded-lg border-0 bg-transparent p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-black/10 [&::-webkit-color-swatch-wrapper]:p-0"
+        className="size-6 shrink-0 cursor-pointer rounded-md sm:size-7 border-0 bg-transparent p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-black/10 [&::-webkit-color-swatch-wrapper]:p-0"
       />
       <input
         value={text}
@@ -166,7 +166,7 @@ export function ColorInput({ id, value, onChange }: { id?: string; value: string
           setText(v);
           if (/^#[0-9a-fA-F]{6}$/.test(v)) onChange(v.toLowerCase());
         }}
-        className="w-full bg-transparent font-mono text-sm uppercase text-fg outline-none"
+        className="w-full min-w-0 bg-transparent font-mono text-[12px] uppercase tracking-tighter text-fg outline-none"
       />
     </div>
   );
