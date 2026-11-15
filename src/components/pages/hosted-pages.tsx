@@ -12,6 +12,7 @@ import { PollPage } from "./poll-page";
 import { SmartImg } from "./smart-img";
 import { brandOf } from "./brand-icons";
 import { CouponValidity, Countdown, Hours } from "./live-bits";
+import { RsvpCard } from "./rsvp-card";
 import { Avatar, Btn, Card, CoverArt, Display, Hero, IconTile, SectionTitle, s, ugc, type C } from "./page-kit";
 
 const i = (n: number) => ({ "--i": n }) as React.CSSProperties;
@@ -282,6 +283,9 @@ function EventPage({ code, c, links }: { code: PublicCode; c: C; links?: PageLin
         </div>
       </div>
       {valid && <div className="mt-2"><Countdown start={s(c.start)} end={s(c.end) || undefined} /></div>}
+      {c.rsvp === true && (code.mode === "dynamic" || code.id === "preview" || code.slug === "preview") && (
+        <div className="mt-6"><RsvpCard slug={code.slug} demo={code.mode !== "dynamic" || code.id === "preview" || code.slug === "preview"} showCount={c.showCount !== false} /></div>
+      )}
       <div className="mt-6 space-y-3">
         {valid && (
           <Card className="flex items-center gap-3.5 p-4" i={2}>

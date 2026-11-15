@@ -19,6 +19,7 @@ import { DesignPanel } from "./design-panel";
 import { Preview } from "./preview";
 import { PrintStudio } from "@/components/print/print-studio";
 import { PollResults } from "@/components/dashboard/poll-results";
+import { RsvpList } from "@/components/dashboard/rsvp-list";
 import { StickerStudio } from "@/components/print/sticker-studio";
 import { MotionStudio } from "@/components/print/motion-studio";
 import { HostedPage } from "@/components/pages/hosted-pages";
@@ -569,6 +570,7 @@ function WizardEditor({ init }: { init: Init }) {
             </div>
           </div>
           {live && token && <EditLinkCard slug={slug} token={token} copied={copied === "edit"} onCopy={() => copy(editLink(slug, token), "edit")} dirty={dirty} />}
+          {type === "event" && live && token && content.rsvp === true && <RsvpList slug={slug} token={token} className="mt-5" />}
           {type === "poll" && live && token && <PollResults slug={slug} token={token} options={(content.options as { label: string }[]) ?? []} className="mt-5" />}
           {publishError && mode === "dynamic" && token && <p className="mt-4 rounded-xl border border-rose/30 bg-rose/10 px-4 py-2.5 text-sm font-semibold text-rose">{publishError}</p>}
           {saved !== "idle" && (

@@ -172,3 +172,32 @@ check("poll: duplicate choices rejected", (await vote("pollG1", [1, 1], "n".repe
 
 await asAnon(`select public.update_guest_code('pollG1', $1, 'Umfrage', 'poll', $2::jsonb, '{}')`, [PT, pollContent({ closesAt: "2020-01-01T00:00:00Z" })]);
 check("poll: closed after end date", (await vote("pollG1", [0], "o".repeat(32))) === "CLOSED");
+
+// ───────── event RSVP ─────────
+const ET = "e".repeat(40);
+const evContent = (extra: Record<string, unknown> = {}) => JSON.stringify({ title: "Jazz Night", start: "2099-12-05T19:30", rsvp: true, capacity: "5", showCount: true, ...extra });
+await asAnon(`select public.create_guest_code('eventG1', $1, 'Jazz', 'event', $2::jsonb, '{}')`, [ET, evContent()]);
+async function rsvp(email: string, guests: number, token: string, auto = false) {
+  await db.exec(`set role service_role;`);
+  try {
+    return ((await db.query(`select public.rsvp_register('eventG1', 'Gast', $1, $2::smallint, $3, $4) as r`, [email, guests, token, auto])).rows[0] as { r: string }).r;
+  } finally {
+    await db.exec("reset role;");
+  }
+}
+check("rsvp: register", (await rsvp("anna@example.com", 2, "t".repeat(40))) === "OK");
+check("rsvp: unconfirmed not counted", ((await asAnon(`select public.rsvp_stats('eventG1') as s`)).rows[0] as { s: { attending: number } }).s.attending === 0);
+await db.exec(`set role service_role;`);
+const conf = ((await db.query(`select public.rsvp_confirm($1) as s`, ["t".repeat(40)])).rows[0] as { s: string }).s;
+await db.exec(`reset role;`);
+check("rsvp: confirm returns slug", conf === "eventG1");
+check("rsvp: confirmed guests counted", ((await asAnon(`select public.rsvp_stats('eventG1') as s`)).rows[0] as { s: { attending: number; capacity: number } }).s.attending === 2);
+check("rsvp: same email again = already attending", (await rsvp("ANNA@example.com", 1, "u".repeat(40))) === "CONFIRMED");
+check("rsvp: auto-confirm without mail service", (await rsvp("ben@example.com", 3, "v".repeat(40), true)) === "OK");
+check("rsvp: capacity enforced", (await rsvp("carl@example.com", 1, "w".repeat(40), true)) === "FULL");
+check("rsvp: list hidden from the public", ((await asAnon(`select public.rsvp_list('eventG1') as l`)).rows[0] as { l: unknown }).l === null);
+check("rsvp: list for edit-token holder", (((await asAnon(`select public.rsvp_list('eventG1', $1) as l`, [ET])).rows[0] as { l: unknown[] }).l?.length) === 2);
+await expectError("rsvp: anon cannot register directly", () => asAnon(`select public.rsvp_register('eventG1', 'x', 'x@y.de', 1::smallint, '${"z".repeat(40)}', true)`), /permission denied/);
+await expectError("rsvp: anon cannot read rows", () => asAnon(`insert into public.event_rsvps (code_id, email, token_hash) select id, 'a@b.de', '${"z".repeat(40)}' from public.qr_codes where slug = 'eventG1'`), /permission denied/);
+await asAnon(`select public.update_guest_code('eventG1', $1, 'Jazz', 'event', $2::jsonb, '{}')`, [ET, evContent({ rsvp: false })]);
+check("rsvp: closed when registration is off", (await rsvp("dora@example.com", 1, "x".repeat(40))) === "CLOSED");

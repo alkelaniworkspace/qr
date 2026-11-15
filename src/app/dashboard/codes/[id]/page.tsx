@@ -10,6 +10,7 @@ import { renderQrSvg } from "@/lib/qr/render";
 import { normalizeStyle } from "@/lib/qr/style";
 import { CodeActions } from "@/components/dashboard/code-actions";
 import { PollResults } from "@/components/dashboard/poll-results";
+import { RsvpList } from "@/components/dashboard/rsvp-list";
 import { Breakdown, HourStrip, ScanSeries } from "@/components/dashboard/charts";
 import { CountUp } from "@/components/motion/count-up";
 import { TypeIcon } from "@/components/type-icon";
@@ -90,6 +91,7 @@ export default async function CodePage({ params, searchParams }: { params: Promi
         </div>
       </div>
 
+      {code.type === "event" && dynamic && code.content.rsvp === true && <RsvpList slug={code.slug} className="mt-6" />}
       {code.type === "poll" && dynamic && (
         <PollResults slug={code.slug} options={(code.content.options as { label: string }[]) ?? []} className="mt-6" />
       )}
