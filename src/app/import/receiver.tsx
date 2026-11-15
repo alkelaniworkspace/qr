@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, ImageIcon, Loader2, TriangleAlert, UtensilsCrossed } from "lucide-react";
-import { IMPORT_CHANNEL, importCaptured, type CapturedPage } from "@/lib/menu-capture";
+import { CAPTURE_VERSION, IMPORT_CHANNEL, importCaptured, type CapturedPage } from "@/lib/menu-capture";
 import { Mark } from "@/components/ui/logo";
 
 type Menu = { name?: string; sections: { title: string; items: { image?: string }[] }[] };
@@ -21,6 +21,7 @@ type State =
 export function ImportReceiver() {
   const [state, setState] = useState<State>({ s: "waiting" });
   const got = useRef(false);
+  const [outdated, setOutdated] = useState(false);
 
   useEffect(() => {
     async function handle(page: CapturedPage) {
@@ -53,6 +54,7 @@ export function ImportReceiver() {
     function onMessage(e: MessageEvent) {
       const d = e.data as Partial<CapturedPage> & { type?: string };
       // Comes from the restaurant's page (any origin): only accept the exact shape.
+      if (d && d.type === "qlick-menu") setOutdated(Number((d as { v?: number }).v ?? 0) < CAPTURE_VERSION);
       if (d && d.type === "qlick-menu" && typeof d.html === "string" && typeof d.url === "string" && /^https?:\/\//.test(d.url)) {
         void handle({ html: d.html, url: d.url, title: typeof d.title === "string" ? d.title.slice(0, 200) : undefined });
       }
@@ -76,6 +78,11 @@ export function ImportReceiver() {
   return (
     <div className="card w-full max-w-md p-8 text-center animate-rise">
       <Mark className="mx-auto size-12" />
+      {outdated && (
+        <p className="mt-5 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-left text-xs text-fg">
+          Dein Lesezeichen „Speisekarte holen“ ist veraltet. Lösche es und ziehe den Button im Studio (Speisekarte importieren → Aus dem Browser) neu in die Lesezeichenleiste: die neue Version holt mehr Gerichte und schärfere Fotos.
+        </p>
+      )}
       {state.s === "waiting" && (
         <>
           <Loader2 className="mx-auto mt-8 size-8 animate-spin text-brand" />

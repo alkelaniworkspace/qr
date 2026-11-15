@@ -13,6 +13,8 @@
 
 export const IMPORT_CHANNEL = "qlick-menu-import";
 export const CAPTURE_PREFIX = "QLICK-MENU:";
+/** Bump when the bookmarklet changes: the import page asks for an old bookmark to be replaced. */
+export const CAPTURE_VERSION = 3;
 
 export interface CapturedPage {
   html: string;
@@ -24,7 +26,12 @@ const SOURCE = String.raw`(function(APP){
 if(window.__qlickCapture){window.__qlickCapture.style.display='block';return;}
 var d=document,box=d.createElement('div');window.__qlickCapture=box;box.setAttribute('data-qlick-ui','');
 box.setAttribute('style','all:initial;position:fixed;right:16px;bottom:16px;z-index:2147483647;width:300px;background:#141414;color:#fff;border-radius:18px;padding:16px;font:14px/1.4 system-ui,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.45)');
-box.innerHTML='<div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px"><span style="width:10px;height:10px;border-radius:50%;background:#bdfb04"></span>Qlick · Speisekarte holen<button data-x style="all:unset;margin-left:auto;cursor:pointer;opacity:.6;font-size:18px">×</button></div><div data-s style="margin:10px 0 12px;color:#bbb">Lade alle Gerichte und Fotos …</div><div style="height:4px;background:#333;border-radius:4px;overflow:hidden"><div data-p style="height:100%;width:0;background:#bdfb04;transition:width .2s"></div></div><button data-go disabled style="all:unset;box-sizing:border-box;display:block;width:100%;margin-top:12px;padding:11px;border-radius:12px;background:#bdfb04;color:#141414;font-weight:700;text-align:center;cursor:pointer;opacity:.4">An Qlick senden</button><button data-copy style="all:unset;display:none;width:100%;margin-top:8px;text-align:center;color:#bbb;text-decoration:underline;cursor:pointer;font-size:12px">Stattdessen kopieren</button>';
+function el(tag,css,text,attr){var e=d.createElement(tag);if(css)e.setAttribute('style',css);if(text)e.textContent=text;if(attr)e.setAttribute(attr,'');return e}
+var head=el('div','display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px');head.appendChild(el('span','width:10px;height:10px;border-radius:50%;background:#bdfb04'));head.appendChild(el('span','','Qlick · Speisekarte holen'));head.appendChild(el('button','all:unset;margin-left:auto;cursor:pointer;opacity:.6;font-size:18px','×','data-x'));box.appendChild(head);
+box.appendChild(el('div','margin:10px 0 12px;color:#bbb','Lade alle Gerichte und Fotos …','data-s'));
+var track=el('div','height:4px;background:#333;border-radius:4px;overflow:hidden');track.appendChild(el('div','height:100%;width:0;background:#bdfb04;transition:width .2s','','data-p'));box.appendChild(track);
+var gob=el('button','all:unset;box-sizing:border-box;display:block;width:100%;margin-top:12px;padding:11px;border-radius:12px;background:#bdfb04;color:#141414;font-weight:700;text-align:center;cursor:pointer;opacity:.4','An Qlick senden','data-go');gob.disabled=true;box.appendChild(gob);
+box.appendChild(el('button','all:unset;display:none;width:100%;margin-top:8px;text-align:center;color:#bbb;text-decoration:underline;cursor:pointer;font-size:12px','Stattdessen kopieren','data-copy'));
 d.body.appendChild(box);
 var q=function(s){return box.querySelector('['+s+']')},st=q('data-s'),bar=q('data-p'),go=q('data-go'),cp=q('data-copy'),html='',sent=false;
 q('data-x').onclick=function(){box.style.display='none'};
@@ -55,17 +62,17 @@ var c=d.documentElement.cloneNode(true);
 c.querySelectorAll('style,svg,noscript,link,iframe,video,audio,canvas,template,[data-qlick-ui]').forEach(function(e){e.remove()});
 c.querySelectorAll('script').forEach(function(s){var t=(s.type||'').toLowerCase(),x=s.textContent||'';if(t.indexOf('json')<0&&!/window\.__|__NEXT_DATA__|__NUXT__|__APOLLO|__PRELOADED|__INITIAL/.test(x.slice(0,400)))s.remove()});
 c.querySelectorAll('[style]').forEach(function(e){if(e.getAttribute('style').indexOf('url(')<0)e.removeAttribute('style')});
-var live=(d.body.innerText||'').replace(/\s+/g,' '),missing=0,photos=0,list=[];
+var live=(d.body.innerText||'').replace(/\s+/g,' '),missing=0,photos=0,list=[],collected='';
 cards.forEach(function(v,k){list.push(v);if(live.indexOf(k.slice(0,120))<0)missing++});
 list.forEach(function(v){if(/data-qlick-(src|bg)=/.test(v.h))photos++});
 if(missing){list.sort(function(a,b){return a.y-b.y});var ex='',cur=null;list.forEach(function(v){if(v.cat!==cur){if(cur!==null)ex+='</section>';cur=v.cat;ex+='<section data-qlick-cards><h2>'+(cur||'Karte').replace(/</g,'&lt;')+'</h2>'}ex+=v.h});if(cur!==null)ex+='</section>';
-var body=c.querySelector('body');if(body)body.insertAdjacentHTML('afterbegin','<main data-qlick-collected>'+ex+'</main>')}
-html='<!doctype html>'+c.outerHTML;
+collected='<main data-qlick-collected>'+ex+'</main>'}
+html='<!doctype html>'+c.outerHTML;if(collected)html=html.replace(/<body([^>]*)>/i,function(m){return m+collected});
 bar.style.width='100%';st.textContent='Fertig: '+cards.size+' Gerichte, '+photos+' mit Foto.';go.disabled=false;go.style.opacity=1;
 }
-function payload(){return{type:'qlick-menu',html:html,url:location.href,title:d.title}}
+function payload(){return{type:'qlick-menu',v:${CAPTURE_VERSION},html:html,url:location.href,title:d.title}}
 go.onclick=function(){
-if(!html)return;var win=window.open(APP+'/import','qlick_import');st.textContent='Sende an Qlick …';
+if(!html)return;var win=window.open(APP+'/import','qlick_import');if(!win){st.textContent='Das Fenster wurde blockiert. Erlaube Pop-ups für diese Seite oder kopiere die Karte und füge sie in Qlick unter „Einfügen“ ein.';cp.style.display='block';return}st.textContent='Sende an Qlick …';
 function on(e){if(e.origin===APP&&e.data==='qlick-ready'&&win){win.postMessage(payload(),APP);sent=true;st.textContent='Gesendet. Weiter im Qlick-Tab.';removeEventListener('message',on)}}
 addEventListener('message',on);
 setTimeout(function(){if(!sent){st.textContent='Senden wurde von dieser Seite blockiert. Kopiere die Karte und füge sie in Qlick unter „Einfügen“ ein.';cp.style.display='block'}},5000);
