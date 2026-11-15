@@ -57,7 +57,8 @@ check("profile created by trigger", (await db.query(`select * from public.profil
 
 await as(A, `insert into public.qr_codes (name, slug, type, mode) values ('Menü', 'menuA1', 'menu', 'dynamic')`);
 check("user A can create a code", true);
-await expectError("free plan blocks a 2nd dynamic code", () => as(A, `insert into public.qr_codes (name, slug, type, mode) values ('x', 'second', 'url', 'dynamic')`), /PLAN_LIMIT_REACHED/);
+await as(A, `insert into public.qr_codes (name, slug, type, mode) values ('x', 'second', 'url', 'dynamic'), ('y', 'third1', 'url', 'dynamic')`);
+await expectError("free plan blocks a 4th dynamic code", () => as(A, `insert into public.qr_codes (name, slug, type, mode) values ('x', 'fourth', 'url', 'dynamic')`), /PLAN_LIMIT_REACHED/);
 await as(A, `insert into public.qr_codes (name, slug, type, mode) values ('WLAN', 'wifiA1', 'wifi', 'static')`);
 check("static codes are not limited", true);
 
@@ -81,7 +82,7 @@ check("stats: 30 day series", stats.s.series.length === 30);
 check("stats: 24 hour buckets", stats.s.hours.length === 24);
 check("B sees no stats for A's code", ((await as(B, `select public.code_stats('${id}', 30) as s`)).rows[0] as { s: { total: number } }).s.total === 0);
 const sum = (await as(A, `select public.dashboard_summary() as s`)).rows[0] as { s: { codes: number; scans_total: number; scans_today: number; series: number[] } };
-check("dashboard summary", sum.s.codes === 2 && sum.s.scans_total === 3);
+check("dashboard summary", sum.s.codes === 4 && sum.s.scans_total === 3);
 check("dashboard 14-day series", sum.s.series.length === 14 && sum.s.series[13] === 3);
 check("dashboard scans today", sum.s.scans_today === 3);
 
@@ -106,4 +107,15 @@ check("owner can switch type url -> menu, slug stays", changed.ok && ((await asA
 const denied = (await asAnon(`select public.update_guest_code('tisch01', $1, 'x', 'url', '{}', '{}') as ok`, ["y".repeat(40)])).rows[0] as { ok: boolean };
 check("wrong token cannot update", !denied.ok);
 await expectError("anon cannot read the table directly", () => asAnon(`select * from public.qr_codes`), /permission denied/);
-check("A still sees only own codes", (await as(A, `select * from public.qr_codes`)).rows.length === 2);
+check("A still sees only own codes", (await as(A, `select * from public.qr_codes`)).rows.length === 4);
+
+// ───────── accounts: claim a guest code ─────────
+await asAnon(`select public.create_guest_code('claim01', $1, 'Gast', 'url', '{"url":"https://example.com"}', '{}')`, [T]);
+await db.exec(`insert into auth.users (id) values ('33333333-3333-3333-3333-333333333333')`);
+const C = "33333333-3333-3333-3333-333333333333";
+const wrong = (await as(C, `select public.claim_guest_code('claim01', '${"z".repeat(40)}') as ok`)).rows[0] as { ok: boolean };
+check("claim needs the right token", !wrong.ok);
+const right = (await as(C, `select public.claim_guest_code('claim01', '${T}') as ok`)).rows[0] as { ok: boolean };
+check("claim with token moves code into the account", right.ok && (await as(C, `select slug from public.qr_codes`)).rows.length === 1);
+await expectError("anon cannot claim", () => asAnon(`select public.claim_guest_code('claim01', $1)`, [T]), /permission denied|NOT_SIGNED_IN/);
+check("plan limits: free=3, business unlimited", ((await db.query(`select public.plan_dynamic_limit('free') a, public.plan_dynamic_limit('business') b`)).rows[0] as { a: number; b: number | null }).a === 3);

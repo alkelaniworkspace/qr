@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { DashboardNav } from "@/components/dashboard/nav";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { PLANS, planOf } from "@/lib/plans";
+import { ClaimGuestCodes } from "@/components/dashboard/claim-guest-codes";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
@@ -39,7 +40,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
         <div className="border-t border-edge px-5 py-2 md:hidden"><DashboardNav /></div>
       </header>
-      <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8"><ClaimGuestCodes />{children}</main>
     </div>
   );
 }

@@ -62,3 +62,30 @@ export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
   if (data.session) redirect("/dashboard/new");
   return { info: "Fast geschafft! Wir haben dir eine E-Mail geschickt. Bitte bestätige deine Adresse.", email };
 }
+
+/** Passwordless: sends a one-time sign-in link (also creates the account on first use). */
+export async function magicLink(_: AuthState, form: FormData): Promise<AuthState> {
+  const email = String(form.get("email") ?? "").trim();
+  if (!z.email().safeParse(email).success) return { error: "Bitte eine gültige E-Mail eingeben", email };
+  if (!supabaseConfigured) return { error: NOT_READY, email };
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: `${env.appUrl}/auth/confirm?next=${encodeURIComponent(safeNext(form.get("next")))}`, shouldCreateUser: true },
+  });
+  if (error) {
+    return { error: error.status === 429 ? "Zu viele Versuche. Bitte in einer Minute erneut." : "Der Link konnte nicht gesendet werden. Bitte erneut versuchen.", email };
+  }
+  return { info: "Prüfe dein Postfach. Wir haben dir einen Anmelde-Link geschickt.", email };
+}
+
+export async function googleSignIn(form: FormData) {
+  if (!supabaseConfigured) redirect("/login?error=google");
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${env.appUrl}/auth/confirm?next=${encodeURIComponent(safeNext(form.get("next")))}` },
+  });
+  if (error || !data.url) redirect("/login?error=google");
+  redirect(data.url);
+}

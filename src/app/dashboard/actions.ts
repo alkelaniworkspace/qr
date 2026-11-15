@@ -104,3 +104,20 @@ export async function deleteCode(id: string) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/codes");
 }
+
+/** Moves guest codes (made without an account in this browser) into the signed-in account. */
+export async function claimGuestCodes(items: { slug: string; token: string }[]): Promise<{ claimed: string[] }> {
+  if (!(await getUserId())) return { claimed: [] };
+  const supabase = await createClient();
+  const claimed: string[] = [];
+  for (const it of items.slice(0, 200)) {
+    if (!/^[A-Za-z0-9_-]{4,64}$/.test(it.slug) || !/^[A-Za-z0-9_-]{32,128}$/.test(it.token)) continue;
+    const { data } = await supabase.rpc("claim_guest_code", { p_slug: it.slug, p_token: it.token } as never);
+    if (data) claimed.push(it.slug);
+  }
+  if (claimed.length) {
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/codes");
+  }
+  return { claimed };
+}
