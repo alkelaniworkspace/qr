@@ -63,7 +63,7 @@ const url = (label = "Link") =>
   z.string().trim().min(1, `${label} fehlt`).max(2000).transform(normalizeUrl).refine(isHttpUrl, "Ungültiger Link (http/https)");
 const optUrl = () =>
   z.string().trim().max(2000).default("").transform(normalizeUrl).refine((v) => !v || isHttpUrl(v), "Ungültiger Link");
-const color = z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#6e50ff");
+const color = z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#191919");
 const linkItem = z.object({ label: reqStr("Bezeichnung", 80), url: url() });
 /** Images are uploaded to our storage (or any https URL). */
 const imageUrl = () => z.string().trim().max(600).default("").refine((v) => !v || /^https:\/\/[^\s"'<>]+$/.test(v), "Ungültiges Bild");
@@ -137,7 +137,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       accent: color,
       theme,
     }),
-    defaults: { firstName: "", lastName: "", title: "", company: "", phone: "", mobile: "", email: "", website: "", street: "", city: "", note: "", accent: "#6e50ff", theme: "light" },
+    defaults: { firstName: "", lastName: "", title: "", company: "", phone: "", mobile: "", email: "", website: "", street: "", city: "", note: "", accent: "#191919", theme: "light" },
   },
   links: {
     id: "links",
@@ -161,7 +161,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       accent: color,
       theme,
     }),
-    defaults: { title: "", bio: "", links: [{ label: "Instagram", url: "" }], accent: "#6e50ff", theme: "light" },
+    defaults: { title: "", bio: "", links: [{ label: "Instagram", url: "" }], accent: "#191919", theme: "light" },
   },
   menu: {
     id: "menu",
@@ -213,7 +213,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       hours: "",
       footer: "",
       layout: "cards",
-      accent: "#6e50ff",
+      accent: "#191919",
       theme: "light",
     },
   },
@@ -241,7 +241,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       accent: color,
       theme,
     }),
-    defaults: { business: "", message: "", googleUrl: "", secondaryUrl: "", accent: "#6e50ff", theme: "light" },
+    defaults: { business: "", message: "", googleUrl: "", secondaryUrl: "", accent: "#191919", theme: "light" },
   },
   coupon: {
     id: "coupon",
@@ -273,7 +273,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       accent: color,
       theme,
     }),
-    defaults: { business: "", discount: "", headline: "", code: "", validUntil: "", url: "", terms: "", accent: "#6e50ff", theme: "light" },
+    defaults: { business: "", discount: "", headline: "", code: "", validUntil: "", url: "", terms: "", accent: "#191919", theme: "light" },
   },
   pdf: {
     id: "pdf",
@@ -297,7 +297,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       accent: color,
       theme,
     }),
-    defaults: { title: "", description: "", file: null, accent: "#6e50ff", theme: "light" },
+    defaults: { title: "", description: "", file: null, accent: "#191919", theme: "light" },
   },
   event: {
     id: "event",
@@ -327,7 +327,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       accent: color,
       theme,
     }),
-    defaults: { title: "", start: "", end: "", location: "", description: "", url: "", accent: "#6e50ff", theme: "light" },
+    defaults: { title: "", start: "", end: "", location: "", description: "", url: "", accent: "#191919", theme: "light" },
   },
   site: {
     id: "site",
@@ -363,7 +363,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       accent: color,
       theme,
     }),
-    defaults: { name: "", tagline: "", about: "", services: "", hours: "", phone: "", email: "", address: "", links: [], accent: "#6e50ff", theme: "light" },
+    defaults: { name: "", tagline: "", about: "", services: "", hours: "", phone: "", email: "", address: "", links: [], accent: "#191919", theme: "light" },
   },
   location: {
     id: "location",

@@ -17,13 +17,13 @@ export default async function BillingPage() {
   return (
     <div className="animate-rise">
       <p className="text-sm text-dim">Konto</p>
-      <h1 className="mt-1 font-display text-5xl uppercase leading-none">Dein Tarif</h1>
+      <h1 className="mt-1 font-display text-5xl leading-none">Dein Tarif</h1>
 
       <div className="card card-glow mt-8 p-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-dim">Aktueller Tarif</p>
-            <p className="font-display text-5xl uppercase text-brand glow-text">{PLANS[quota.plan].label}</p>
+            <p className="font-display text-5xl text-brand glow-text">{PLANS[quota.plan].label}</p>
           </div>
           <p className="text-sm text-dim">{quota.used} von {quota.limit} dynamischen Codes genutzt</p>
         </div>
@@ -38,7 +38,7 @@ export default async function BillingPage() {
           const current = id === quota.plan;
           return (
             <div key={id} className={cn("card flex flex-col p-6", current && "card-glow")}>
-              <p className="font-display text-lg uppercase">{p.label}</p>
+              <p className="font-display text-lg">{p.label}</p>
               <p className={cn("mt-3 font-display text-5xl", current && "text-brand")}>{p.price} €<span className="font-sans text-sm font-normal text-dim"> / Monat</span></p>
               <ul className="mt-6 flex-1 space-y-2.5 text-sm">
                 {p.features.map((f) => (

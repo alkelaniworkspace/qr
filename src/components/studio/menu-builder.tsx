@@ -161,7 +161,7 @@ export function MenuBuilder({ value, onChange, errors, prefix }: { value: Partia
               value={section.title}
               placeholder="Kategorie, z. B. Döner, Pizza, Schnitzel"
               aria-invalid={!!errors[`${prefix}.${cur}.title`]}
-              className="min-w-0 flex-1 font-display text-base uppercase"
+              className="min-w-0 flex-1 font-display text-base"
               onChange={(e) => setSection(cur, { ...section, title: e.target.value })}
             />
             <div className="flex items-center gap-1">

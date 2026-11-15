@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <div className="relative overflow-hidden rounded-2xl [&>svg]:size-64" dangerouslySetInnerHTML={{ __html: showcase }} />
             <div className="absolute inset-x-6 h-0.5 rounded-full bg-brand shadow-[0_0_16px_4px_rgb(var(--glow)/0.7)] animate-scan" />
           </div>
-          <h2 className="mt-12 max-w-md text-center font-display text-4xl uppercase leading-[0.95]">
+          <h2 className="mt-12 max-w-md text-center font-display text-4xl leading-[0.95]">
             Codes, die gesehen werden. <span className="text-brand glow-text">Und bleiben.</span>
           </h2>
           <ul className="mt-6 space-y-2 text-sm text-dim">

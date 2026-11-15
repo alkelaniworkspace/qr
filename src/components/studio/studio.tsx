@@ -107,13 +107,13 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
     return (
       <div className="animate-rise">
         <p className="text-sm text-dim">Schritt 1 von 2</p>
-        <h1 className="mt-1 font-display text-5xl uppercase leading-[0.95] sm:text-6xl">
+        <h1 className="mt-1 font-display text-5xl leading-[0.95] sm:text-6xl">
           Was soll dein Code <span className="text-brand glow-text">können?</span>
         </h1>
         {GROUPS.map((group, gi) => (
           <section key={group.id} className="mt-12">
             <div className="mb-4 flex items-baseline gap-3">
-              <h2 className="font-display text-xl uppercase">{group.title}</h2>
+              <h2 className="font-display text-xl">{group.title}</h2>
               <span className="text-sm text-faint">{group.hint}</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -170,14 +170,14 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
           </span>
           <div className="min-w-0 flex-1">
             {isPublic ? (
-              <h1 className="font-display text-4xl uppercase leading-none sm:text-5xl">QR-Code <span className="text-brand">erstellen</span></h1>
+              <h1 className="font-display text-4xl leading-none sm:text-5xl">QR-Code <span className="text-brand">erstellen</span></h1>
             ) : (
               <label className="group flex items-center gap-2">
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={`${def.label} benennen`}
-                  className="w-full bg-transparent font-display text-4xl uppercase leading-none text-fg outline-none placeholder:text-faint sm:text-5xl"
+                  className="w-full bg-transparent font-display text-4xl leading-none text-fg outline-none placeholder:text-faint sm:text-5xl"
                   maxLength={120}
                 />
                 <PenLine className="size-5 shrink-0 text-faint transition group-hover:text-brand" />
@@ -298,7 +298,7 @@ function ModeCard({ active, onClick, title, text, icon, locked }: { active: bool
       onClick={onClick}
       className={cn("card p-4 text-left transition duration-200", active ? "card-glow" : "hover:border-hi/25")}
     >
-      <span className={cn("flex items-center gap-2 font-display text-base uppercase", active && "text-brand")}>
+      <span className={cn("flex items-center gap-2 font-display text-base", active && "text-brand")}>
         {icon} {title} {locked && <Lock className="size-3.5 text-faint" />}
       </span>
       <span className="mt-1.5 block text-xs leading-relaxed text-dim">{text}</span>

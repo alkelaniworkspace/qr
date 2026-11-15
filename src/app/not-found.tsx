@@ -7,7 +7,7 @@ export default function NotFound() {
       <div className="animate-rise">
         <Mark className="mx-auto size-14" />
         <p className="mt-8 font-display text-8xl text-brand glow-text">404</p>
-        <h1 className="mt-2 font-display text-3xl uppercase">Seite nicht gefunden</h1>
+        <h1 className="mt-2 font-display text-3xl">Seite nicht gefunden</h1>
         <p className="mt-3 text-dim">Diese Seite gibt es nicht (mehr).</p>
         <ButtonLink href="/" className="mt-8">Zur Startseite</ButtonLink>
       </div>

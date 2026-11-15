@@ -36,7 +36,7 @@ export function PageFromHash() {
       <main className="ambient grid min-h-screen place-items-center px-6 text-center">
         <div>
           <Mark className="mx-auto size-14" />
-          <h1 className="mt-6 font-display text-3xl uppercase">Code unvollständig</h1>
+          <h1 className="mt-6 font-display text-3xl">Code unvollständig</h1>
           <p className="mt-3 text-dim">Dieser QR-Code enthält keine lesbare Seite.</p>
         </div>
       </main>

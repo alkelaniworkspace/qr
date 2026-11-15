@@ -17,8 +17,8 @@ import { cn } from "@/lib/cn";
 const qr = (data: string, style: Partial<QrStyle>, id: string, size = 360) =>
   renderQrSvg(data, { ...DEFAULT_STYLE, ...style } as QrStyle, { size, id });
 
-const HERO_QR = qr("https://scanwerk.de/r/hero", STYLE_PRESETS[1].style, "hero", 420);
-const PRESET_QRS = STYLE_PRESETS.map((p) => ({ ...p, svg: qr(`https://scanwerk.de/r/${p.id}`, p.style, `p-${p.id}`, 240) }));
+const HERO_QR = qr("https://qlick.codes/r/hero", STYLE_PRESETS[1].style, "hero", 420);
+const PRESET_QRS = STYLE_PRESETS.map((p) => ({ ...p, svg: qr(`https://qlick.codes/r/${p.id}`, p.style, `p-${p.id}`, 240) }));
 
 const USE_CASES = ["Speisekarte", "Visitenkarte", "Google-Bewertungen", "WLAN", "Gutscheine", "Events", "Link-Seite", "PDF-Katalog", "App-Download", "Standort"];
 
@@ -49,7 +49,7 @@ export default function Home() {
             <span className="size-2 rounded-full bg-brand animate-pulse-dot" />
             Codes, die nie abgeschaltet werden
           </p>
-          <h1 className="mt-7 font-display text-[3.2rem] uppercase leading-[0.92] sm:text-7xl lg:text-[5.2rem]">
+          <h1 className="mt-7 font-display text-[3.2rem] leading-[0.92] sm:text-7xl lg:text-[5.2rem]">
             QR-Codes,<br />
             <span className="text-brand glow-text">die auffallen.</span>
           </h1>
@@ -100,7 +100,7 @@ export default function Home() {
       <div className="overflow-hidden border-y border-edge bg-surface/60 py-5">
         <div className="flex w-max animate-marquee gap-10 whitespace-nowrap">
           {[...USE_CASES, ...USE_CASES].map((u, i) => (
-            <span key={i} className="flex items-center gap-10 font-display text-2xl uppercase text-dim">
+            <span key={i} className="flex items-center gap-10 font-display text-2xl text-dim">
               {u} <span className="size-2 rotate-45 bg-brand" />
             </span>
           ))}
@@ -113,7 +113,7 @@ export default function Home() {
           ["15", "Code-Typen", "text-brand glow-text"],
           ["10", "Muster", "text-mint"],
           ["42", "Eck-Kombinationen", "text-gold"],
-          ["0", "Cookies beim Scan", "text-cyan"],
+          ["0", "Cookies beim Scan", "text-lime-ink"],
         ].map(([n, label, color], i) => (
           <Reveal key={label} delay={i * 90}>
             <div className="card p-6">
@@ -128,7 +128,7 @@ export default function Home() {
       <section id="funktionen" className="mx-auto max-w-7xl scroll-mt-20 px-5 pb-24 sm:px-8">
         <Reveal>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Funktionen</p>
-          <h2 className="mt-3 max-w-3xl font-display text-5xl uppercase leading-[0.95] sm:text-6xl">Alles, was ein starker Code braucht.</h2>
+          <h2 className="mt-3 max-w-3xl font-display text-5xl leading-[0.95] sm:text-6xl">Alles, was ein starker Code braucht.</h2>
         </Reveal>
         <div className="mt-12 grid gap-4 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, text, span, accent, chart }, i) => (
@@ -137,7 +137,7 @@ export default function Home() {
                 <span className={cn("grid size-12 place-items-center rounded-2xl transition", accent ? "bg-brand text-on-brand" : "bg-elevated text-brand group-hover:bg-brand group-hover:text-on-brand")}>
                   <Icon className="size-5" strokeWidth={2} />
                 </span>
-                <h3 className="mt-6 font-display text-2xl uppercase">{title}</h3>
+                <h3 className="mt-6 font-display text-2xl">{title}</h3>
                 <p className="mt-2 max-w-md text-sm leading-relaxed text-dim">{text}</p>
                 {accent && (
                   <div className="mt-6 grid grid-cols-4 gap-3 sm:grid-cols-8">
@@ -159,7 +159,7 @@ export default function Home() {
           <Reveal className="flex flex-wrap items-end justify-between gap-6">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Designs</p>
-              <h2 className="mt-3 font-display text-5xl uppercase leading-[0.95] sm:text-6xl">Kein Code sieht<br />aus wie der andere.</h2>
+              <h2 className="mt-3 font-display text-5xl leading-[0.95] sm:text-6xl">Kein Code sieht<br />aus wie der andere.</h2>
             </div>
             <ButtonLink href="/studio" variant="secondary">Selbst gestalten <ArrowRight className="size-4" /></ButtonLink>
           </Reveal>
@@ -168,7 +168,7 @@ export default function Home() {
               <Reveal key={p.id} delay={(i % 4) * 80}>
                 <div className="card group p-4 transition duration-300 hover:-translate-y-1.5 hover:rotate-[-1deg] hover:border-brand/40">
                   <div className="overflow-hidden rounded-2xl [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: p.svg }} />
-                  <p className="mt-3 flex items-center justify-between font-display text-sm uppercase">
+                  <p className="mt-3 flex items-center justify-between font-display text-sm">
                     {p.name} <ArrowRight className="size-4 -translate-x-1 text-brand opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100" />
                   </p>
                 </div>
@@ -182,7 +182,7 @@ export default function Home() {
       <section id="versprechen" className="mx-auto max-w-7xl scroll-mt-20 px-5 py-24 sm:px-8">
         <Reveal>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Unser Versprechen</p>
-          <h2 className="mt-3 max-w-4xl font-display text-5xl uppercase leading-[0.95] sm:text-6xl">
+          <h2 className="mt-3 max-w-4xl font-display text-5xl leading-[0.95] sm:text-6xl">
             Andere schalten deine Codes ab. <span className="text-brand glow-text">Wir nicht.</span>
           </h2>
         </Reveal>
@@ -194,7 +194,7 @@ export default function Home() {
                   <Icon className="size-7 text-brand" strokeWidth={1.8} />
                   <span className="badge bg-brand/15 text-brand">{badge}</span>
                 </div>
-                <h3 className="mt-8 font-display text-2xl uppercase leading-tight">{title}</h3>
+                <h3 className="mt-8 font-display text-2xl leading-tight">{title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-dim">{text}</p>
               </div>
             </Reveal>
@@ -207,7 +207,7 @@ export default function Home() {
         <Reveal>
           <div className="card p-8 sm:p-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <h3 className="font-display text-3xl uppercase">16 Code-Typen</h3>
+              <h3 className="font-display text-3xl">16 Code-Typen</h3>
               <span className="badge bg-brand text-on-brand"><Zap className="size-3" /> Sofort startklar</span>
             </div>
             <div className="mt-6 flex flex-wrap gap-2">
@@ -230,7 +230,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8">
           <Reveal className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Preise</p>
-            <h2 className="mt-3 font-display text-5xl uppercase leading-[0.95] sm:text-6xl">Ehrlich. Ohne Falle.</h2>
+            <h2 className="mt-3 font-display text-5xl leading-[0.95] sm:text-6xl">Ehrlich. Ohne Falle.</h2>
             <p className="mt-4 text-dim">Monatlich kündbar. Statische Codes sind immer kostenlos und unbegrenzt.</p>
           </Reveal>
           <div className="mt-14 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -241,7 +241,7 @@ export default function Home() {
                 <Reveal key={id} delay={i * 90}>
                   <div className={cn("card flex h-full flex-col p-7 transition hover:-translate-y-1", featured && "card-glow")}>
                     <div className="flex items-center justify-between">
-                      <p className="font-display text-lg uppercase">{p.label}</p>
+                      <p className="font-display text-lg">{p.label}</p>
                       {featured && <span className="badge bg-brand text-on-brand">Beliebt</span>}
                     </div>
                     <p className={cn("mt-5 font-display text-6xl", featured && "text-brand glow-text")}>{p.price} €</p>
@@ -268,9 +268,9 @@ export default function Home() {
           <div className="relative overflow-hidden rounded-[32px] bg-brand px-8 py-16 text-center text-on-brand sm:px-16">
             <div className="pointer-events-none absolute -right-10 -top-10 size-64 rotate-12 rounded-[48px] border-[14px] border-on-brand/10" />
             <div className="pointer-events-none absolute -bottom-12 -left-8 size-48 -rotate-12 rounded-[40px] border-[12px] border-on-brand/10" />
-            <h2 className="relative font-display text-5xl uppercase leading-[0.95] sm:text-6xl">Dein nächster Code<br />wird gesehen.</h2>
+            <h2 className="relative font-display text-5xl leading-[0.95] sm:text-6xl">Dein nächster Code<br />wird gesehen.</h2>
             <div className="relative mt-9 flex flex-wrap justify-center gap-3">
-              <Link href="/studio" className="inline-flex h-14 items-center gap-2 rounded-[14px] bg-on-brand px-7 font-display text-[15px] font-bold uppercase tracking-[0.03em] text-brand shadow-[0_4px_0_rgba(0,0,0,0.35)] transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none">
+              <Link href="/studio" className="inline-flex h-14 items-center gap-2 rounded-[14px] bg-on-brand px-7 font-display text-[15px] font-bold tracking-[0.03em] text-brand shadow-[0_4px_0_rgba(0,0,0,0.35)] transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none">
                 Jetzt Code erstellen <ArrowRight className="size-4" />
               </Link>
             </div>

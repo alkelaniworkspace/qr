@@ -54,12 +54,12 @@ export default async function CodePage({ params, searchParams }: { params: Promi
 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={cn("badge", code.status === "paused" ? "bg-gold text-night" : dynamic ? "bg-brand text-on-brand" : "bg-cyan text-night")}>
+            <span className={cn("badge", code.status === "paused" ? "bg-gold text-night" : dynamic ? "bg-brand text-on-brand" : "bg-lime text-night")}>
               {code.status === "paused" ? "Pausiert" : dynamic ? "Dynamisch" : "Statisch"}
             </span>
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-dim"><TypeIcon name={def.icon} className="size-3.5" /> {def.label}</span>
           </div>
-          <h1 className="mt-3 font-display text-5xl uppercase leading-[0.95]">{code.name}</h1>
+          <h1 className="mt-3 font-display text-5xl leading-[0.95]">{code.name}</h1>
           <div className="mt-4 flex flex-wrap gap-2 text-sm">
             {dynamic && (
               <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-edge bg-surface px-3.5 py-2 font-mono text-[13px] transition hover:border-brand/50">
@@ -123,7 +123,7 @@ function Kpi({ label, children, small, color }: { label: string; children: React
 function Panel({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <section className={cn("card p-6", className)}>
-      <h2 className="mb-5 font-display text-lg uppercase">{title}</h2>
+      <h2 className="mb-5 font-display text-lg">{title}</h2>
       {children}
     </section>
   );

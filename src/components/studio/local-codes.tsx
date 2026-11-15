@@ -40,7 +40,7 @@ export function LocalCodes() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl uppercase leading-none sm:text-6xl">
+          <h1 className="font-display text-4xl leading-none sm:text-6xl">
             Meine <span className="text-brand glow-text">Codes</span>
           </h1>
           <p className="mt-3 max-w-xl text-dim">Gespeichert in diesem Browser, ohne Konto. Die Codes selbst funktionieren überall und für immer.</p>
@@ -50,7 +50,7 @@ export function LocalCodes() {
 
       {codes && codes.length === 0 && (
         <div className="card mt-10 grid place-items-center px-6 py-20 text-center">
-          <p className="font-display text-2xl uppercase">Noch keine Codes</p>
+          <p className="font-display text-2xl">Noch keine Codes</p>
           <p className="mt-2 text-dim">In 4 Schritten zum fertigen Code und Poster.</p>
           <ButtonLink href="/studio" className="mt-6"><Plus className="size-4" /> Ersten Code erstellen</ButtonLink>
         </div>

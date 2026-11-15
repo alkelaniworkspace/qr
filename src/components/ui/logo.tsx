@@ -1,22 +1,26 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
 
-export function Mark({ className = "size-8" }: { className?: string }) {
+/**
+ * Qlick mark: a QR finder eye that turns into a Q. Its tail is a cursor,
+ * because scanning should feel as easy as a click.
+ */
+export function Mark({ className = "size-8", tone = "auto" }: { className?: string; tone?: "auto" | "dark" | "light" }) {
+  const ink = tone === "dark" ? "#191919" : tone === "light" ? "#ffffff" : "currentColor";
   return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden>
-      <rect width="32" height="32" rx="9" fill="#7b5cff" />
-      <path d="M8 8h6.5v6.5H8zM17.5 8H24v6.5h-6.5zM8 17.5h6.5V24H8z" fill="#ffffff" />
-      <path d="M10.2 10.2h2.1v2.1h-2.1zM19.7 10.2h2.1v2.1h-2.1zM10.2 19.7h2.1v2.1h-2.1z" fill="#7b5cff" />
-      <rect x="17.5" y="17.5" width="6.5" height="6.5" rx="3.25" fill="#22d3ee" />
+    <svg viewBox="0 0 56 56" className={className} aria-hidden>
+      <rect x="5" y="5" width="38" height="38" rx="12" fill="none" stroke={ink} strokeWidth="6" />
+      <rect x="17" y="17" width="14" height="14" rx="4" fill={ink} />
+      <path d="M33 33 L51 39 L43 43 L39 51 Z" fill="#bdfb04" stroke="var(--color-bg, #191919)" strokeWidth="2.5" strokeLinejoin="round" className="origin-[40px_40px] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:translate-y-0.5" />
     </svg>
   );
 }
 
 export function Logo({ href = "/" }: { href?: string }) {
   return (
-    <Link href={href} className="group flex items-center gap-2.5" aria-label={site.name}>
-      <Mark className="size-8 transition-transform duration-300 group-hover:rotate-[-8deg]" />
-      <span className="font-display text-[22px] leading-none">{site.name}</span>
+    <Link href={href} className="group flex items-center gap-2 text-fg" aria-label={site.name}>
+      <Mark className="size-8" />
+      <span className="font-display text-[24px] leading-none tracking-[-0.05em]">{site.name.toLowerCase()}</span>
     </Link>
   );
 }

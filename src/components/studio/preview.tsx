@@ -120,7 +120,7 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
         <button
           type="button"
           onClick={() => downloadPng(svg, name, pngSize)}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] bg-elevated font-display text-[13px] font-bold uppercase tracking-wide text-fg shadow-[0_4px_0_rgba(0,0,0,0.45)] transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-elevated font-display text-[13px] font-bold tracking-wide text-fg shadow-[0_4px_0_rgba(0,0,0,0.45)] transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none"
         >
           <Download className="size-4" /> PNG
         </button>

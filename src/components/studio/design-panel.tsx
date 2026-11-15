@@ -20,7 +20,7 @@ interface Props {
 }
 
 const SAMPLE = "SCANWERK-2026";
-const SWATCHES = ["#0f1113", "#ffffff", "#6e50ff", "#d42a4e", "#ff5d6c", "#38d5ff", "#a78bfa", "#3ee6a8", "#ffb020", "#1a1d4e", "#5a1428"];
+const SWATCHES = ["#0f1113", "#ffffff", "#bdfb04", "#191919", "#d42a4e", "#ff5d6c", "#38d5ff", "#a78bfa", "#3ee6a8", "#ffb020", "#1a1d4e", "#5a1428"];
 
 const DOTS: { value: DotStyle; label: string }[] = [
   { value: "square", label: "Quadrat" },
@@ -64,7 +64,7 @@ function Section({ title, hint, defaultOpen = false, children }: { title: string
     <div className="card overflow-hidden">
       <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-hi/[0.02]" aria-expanded={open}>
         <span>
-          <span className="block font-display text-base uppercase">{title}</span>
+          <span className="block font-display text-base">{title}</span>
           {hint && <span className="mt-0.5 block text-xs text-faint">{hint}</span>}
         </span>
         <ChevronDown className={cn("size-4 shrink-0 text-dim transition-transform duration-300", open && "rotate-180 text-brand")} />
@@ -256,11 +256,11 @@ export function DesignPanel({ style, onChange, data }: Props) {
           )}
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <Toggle checked={style.eyeColor !== null} onChange={(v) => set({ eyeColor: v ? "#6e50ff" : null })} label="Eigene Farbe Rahmen" />
+              <Toggle checked={style.eyeColor !== null} onChange={(v) => set({ eyeColor: v ? "#191919" : null })} label="Eigene Farbe Rahmen" />
               {style.eyeColor !== null && <div className="mt-3"><ColorInput value={style.eyeColor} onChange={(c) => set({ eyeColor: c })} /></div>}
             </div>
             <div>
-              <Toggle checked={style.eyeBallColor !== null} onChange={(v) => set({ eyeBallColor: v ? "#6e50ff" : null })} label="Eigene Farbe Kern" />
+              <Toggle checked={style.eyeBallColor !== null} onChange={(v) => set({ eyeBallColor: v ? "#191919" : null })} label="Eigene Farbe Kern" />
               {style.eyeBallColor !== null && <div className="mt-3"><ColorInput value={style.eyeBallColor} onChange={(c) => set({ eyeBallColor: c })} /></div>}
             </div>
           </div>

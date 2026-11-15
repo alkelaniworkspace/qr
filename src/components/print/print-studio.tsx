@@ -74,7 +74,7 @@ export function PrintStudio({ settings: p, onChange, qrSvg, name }: Props) {
     <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
       <div className="space-y-4">
         <div className="card p-5">
-          <p className="mb-3 font-display text-base uppercase">Format</p>
+          <p className="mb-3 font-display text-base">Format</p>
           <div className="grid grid-cols-4 gap-2">
             {formatIds.map((id) => (
               <button
@@ -83,7 +83,7 @@ export function PrintStudio({ settings: p, onChange, qrSvg, name }: Props) {
                 onClick={() => set({ format: id })}
                 className={cn("rounded-xl border px-2 py-2.5 text-center transition", p.format === id ? "border-brand bg-brand/15 text-fg" : "border-edge bg-bg/60 text-dim hover:border-hi/25")}
               >
-                <span className="block truncate font-display text-[13px] uppercase">{FORMATS[id].label}</span>
+                <span className="block truncate font-display text-[13px]">{FORMATS[id].label}</span>
                 <span className="block truncate text-[10px] text-faint">{FORMATS[id].hint}</span>
               </button>
             ))}
@@ -109,7 +109,7 @@ export function PrintStudio({ settings: p, onChange, qrSvg, name }: Props) {
         </div>
 
         <div className="card p-5">
-          <p className="mb-3 font-display text-base uppercase">Vorlage</p>
+          <p className="mb-3 font-display text-base">Vorlage</p>
           <div className="grid grid-cols-5 gap-2">
             {POSTER_TEMPLATES.map((t) => (
               <button key={t.id} type="button" onClick={() => set({ template: t.id })} title={t.name} className={cn("group rounded-xl border p-1 transition", p.template === t.id ? "border-brand shadow-[0_0_20px_-6px_rgb(var(--glow)/0.8)]" : "border-edge hover:border-hi/25")}>
@@ -123,7 +123,7 @@ export function PrintStudio({ settings: p, onChange, qrSvg, name }: Props) {
         </div>
 
         <div className="card space-y-4 p-5">
-          <p className="font-display text-base uppercase">Texte</p>
+          <p className="font-display text-base">Texte</p>
           <FieldShell label="Überschrift"><Input value={p.headline} maxLength={60} onChange={(e) => set({ headline: e.target.value })} /></FieldShell>
           <FieldShell label="Untertitel"><Textarea rows={2} value={p.subline} maxLength={160} onChange={(e) => set({ subline: e.target.value })} /></FieldShell>
           <div className="grid grid-cols-2 gap-3">
@@ -134,7 +134,7 @@ export function PrintStudio({ settings: p, onChange, qrSvg, name }: Props) {
         </div>
 
         <div className="card space-y-4 p-5">
-          <p className="font-display text-base uppercase">Farben</p>
+          <p className="font-display text-base">Farben</p>
           <div className="grid grid-cols-3 gap-2">
             {POSTER_PALETTES.map((pal) => (
               <button key={pal.name} type="button" onClick={() => set({ bg: pal.bg, accent: pal.accent, text: pal.text })} className={cn("flex items-center gap-2 rounded-xl border p-2 text-xs font-semibold transition", p.bg === pal.bg && p.accent === pal.accent ? "border-brand text-fg" : "border-edge text-dim hover:border-hi/25")}>

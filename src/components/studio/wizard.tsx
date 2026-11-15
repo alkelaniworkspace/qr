@@ -130,7 +130,7 @@ function RemoteWizard({ slug }: { slug: string }) {
     return (
       <div className="card mx-auto mt-16 max-w-lg p-8 text-center">
         <Lock className="mx-auto size-8 text-brand" />
-        <p className="mt-4 font-display text-2xl uppercase">Kein Zugriff</p>
+        <p className="mt-4 font-display text-2xl">Kein Zugriff</p>
         <p className="mt-2 text-dim">{state.error} Öffne den vollständigen Link, den du beim Erstellen bekommen hast.</p>
         <Link href="/studio" className="mt-6 inline-block font-semibold text-brand hover:underline">Neuen Code erstellen</Link>
       </div>
@@ -339,7 +339,7 @@ function WizardEditor({ init }: { init: Init }) {
       {/* ───── Step 1: type ───── */}
       {step === 1 && (
         <div className="animate-rise">
-          <h1 className="font-display text-4xl uppercase leading-[0.95] sm:text-6xl">
+          <h1 className="font-display text-4xl leading-[0.95] sm:text-6xl">
             Was soll dein Code <span className="text-brand glow-text">können?</span>
           </h1>
           <p className="mt-3 max-w-2xl text-dim">Wähle einen Typ. Du kommst automatisch zum nächsten Schritt. Kein Konto nötig.</p>
@@ -352,7 +352,7 @@ function WizardEditor({ init }: { init: Init }) {
           {GROUPS.map((group, gi) => (
             <section key={group.id} className="mt-10">
               <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <h2 className="font-display text-xl uppercase">{group.title}</h2>
+                <h2 className="font-display text-xl">{group.title}</h2>
                 <span className="text-sm text-faint">{group.hint}</span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
@@ -373,7 +373,7 @@ function WizardEditor({ init }: { init: Init }) {
                         <span className="flex items-center gap-2 font-bold">
                           {d.label}
                           {t === "review" && <span className="badge bg-gold text-night">Neu</span>}
-                          {t === "site" && <span className="badge bg-cyan text-night">Mini-Website</span>}
+                          {t === "site" && <span className="badge bg-lime text-night">Mini-Website</span>}
                         </span>
                         <span className="mt-0.5 block text-sm leading-snug text-dim">{d.description}</span>
                       </span>
@@ -401,7 +401,7 @@ function WizardEditor({ init }: { init: Init }) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={`${def.label} benennen`}
-                    className="w-full bg-transparent font-display text-3xl uppercase leading-none text-fg outline-none placeholder:text-faint sm:text-5xl"
+                    className="w-full bg-transparent font-display text-3xl leading-none text-fg outline-none placeholder:text-faint sm:text-5xl"
                     maxLength={120}
                   />
                   <PenLine className="size-5 shrink-0 text-faint transition group-hover:text-brand" />
@@ -463,13 +463,13 @@ function WizardEditor({ init }: { init: Init }) {
           {publishing ? (
             <>
               <Loader2 className="mx-auto size-8 animate-spin text-brand" />
-              <p className="mt-4 font-display text-2xl uppercase">Code wird aktiviert</p>
+              <p className="mt-4 font-display text-2xl">Code wird aktiviert</p>
               <p className="mt-2 text-dim">Einen Moment. Danach gehört dieser Link für immer dir.</p>
             </>
           ) : (
             <>
               <TriangleAlert className="mx-auto size-8 text-rose" />
-              <p className="mt-4 font-display text-2xl uppercase">Nicht aktiviert</p>
+              <p className="mt-4 font-display text-2xl">Nicht aktiviert</p>
               <p className="mt-2 text-dim">{publishError ?? "Bitte erneut versuchen."}</p>
               <div className="mt-6 flex justify-center gap-2">
                 <Button type="button" onClick={() => void publish()}><RefreshCw className="size-4" /> Erneut versuchen</Button>
@@ -484,7 +484,7 @@ function WizardEditor({ init }: { init: Init }) {
         <div className="animate-rise">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="font-display text-4xl uppercase leading-[0.95] sm:text-5xl">
+              <h1 className="font-display text-4xl leading-[0.95] sm:text-5xl">
                 Fertig zum <span className="text-brand glow-text">Drucken</span>
               </h1>
               <p className="mt-2 max-w-2xl text-dim">Wähle Format und Vorlage: A6 bis A0, Sticker, Visitenkarte oder eigene Maße. Oder lade nur den Code herunter.</p>
@@ -556,7 +556,7 @@ function ModeSwitch({ mode, onChange, locked }: { mode: Mode; onChange: (m: Mode
           onClick={() => onChange(o.id)}
           className={cn("card p-4 text-left transition disabled:opacity-40", mode === o.id ? "card-glow" : "hover:border-hi/25")}
         >
-          <span className="flex items-center gap-2 font-display text-base uppercase">
+          <span className="flex items-center gap-2 font-display text-base">
             <o.icon className={cn("size-4", mode === o.id ? "text-brand" : "text-faint")} /> {o.title}
             <span className={cn("badge", o.id === "dynamic" ? "bg-brand text-on-brand" : "bg-hi/10 text-dim")}>{o.badge}</span>
           </span>

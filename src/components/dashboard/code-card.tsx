@@ -20,7 +20,7 @@ export function CodeCard({ code }: { code: Row }) {
   const dynamic = code.mode === "dynamic";
   const svg = renderQrSvg(qrData(code), normalizeStyle(code.style), { size: 640, id: `c-${code.slug}` });
   const href = dynamic ? `/dashboard/codes/${code.id}` : `/dashboard/codes/${code.id}/edit`;
-  const accent = code.status === "paused" ? "border-l-gold" : dynamic ? "border-l-brand" : "border-l-cyan";
+  const accent = code.status === "paused" ? "border-l-gold" : dynamic ? "border-l-brand" : "border-l-lime";
 
   return (
     <div className={cn("card group relative flex flex-col overflow-visible border-l-[3px] p-5 transition duration-300 hover:-translate-y-1 hover:border-hi/20", accent)}>
@@ -30,14 +30,14 @@ export function CodeCard({ code }: { code: Row }) {
         ) : dynamic ? (
           <span className="badge bg-brand text-on-brand">Dynamisch</span>
         ) : (
-          <span className="badge bg-cyan text-night">Statisch</span>
+          <span className="badge bg-lime text-night">Statisch</span>
         )}
         <CodeActions id={code.id} name={code.name} svg={svg} status={code.status} dynamic={dynamic} compact />
       </div>
       <Link href={href} className="mt-4 flex items-center gap-4">
         <span className="grid size-24 shrink-0 place-items-center overflow-hidden rounded-2xl bg-hi/[0.04] p-2 transition group-hover:scale-[1.04] [&>svg]:h-auto [&>svg]:max-h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
         <span className="min-w-0">
-          <span className="block truncate font-display text-lg uppercase leading-tight">{code.name}</span>
+          <span className="block truncate font-display text-lg leading-tight">{code.name}</span>
           <span className="mt-1 flex items-center gap-1.5 text-xs text-dim"><TypeIcon name={def.icon} className="size-3.5" /> {def.label}</span>
           <span className="mt-0.5 block text-xs text-faint">{df.format(new Date(code.created_at))}</span>
         </span>

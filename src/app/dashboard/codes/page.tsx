@@ -32,7 +32,7 @@ export default async function CodesPage({ searchParams }: { searchParams: Promis
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm text-dim">Übersicht</p>
-          <h1 className="mt-1 font-display text-5xl uppercase leading-none">Meine Codes</h1>
+          <h1 className="mt-1 font-display text-5xl leading-none">Meine Codes</h1>
         </div>
         <ButtonLink href="/dashboard/new"><Plus className="size-4" /> Neuer Code</ButtonLink>
       </div>
@@ -59,7 +59,7 @@ export default async function CodesPage({ searchParams }: { searchParams: Promis
 
       {codes.length === 0 ? (
         <div className="card mt-6 px-6 py-16 text-center">
-          <p className="font-display text-3xl uppercase">{filtered ? "Nichts gefunden" : "Noch keine Codes"}</p>
+          <p className="font-display text-3xl">{filtered ? "Nichts gefunden" : "Noch keine Codes"}</p>
           <p className="mt-2 text-dim">{filtered ? "Ändere die Filter oder suche nach einem anderen Namen." : "Erstelle deinen ersten Code in zwei Minuten."}</p>
           {!filtered && <ButtonLink href="/dashboard/new" className="mt-6"><Plus className="size-4" /> Code erstellen</ButtonLink>}
         </div>

@@ -11,7 +11,7 @@ export default async function UnavailablePage({ searchParams }: { searchParams: 
       <div className="max-w-sm animate-rise">
         <Mark className="mx-auto size-14" />
         <span className={`badge mt-8 ${paused ? "bg-gold" : "bg-rose"} text-night`}>{paused ? "Pausiert" : "Nicht gefunden"}</span>
-        <h1 className="mt-4 font-display text-4xl uppercase leading-[0.95]">{paused ? "Gerade pausiert" : "Code nicht gefunden"}</h1>
+        <h1 className="mt-4 font-display text-4xl leading-[0.95]">{paused ? "Gerade pausiert" : "Code nicht gefunden"}</h1>
         <p className="mt-4 text-dim">
           {paused
             ? "Der Inhaber hat diesen Code vorübergehend pausiert. Bitte versuche es später noch einmal."

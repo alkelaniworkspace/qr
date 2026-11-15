@@ -39,13 +39,13 @@ export default async function TodayPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm text-dim">Hallo {name}</p>
-          <h1 className="mt-1 font-display text-5xl uppercase leading-none sm:text-6xl">
+          <h1 className="mt-1 font-display text-5xl leading-none sm:text-6xl">
             Heute, <span className="text-brand glow-text">{weekday}</span>
           </h1>
           <p className="mt-2 text-sm text-dim">{date} · {s.codes} {s.codes === 1 ? "Code" : "Codes"} im Einsatz</p>
         </div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-cyan/30 bg-cyan/10 px-3.5 py-1.5 text-xs font-semibold text-cyan">
-          <span className="size-2 rounded-full bg-cyan" /> {s.dynamic} dynamische Codes live
+        <span className="inline-flex items-center gap-2 rounded-full border border-lime/30 bg-lime/10 px-3.5 py-1.5 text-xs font-semibold text-lime-ink">
+          <span className="size-2 rounded-full bg-lime" /> {s.dynamic} dynamische Codes live
         </span>
       </div>
 
@@ -76,14 +76,14 @@ export default async function TodayPage() {
         </div>
         <div className="card p-5">
           <p className="text-sm font-semibold text-dim">Scans gesamt</p>
-          <p className="mt-2 font-display text-5xl text-cyan"><CountUp value={s.scans_total} /></p>
+          <p className="mt-2 font-display text-5xl text-lime-ink"><CountUp value={s.scans_total} /></p>
           <p className="mt-3 text-xs text-faint">Seit dem ersten Code</p>
         </div>
       </div>
 
       {/* Quick create */}
       <div className="mt-10 flex items-center gap-3">
-        <h2 className="font-display text-2xl uppercase">Schnell erstellen</h2>
+        <h2 className="font-display text-2xl">Schnell erstellen</h2>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {QUICK.map((t) => (
@@ -98,14 +98,14 @@ export default async function TodayPage() {
 
       {/* Recent */}
       <div className="mt-12 flex items-center justify-between gap-3">
-        <h2 className="flex items-center gap-3 font-display text-2xl uppercase">
+        <h2 className="flex items-center gap-3 font-display text-2xl">
           Zuletzt erstellt <span className="badge bg-brand text-on-brand">{s.codes}</span>
         </h2>
         {s.codes > 0 && <Link href="/dashboard/codes" className="inline-flex items-center gap-1.5 text-sm font-semibold text-dim hover:text-brand">Alle Codes <ArrowRight className="size-4" /></Link>}
       </div>
       {codes.length === 0 ? (
         <div className="card mt-4 px-6 py-16 text-center">
-          <p className="font-display text-4xl uppercase">Dein erster Code wartet.</p>
+          <p className="font-display text-4xl">Dein erster Code wartet.</p>
           <p className="mx-auto mt-3 max-w-md text-dim">Speisekarte, Visitenkarte, Google-Bewertungen oder ein Link. In zwei Minuten gestaltet.</p>
           <ButtonLink href="/dashboard/new" size="lg" className="mt-8 shine"><Plus className="size-4" /> Code erstellen</ButtonLink>
         </div>

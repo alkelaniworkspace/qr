@@ -59,7 +59,7 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
           case "color":
             return (
               <FieldShell key={field.name} label={field.label} htmlFor={id} className={span}>
-                <ColorInput id={id} value={str(value[field.name]) || "#6e50ff"} onChange={(v) => set(field.name, v)} />
+                <ColorInput id={id} value={str(value[field.name]) || "#191919"} onChange={(v) => set(field.name, v)} />
               </FieldShell>
             );
           case "links":

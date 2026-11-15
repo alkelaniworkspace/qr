@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* App theme: Electric Ultraviolet brand, cyan for highlights, gold for small badges.
+  /* App theme (Qlick): Casual Black, Lime for what matters, Silver Feather, White. Glass surfaces.
      Colours that differ between dark and light mode point at the variables below. */
   --color-bg: var(--t-bg);
   --color-surface: var(--t-surface);
@@ -13,11 +13,14 @@
   --color-faint: var(--t-faint);
   --color-hi: var(--t-hi);
   --color-brand: var(--t-brand);
-  --color-brand-deep: #4f33e6;
+  --color-brand-deep: #9bd000;
   --color-brand-shadow: var(--t-brand-shadow);
-  --color-on-brand: #ffffff;
-  --color-night: #0b0b12;
-  --color-cyan: var(--t-cyan);
+  --color-on-brand: var(--t-on-brand);
+  --color-solid: var(--t-solid);
+  --color-lime: #bdfb04;
+  --color-lime-ink: var(--t-lime-ink);
+  --color-silver: #dfded7;
+  --color-night: #191919;
   --color-gold: #f5c542;
   --color-mint: var(--t-mint);
   --color-rose: var(--t-rose);
@@ -34,7 +37,7 @@
   --color-warn: #a86a12;
 
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", "Inter Variable", ui-sans-serif, sans-serif;
+  --font-display: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
 
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.2), 0 12px 32px -16px rgb(0 0 0 / 0.6);
   --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.25), 0 30px 60px -30px rgb(0 0 0 / 0.8);
@@ -42,40 +45,46 @@
 
 @layer base {
   :root {
-    --t-bg: #0b0b12;
-    --t-surface: #13131d;
-    --t-elevated: #1b1b28;
-    --t-edge: rgb(255 255 255 / 0.08);
-    --t-edge-strong: rgb(255 255 255 / 0.16);
-    --t-fg: #f6f6fb;
-    --t-dim: #a7a9bd;
-    --t-faint: #6c6f86;
+    /* Qlick: Casual Black, Lime, Silver Feather, White */
+    --t-bg: #0d0d0d;
+    --t-surface: rgb(30 30 30 / 0.62);
+    --t-elevated: rgb(48 48 48 / 0.7);
+    --t-solid: #191919;
+    --t-edge: rgb(255 255 255 / 0.09);
+    --t-edge-strong: rgb(255 255 255 / 0.18);
+    --t-fg: #ffffff;
+    --t-dim: #b9b8b1;
+    --t-faint: #7c7b76;
     --t-hi: #ffffff;
-    --t-brand: #7b5cff;
-    --t-brand-shadow: #3c24b0;
-    --t-cyan: #22d3ee;
-    --t-mint: #34e3a4;
-    --t-rose: #ff5d73;
-    --glow: 123 92 255;
-    --glow-2: 34 211 238;
+    --t-brand: #bdfb04;
+    --t-on-brand: #191919;
+    --t-brand-shadow: #6f9400;
+    --t-lime-ink: #bdfb04;
+    --t-mint: #3ee6a8;
+    --t-rose: #ff5d6c;
+    --glow: 189 251 4;
+    --glow-2: 189 251 4;
+    --glass-blur: 22px;
   }
   :root[data-theme="light"] {
-    --t-bg: #f5f5fa;
-    --t-surface: #ffffff;
-    --t-elevated: #ececf4;
-    --t-edge: rgb(13 13 30 / 0.09);
-    --t-edge-strong: rgb(13 13 30 / 0.18);
-    --t-fg: #0d0d1a;
-    --t-dim: #4b4d63;
-    --t-faint: #85879c;
-    --t-hi: #0d0d1a;
-    --t-brand: #6a4cff;
-    --t-brand-shadow: #3a22a8;
-    --t-cyan: #0891b2;
+    --t-bg: #efeee8;
+    --t-surface: rgb(255 255 255 / 0.66);
+    --t-elevated: rgb(223 222 215 / 0.7);
+    --t-solid: #ffffff;
+    --t-edge: rgb(25 25 25 / 0.08);
+    --t-edge-strong: rgb(25 25 25 / 0.16);
+    --t-fg: #191919;
+    --t-dim: #55554f;
+    --t-faint: #8d8c85;
+    --t-hi: #191919;
+    --t-brand: #191919;
+    --t-on-brand: #bdfb04;
+    --t-brand-shadow: #000000;
+    --t-lime-ink: #4d6600;
     --t-mint: #0f9f6e;
     --t-rose: #e11d48;
-    --glow: 106 76 255;
-    --glow-2: 8 145 178;
+    --glow: 25 25 25;
+    --glow-2: 140 190 0;
     color-scheme: light;
   }
   :root[data-theme="light"] .ambient-dark-only { display: none; }
@@ -104,20 +113,32 @@
 @utility font-display {
   font-family: var(--font-display);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.035em;
 }
 
 /* Soft corner glows on the page background */
 @utility ambient {
   background-image:
-    radial-gradient(1200px 700px at 0 -10%, rgb(var(--glow) / 0.07), transparent 60%),
-    radial-gradient(900px 600px at 100% 0, rgb(var(--glow-2) / 0.18), transparent 60%);
+    radial-gradient(900px 600px at 8% -8%, rgb(189 251 4 / 0.10), transparent 60%),
+    radial-gradient(800px 600px at 100% 10%, rgb(223 222 215 / 0.10), transparent 60%),
+    radial-gradient(700px 500px at 50% 110%, rgb(189 251 4 / 0.06), transparent 60%);
+  background-attachment: fixed;
 }
 
+/* Glass: translucent, blurred, with a hairline and a soft top highlight */
 @utility card {
   background: var(--color-surface);
   border: 1px solid var(--color-edge);
-  border-radius: 22px;
+  border-radius: 24px;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 22px)) saturate(170%);
+  backdrop-filter: blur(var(--glass-blur, 22px)) saturate(170%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+@utility glass {
+  background: color-mix(in srgb, var(--color-bg) 62%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
 }
 
 /* Lime-glowing card for the one thing that matters most */
@@ -135,14 +156,11 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  transform: skewX(-12deg);
   font-size: 11px;
-  font-weight: 800;
-  font-style: italic;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   padding: 3px 9px;
-  border-radius: 6px;
+  border-radius: 999px;
 }
 
 @utility checker {
@@ -253,4 +271,9 @@
 :root[data-theme="light"] .card {
   box-shadow: 0 1px 2px rgb(13 13 30 / 0.04), 0 10px 30px -16px rgb(13 13 30 / 0.18);
 }
-:root[data-theme="light"] .glow-text { text-shadow: none; }
+:root[data-theme="light"] .glow-text {
+  text-shadow: none;
+  background: linear-gradient(transparent 58%, #bdfb04 58%, #bdfb04 92%, transparent 92%);
+  padding: 0 0.08em;
+}
+:root[data-theme="light"] .card { box-shadow: 0 1px 2px rgb(25 25 25 / 0.04), 0 18px 40px -24px rgb(25 25 25 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.8); }

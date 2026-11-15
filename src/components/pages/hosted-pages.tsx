@@ -332,7 +332,7 @@ export interface PageLinks {
 
 export function HostedPage({ code, links }: { code: PublicCode; links?: PageLinks }) {
   const c = code.content;
-  const accent = /^#[0-9a-fA-F]{6}$/.test(s(c.accent)) ? s(c.accent) : "#6e50ff";
+  const accent = /^#[0-9a-fA-F]{6}$/.test(s(c.accent)) ? s(c.accent) : "#191919";
   let body: React.ReactNode = null;
   switch (code.type) {
     case "vcard": body = <VCardPage code={code} c={c} links={links} />; break;
