@@ -142,3 +142,14 @@ check("dom: plain list rows are separate dishes", pl?.sections[0]?.items.length 
   const pen = m?.sections.flatMap((s) => s.items).find((i) => i.name === "Penne Arrabbiata");
   check("html: neighbour's photo is not copied to a dish without photo", pen?.image === "", pen);
 }
+
+// ───────── full-size photos ─────────
+{
+  const { fullSizeUrl, proxiedImage } = await import("../src/lib/image-url");
+  check("full size: Cloudinary thumb", fullSizeUrl("https://res.cloudinary.com/tkwy-prod-eu/image/upload/c_thumb,w_140,h_140/v1/menu/pizza.jpg") === "https://res.cloudinary.com/tkwy-prod-eu/image/upload/c_limit,w_1600,q_auto:good/v1/menu/pizza.jpg");
+  check("full size: query width", fullSizeUrl("https://imageproxy.wolt.com/menu/abc.jpg?w=200&h=200") === "https://imageproxy.wolt.com/menu/abc.jpg?w=1600");
+  check("full size: WordPress thumbnail", fullSizeUrl("https://pizzeria.de/wp-content/uploads/2024/05/margherita-150x150.jpg") === "https://pizzeria.de/wp-content/uploads/2024/05/margherita.jpg");
+  check("full size: Shopify", fullSizeUrl("https://cdn.shopify.com/s/files/1/0/products/cake_200x200.jpg?v=1") === "https://cdn.shopify.com/s/files/1/0/products/cake.jpg?v=1");
+  check("full size: large URL untouched", fullSizeUrl("https://x.de/img/pizza.jpg?w=2000") === "https://x.de/img/pizza.jpg?w=2000");
+  check("proxy: external photos go through /api/img, own storage does not", proxiedImage("https://x.de/a.jpg", 640).startsWith("/api/img?w=640&u=") && proxiedImage("https://abc.supabase.co/storage/v1/object/public/images/a.webp") === "https://abc.supabase.co/storage/v1/object/public/images/a.webp");
+}

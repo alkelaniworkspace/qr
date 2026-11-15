@@ -14,6 +14,7 @@ import { ChevronDown, Clock, Flame, Leaf, MapPin, Phone, Search, Sparkles, Star,
 import type { MenuItemData, MenuSectionData } from "@/lib/codes/types";
 import { mapsUrl } from "@/lib/codes/payload";
 import { menuStyle, type MenuStyle } from "@/lib/menu-styles";
+import { SmartImg } from "./smart-img";
 
 type C = Record<string, unknown>;
 const s = (v: unknown) => String(v ?? "").trim();
@@ -249,8 +250,8 @@ export function MenuPage({ c }: { c: C }) {
 function Monogram({ c, className = "" }: { c: C; className?: string }) {
   const logo = s(c.logo);
   if (logo) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={logo} alt="" referrerPolicy="no-referrer" className={`object-cover ${className}`} />;
+     
+    return <SmartImg src={logo} width={320} eager className={`object-cover ${className}`} fallback={<div className={`grid place-items-center bg-[var(--accent)] text-[var(--on-accent)] mp-display ${className}`}>{s(c.name).slice(0, 1) || "?"}</div>} />;
   }
   return <div className={`grid place-items-center bg-[var(--accent)] text-[var(--on-accent)] mp-display ${className}`}>{s(c.name).slice(0, 1) || "?"}</div>;
 }
@@ -258,8 +259,8 @@ function Monogram({ c, className = "" }: { c: C; className?: string }) {
 function Cover({ c, className = "", fallback }: { c: C; className?: string; fallback: React.ReactNode }) {
   const cover = s(c.cover);
   if (!cover) return <>{fallback}</>;
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={cover} alt="" referrerPolicy="no-referrer" className={`size-full object-cover mp-kenburns ${className}`} />;
+   
+  return <SmartImg src={cover} width={1280} eager className={`size-full object-cover mp-kenburns ${className}`} fallback={fallback} />;
 }
 
 function Hero({ c, st }: { c: C; st: MenuStyle }) {
@@ -461,10 +462,12 @@ function Heading({ st, title, note, center }: { st: MenuStyle; title: string; no
 interface ItemProps { it: MenuItemData; st: MenuStyle; n: number; id: string; open: boolean; onToggle: (k: string | null) => void; itemFont: boolean }
 
 function Photo({ it, st, className = "" }: { it: MenuItemData; st: MenuStyle; className?: string }) {
-  if (it.image) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={it.image} alt="" referrerPolicy="no-referrer" loading="lazy" className={`object-cover transition duration-500 group-hover:scale-105 ${className}`} />;
-  }
+  const fb = <PhotoFallback it={it} st={st} className={className} />;
+  if (!it.image) return fb;
+  return <SmartImg src={it.image} width={640} className={`object-cover transition duration-500 group-hover:scale-105 ${className}`} fallback={fb} />;
+}
+
+function PhotoFallback({ it, st, className = "" }: { it: MenuItemData; st: MenuStyle; className?: string }) {
   return (
     <div className={`grid place-items-center bg-[radial-gradient(circle_at_30%_25%,color-mix(in_srgb,var(--accent)_28%,var(--pg-soft)),var(--pg-soft)_70%)] ${className}`}>
       <span className={`mp-display text-5xl text-[var(--accent)] opacity-80 ${st.uppercase ? "uppercase" : ""}`}>{it.name.slice(0, 1)}</span>
@@ -518,8 +521,8 @@ function Details({ it, open, showPhoto }: { it: MenuItemData; open: boolean; sho
     <div className={`grid transition-[grid-template-rows,opacity] duration-400 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
       <div className="overflow-hidden">
         {showPhoto && it.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={it.image} alt="" referrerPolicy="no-referrer" loading="lazy" className="mp-card mt-3 aspect-[16/10] w-full object-cover" />
+           
+          <SmartImg src={it.image} width={1080} className="mp-card mt-3 aspect-[16/10] w-full object-cover" />
         )}
         {al.length > 0 && <p className="mt-2 text-xs text-[var(--pg-muted)]"><b className="font-semibold text-[var(--pg-fg)]">Enthält:</b> {al.map((a) => ALLERGENS[a]).join(", ")}</p>}
       </div>
@@ -542,8 +545,8 @@ function CardItem({ it, n, id, open, onToggle, itemFont }: ItemProps) {
         </div>
         {it.image && (
           <span className="mp-card relative size-24 shrink-0 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={it.image} alt="" referrerPolicy="no-referrer" loading="lazy" className="size-full object-cover transition duration-500 group-hover:scale-110" />
+            { }
+            <SmartImg src={it.image} width={320} className="size-full object-cover transition duration-500 group-hover:scale-110" fallback={<span className="block size-full bg-[var(--pg-soft)]" />} />
           </span>
         )}
       </button>

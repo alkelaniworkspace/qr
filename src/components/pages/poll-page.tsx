@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { SmartImg } from "./smart-img";
 import { BarChart3, Check, Clock, Loader2, Lock, PartyPopper, Trophy } from "lucide-react";
 
 type C = Record<string, unknown>;
@@ -152,8 +153,7 @@ export function PollPage({ c, slug, demo }: { c: C; slug: string; demo: boolean 
               {withImages && (
                 <span className="relative block aspect-square overflow-hidden bg-[var(--pg-soft)]">
                   {o.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={o.image} alt="" referrerPolicy="no-referrer" className={`size-full object-cover transition duration-500 ${sel ? "scale-105" : "group-hover:scale-105"}`} />
+                    <SmartImg src={o.image} width={640} className={`size-full object-cover transition duration-500 ${sel ? "scale-105" : "group-hover:scale-105"}`} fallback={<span className="grid size-full place-items-center font-display text-5xl text-[var(--accent)]">{String.fromCharCode(65 + i)}</span>} />
                   ) : (
                     <span className="grid size-full place-items-center font-display text-5xl text-[var(--accent)]">{String.fromCharCode(65 + i)}</span>
                   )}

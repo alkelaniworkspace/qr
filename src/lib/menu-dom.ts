@@ -107,6 +107,9 @@ export function fromDom(html: string): DomMenu | null {
     while (card.parentNode && card.parentNode !== root) {
       const parent = card.parentNode as HTMLElement;
       const n = prices(parent.text).length;
+      // a heading next to the card (outside it) is the category: stop if the card already has its own name
+      const outsideHeading = parent.querySelectorAll("h1,h2,h3,h4,h5,h6").some((h) => h !== card && !isAncestor(card, h));
+      if (outsideHeading && nameCount(card) >= 1) break;
       if (n === own) {
         card = parent;
         continue;
@@ -142,6 +145,7 @@ export function fromDom(html: string): DomMenu | null {
   const headings = root.querySelectorAll("h1,h2,h3,h4,[role=heading]").filter((h) => !inCard(h) && textOf(h).length > 0 && textOf(h).length <= 60 && !prices(textOf(h)).length);
 
   const sections: MenuSectionData[] = [];
+  const dupes = new Map<string, MenuItemData>();
   let current: MenuSectionData | null = null;
   const sorted = [...top].sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
   for (const card of sorted) {
@@ -189,6 +193,14 @@ export function fromDom(html: string): DomMenu | null {
       }
       item.variants = ps.slice(0, 8).map((p, k) => ({ label: labels[k] || `Größe ${k + 1}`, price: p }));
     } else item.price = ps[0] ?? "";
+    // the browser capture can deliver a dish twice (page + collected while scrolling)
+    const sig = `${item.name.toLowerCase()}|${item.price}|${item.variants.map((v) => v.price).join(",")}`;
+    if (dupes.has(sig)) {
+      const prev = dupes.get(sig)!;
+      if (!prev.image && item.image) prev.image = item.image;
+      continue;
+    }
+    dupes.set(sig, item);
     current.items.push(item);
   }
 

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { MENU_STYLES } from "@/lib/menu-styles";
+import { proxiedImage } from "@/lib/image-url";
 import { IMPORT_CHANNEL, bookmarkletHref, importCaptured, parseCapturePayload } from "@/lib/menu-capture";
 
 type Errors = Record<string, string>;
@@ -70,7 +71,7 @@ export function ImageField({ value, onChange, shape = "square", label = "Bild ho
       >
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={value} alt="" className="absolute inset-0 size-full object-cover" />
+          <img src={proxiedImage(value, 320)} alt="" referrerPolicy="no-referrer" className="absolute inset-0 size-full object-cover" />
         ) : (
           <span className="flex flex-col items-center gap-1.5 p-2 text-center text-xs font-semibold text-faint">
             <ImagePlus className="size-5" /> {label}
@@ -518,7 +519,7 @@ export function MenuImport({ onImport }: { onImport: (menu: ImportedMenuData, mo
             <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
               {photos.slice(0, 12).map((src) => (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img key={src} src={src} alt="" loading="lazy" referrerPolicy="no-referrer" className="size-14 shrink-0 rounded-xl border border-edge object-cover" />
+                <img key={src} src={proxiedImage(src, 160)} alt="" loading="lazy" referrerPolicy="no-referrer" className="size-14 shrink-0 rounded-xl border border-edge object-cover" />
               ))}
               {photos.length > 12 && <span className="grid size-14 shrink-0 place-items-center rounded-xl border border-edge text-xs font-bold text-dim">+{photos.length - 12}</span>}
             </div>

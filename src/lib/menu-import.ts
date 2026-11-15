@@ -1,8 +1,8 @@
 import "server-only";
 import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
 import type { MenuItemData, MenuSectionData } from "@/lib/codes/types";
 import { fromDom } from "./menu-dom";
+import { privateIp } from "./safe-fetch";
 
 /**
  * Imports a menu from any web page: delivery platforms (Lieferando, Wolt, …),
@@ -514,11 +514,6 @@ export function fromText(text: string): ImportedMenu | null {
 }
 
 // ───────── fetching (with SSRF guard) ─────────
-function privateIp(ip: string): boolean {
-  if (isIP(ip) === 6) return /^(::1|fc|fd|fe80|::ffff:(10|127|192\.168|169\.254|172\.(1[6-9]|2\d|3[01]))\.)/i.test(ip) || ip === "::";
-  const [a, b] = ip.split(".").map(Number);
-  return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
-}
 
 async function fetchPage(input: string): Promise<{ html: string; url: string } | { error: string }> {
   let url: URL;
