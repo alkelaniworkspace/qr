@@ -89,7 +89,7 @@ export default function Home() {
             <Sparkline points={[3, 4, 3, 6, 5, 8, 7, 11, 10, 14]} className="mt-2 h-8 w-full" />
           </div>
           <div className="card absolute -right-2 -top-8 w-40 p-4 shadow-lift sm:-right-12" style={{ animation: "float 8s ease-in-out infinite" }}>
-            <span className="badge bg-gold text-night">Scan-Test</span>
+            <span className="badge bg-hi/10 text-fg">Scan-Test</span>
             <p className="mt-2 font-display text-3xl">100<span className="text-base text-dim">/100</span></p>
             <p className="text-xs text-dim">Lesbarkeit geprüft</p>
           </div>
@@ -113,7 +113,7 @@ export default function Home() {
           ["15", "Code-Typen", "text-brand glow-text"],
           ["10", "Muster", "text-mint"],
           ["42", "Eck-Kombinationen", "text-gold"],
-          ["0", "Cookies beim Scan", "text-lime-ink"],
+          ["0", "Cookies beim Scan", "text-fg"],
         ].map(([n, label, color], i) => (
           <Reveal key={label} delay={i * 90}>
             <div className="card p-6">

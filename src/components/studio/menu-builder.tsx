@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowDown, ArrowUp, ChevronDown, Copy, ImagePlus, LayoutGrid, LayoutList, Loader2, Plus, Rows3, Sparkles, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Copy, Download, ImagePlus, LayoutGrid, LayoutList, Loader2, Plus, Rows3, Sparkles, Trash2, X } from "lucide-react";
 import { MENU_BADGES, type MenuItemData, type MenuSectionData } from "@/lib/codes/types";
 import { uploadImage } from "@/lib/upload-image";
 import { Input } from "@/components/ui/field";
@@ -265,5 +265,105 @@ function IconBtn({ children, label, onClick, danger, disabled }: { children: Rea
     <button type="button" aria-label={label} title={label} onClick={onClick} disabled={disabled} className={cn("grid size-8 place-items-center rounded-lg text-faint transition hover:bg-hi/5 disabled:opacity-30", danger ? "hover:text-rose" : "hover:text-fg")}>
       {children}
     </button>
+  );
+}
+
+// ───────── Import from Lieferando, websites or pasted text ─────────
+export interface ImportedMenuData {
+  name?: string;
+  logo?: string;
+  cover?: string;
+  phone?: string;
+  address?: string;
+  sections: MenuSectionData[];
+  source: string;
+}
+
+export function MenuImport({ onImport }: { onImport: (menu: ImportedMenuData, mode: "replace" | "append") => void }) {
+  const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState<"url" | "text">("url");
+  const [url, setUrl] = useState("");
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<ImportedMenuData | null>(null);
+
+  async function run() {
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    const res = await fetch("/api/menu-import", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(tab === "url" ? { url } : { text }),
+    }).then((r) => r.json()).catch(() => ({ ok: false, message: "Verbindung fehlgeschlagen." }));
+    setBusy(false);
+    if (!res.ok) {
+      setError(res.message);
+      if (/Text|kopiere/i.test(res.message)) setTab("text");
+      return;
+    }
+    setResult(res.menu);
+  }
+
+  const count = result?.sections.reduce((n, s) => n + s.items.length, 0) ?? 0;
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="card group mb-4 flex w-full items-center gap-4 p-4 text-left transition hover:border-edge-strong">
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-lime text-night"><Download className="size-5" /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold">Speisekarte importieren</span>
+          <span className="block text-sm text-dim">Link von Lieferando, Wolt, Uber Eats oder deiner Website einfügen. Gerichte, Preise, Fotos und Allergene kommen automatisch.</span>
+        </span>
+        <ChevronDown className="size-4 -rotate-90 text-faint transition group-hover:translate-x-0.5" />
+      </button>
+    );
+  }
+
+  return (
+    <div className="card mb-4 p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-display text-lg">Speisekarte importieren</p>
+        <button type="button" onClick={() => setOpen(false)} aria-label="Schließen" className="grid size-8 place-items-center rounded-full text-faint hover:bg-hi/5 hover:text-fg"><X className="size-4" /></button>
+      </div>
+      <div className="mt-3 inline-flex rounded-full border border-edge bg-hi/5 p-1 text-sm font-semibold">
+        {(["url", "text"] as const).map((t) => (
+          <button key={t} type="button" onClick={() => setTab(t)} className={cn("rounded-full px-4 py-1.5 transition", tab === t ? "bg-brand text-on-brand" : "text-dim hover:text-fg")}>
+            {t === "url" ? "Aus Link" : "Aus Text"}
+          </button>
+        ))}
+      </div>
+      {tab === "url" ? (
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.lieferando.de/speisekarte/dein-restaurant" className="flex-1" onKeyDown={(e) => e.key === "Enter" && url && run()} />
+          <Button type="button" onClick={run} disabled={busy || !url.trim()}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Importieren</Button>
+        </div>
+      ) : (
+        <div className="mt-3 space-y-2">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={6}
+            placeholder={"Speisekarte hier einfügen, zum Beispiel:\nPizza\nMargherita (A, G) ...... 8,90 €"}
+            className="w-full rounded-2xl border border-edge bg-bg/60 p-3 text-sm outline-none focus:border-brand"
+          />
+          <Button type="button" onClick={run} disabled={busy || !text.trim()}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} Gerichte erkennen</Button>
+        </div>
+      )}
+      {busy && <p className="mt-3 text-sm text-dim">Lese die Karte … das kann bis zu einer Minute dauern.</p>}
+      {error && <p className="mt-3 rounded-xl border border-rose/30 bg-rose/10 px-3 py-2 text-sm text-rose">{error}</p>}
+      {result && (
+        <div className="mt-4 rounded-2xl border border-edge-strong bg-hi/5 p-4">
+          <p className="font-semibold">{count} Gerichte in {result.sections.length} Kategorien gefunden{result.name ? ` · ${result.name}` : ""}</p>
+          <p className="mt-1 text-sm text-dim">{result.sections.slice(0, 8).map((s) => `${s.title} (${s.items.length})`).join(" · ")}{result.sections.length > 8 ? " …" : ""}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button type="button" onClick={() => { onImport(result, "replace"); setOpen(false); setResult(null); }}>Karte ersetzen</Button>
+            <Button type="button" variant="secondary" onClick={() => { onImport(result, "append"); setOpen(false); setResult(null); }}>Anhängen</Button>
+          </div>
+          <p className="mt-3 text-xs text-faint">Bitte Preise und Allergene nach dem Import kurz prüfen. Fotos von Plattformen besser durch eigene ersetzen.</p>
+        </div>
+      )}
+    </div>
   );
 }

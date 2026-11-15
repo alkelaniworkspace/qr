@@ -44,8 +44,8 @@ export default async function TodayPage() {
           </h1>
           <p className="mt-2 text-sm text-dim">{date} · {s.codes} {s.codes === 1 ? "Code" : "Codes"} im Einsatz</p>
         </div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-lime/30 bg-lime/10 px-3.5 py-1.5 text-xs font-semibold text-lime-ink">
-          <span className="size-2 rounded-full bg-lime" /> {s.dynamic} dynamische Codes live
+        <span className="inline-flex items-center gap-2 rounded-full border border-edge bg-hi/5 px-3.5 py-1.5 text-xs font-semibold text-lime-ink">
+          <span className="size-2 rounded-full bg-mint" /> {s.dynamic} dynamische Codes live
         </span>
       </div>
 
@@ -76,7 +76,7 @@ export default async function TodayPage() {
         </div>
         <div className="card p-5">
           <p className="text-sm font-semibold text-dim">Scans gesamt</p>
-          <p className="mt-2 font-display text-5xl text-lime-ink"><CountUp value={s.scans_total} /></p>
+          <p className="mt-2 font-display text-5xl text-fg"><CountUp value={s.scans_total} /></p>
           <p className="mt-3 text-xs text-faint">Seit dem ersten Code</p>
         </div>
       </div>

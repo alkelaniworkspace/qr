@@ -7,7 +7,7 @@ import { FieldShell, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
-import { ImageField, LayoutPicker, MenuBuilder } from "./menu-builder";
+import { ImageField, LayoutPicker, MenuBuilder, MenuImport } from "./menu-builder";
 
 type Content = Record<string, unknown>;
 type Errors = Record<string, string>;
@@ -72,6 +72,18 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
           case "menu":
             return (
               <div key={field.name} className="col-span-2">
+                <MenuImport
+                  onImport={(menu, mode) => {
+                    const current = (value[field.name] as MenuSectionData[]) ?? [];
+                    const filled = (k: string, v?: string) => (v && !str(value[k]) ? { [k]: v } : {});
+                    onChange({
+                      ...value,
+                      [field.name]: mode === "replace" ? menu.sections : [...current, ...menu.sections],
+                      ...filled("name", menu.name), ...filled("logo", menu.logo), ...filled("cover", menu.cover),
+                      ...filled("phone", menu.phone), ...filled("address", menu.address),
+                    });
+                  }}
+                />
                 <p className="mb-2 text-xs font-bold uppercase tracking-widest text-dim">{field.label}</p>
                 <MenuBuilder value={(value[field.name] as MenuSectionData[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
                 {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}

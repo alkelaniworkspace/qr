@@ -56,14 +56,14 @@
     --t-dim: #b9b8b1;
     --t-faint: #7c7b76;
     --t-hi: #ffffff;
-    --t-brand: #bdfb04;
+    --t-brand: #ffffff;
     --t-on-brand: #191919;
-    --t-brand-shadow: #6f9400;
+    --t-brand-shadow: #8d8c85;
     --t-lime-ink: #bdfb04;
     --t-mint: #3ee6a8;
     --t-rose: #ff5d6c;
-    --glow: 189 251 4;
-    --glow-2: 189 251 4;
+    --glow: 255 255 255;
+    --glow-2: 223 222 215;
     --glass-blur: 22px;
   }
   :root[data-theme="light"] {
@@ -78,13 +78,13 @@
     --t-faint: #8d8c85;
     --t-hi: #191919;
     --t-brand: #191919;
-    --t-on-brand: #bdfb04;
+    --t-on-brand: #ffffff;
     --t-brand-shadow: #000000;
     --t-lime-ink: #4d6600;
     --t-mint: #0f9f6e;
     --t-rose: #e11d48;
     --glow: 25 25 25;
-    --glow-2: 140 190 0;
+    --glow-2: 25 25 25;
     color-scheme: light;
   }
   :root[data-theme="light"] .ambient-dark-only { display: none; }
@@ -119,9 +119,8 @@
 /* Soft corner glows on the page background */
 @utility ambient {
   background-image:
-    radial-gradient(900px 600px at 8% -8%, rgb(189 251 4 / 0.10), transparent 60%),
-    radial-gradient(800px 600px at 100% 10%, rgb(223 222 215 / 0.10), transparent 60%),
-    radial-gradient(700px 500px at 50% 110%, rgb(189 251 4 / 0.06), transparent 60%);
+    radial-gradient(900px 600px at 8% -8%, rgb(var(--glow-2) / 0.07), transparent 60%),
+    radial-gradient(800px 600px at 100% 10%, rgb(var(--glow) / 0.05), transparent 60%);
   background-attachment: fixed;
 }
 
@@ -143,8 +142,8 @@
 
 /* Lime-glowing card for the one thing that matters most */
 @utility card-glow {
-  border-color: rgb(var(--glow) / 0.55);
-  box-shadow: 0 0 0 1px rgb(var(--glow) / 0.15), 0 0 40px -6px rgb(var(--glow) / 0.35);
+  border-color: rgb(var(--glow) / 0.35);
+  box-shadow: 0 0 0 1px rgb(var(--glow) / 0.08), 0 24px 60px -30px rgb(var(--glow) / 0.35);
 }
 
 @utility glow-text {
@@ -277,3 +276,6 @@
   padding: 0 0.08em;
 }
 :root[data-theme="light"] .card { box-shadow: 0 1px 2px rgb(25 25 25 / 0.04), 0 18px 40px -24px rgb(25 25 25 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.8); }
+
+/* Lime is rare: only the one word or element that should stand out */
+:root:not([data-theme="light"]) .glow-text { color: var(--color-lime); text-shadow: 0 0 28px rgb(189 251 4 / 0.35); }

@@ -30,7 +30,7 @@ export function CodeCard({ code }: { code: Row }) {
         ) : dynamic ? (
           <span className="badge bg-brand text-on-brand">Dynamisch</span>
         ) : (
-          <span className="badge bg-lime text-night">Statisch</span>
+          <span className="badge bg-hi/10 text-dim">Statisch</span>
         )}
         <CodeActions id={code.id} name={code.name} svg={svg} status={code.status} dynamic={dynamic} compact />
       </div>

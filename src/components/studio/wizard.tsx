@@ -372,8 +372,8 @@ function WizardEditor({ init }: { init: Init }) {
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2 font-bold">
                           {d.label}
-                          {t === "review" && <span className="badge bg-gold text-night">Neu</span>}
-                          {t === "site" && <span className="badge bg-lime text-night">Mini-Website</span>}
+                          {t === "review" && <span className="badge bg-lime text-night">Neu</span>}
+                          {t === "site" && <span className="badge bg-hi/10 text-fg">Mini-Website</span>}
                         </span>
                         <span className="mt-0.5 block text-sm leading-snug text-dim">{d.description}</span>
                       </span>
