@@ -1,13 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { ArrowDown, ArrowUp, ChevronDown, Copy, Download, ImagePlus, LayoutGrid, LayoutList, Loader2, Plus, Rows3, Sparkles, Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowDown, ArrowUp, ChevronDown, ClipboardPaste, Copy, Download, Globe, ImagePlus, LayoutGrid, LayoutList, Link2, Loader2, Plus, Rows3, Sparkles, Trash2, X } from "lucide-react";
 import { MENU_BADGES, type MenuItemData, type MenuSectionData } from "@/lib/codes/types";
 import { uploadImage } from "@/lib/upload-image";
 import { Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { MENU_STYLES } from "@/lib/menu-styles";
+import { IMPORT_CHANNEL, bookmarkletHref, importCaptured, parseCapturePayload } from "@/lib/menu-capture";
 
 type Errors = Record<string, string>;
 
@@ -311,29 +312,94 @@ export interface ImportedMenuData {
 
 export function MenuImport({ onImport }: { onImport: (menu: ImportedMenuData, mode: "replace" | "append") => void }) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"url" | "text">("url");
+  const [tab, setTab] = useState<"url" | "browser" | "paste">("url");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
+  const [pasted, setPasted] = useState<{ html: string; url: string; photos: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportedMenuData | null>(null);
+  const [app, setApp] = useState("");
+  const bm = useRef<HTMLAnchorElement>(null);
+
+  // Results captured by the browser helper arrive from the /import tab.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- origin is only known in the browser
+    setApp(window.location.origin);
+    let ch: BroadcastChannel | null = null;
+    try {
+      ch = new BroadcastChannel(IMPORT_CHANNEL);
+      ch.onmessage = (e) => {
+        if (e.data?.type === "menu" && e.data.menu?.sections) {
+          setResult(e.data.menu);
+          setError(null);
+          setOpen(true);
+          ch?.postMessage("received");
+        }
+      };
+    } catch {
+      /* no BroadcastChannel: fall back to the focus check below */
+    }
+    const pick = () => {
+      try {
+        const raw = localStorage.getItem(IMPORT_CHANNEL);
+        if (!raw) return;
+        const { at, menu } = JSON.parse(raw);
+        localStorage.removeItem(IMPORT_CHANNEL);
+        if (Date.now() - at < 30 * 60 * 1000 && menu?.sections) {
+          setResult(menu);
+          setOpen(true);
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    pick();
+    window.addEventListener("focus", pick);
+    return () => {
+      ch?.close();
+      window.removeEventListener("focus", pick);
+    };
+  }, []);
+
+  // React blocks javascript: URLs in props, so the bookmarklet href is set directly.
+  useEffect(() => {
+    if (bm.current && app) bm.current.setAttribute("href", bookmarkletHref(app));
+  }, [app, tab, open]);
+
+  async function post(body: Record<string, string>) {
+    return fetch("/api/menu-import", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })
+      .then((r) => r.json())
+      .catch(() => ({ ok: false, message: "Verbindung fehlgeschlagen." }));
+  }
 
   async function run() {
     setBusy(true);
     setError(null);
     setResult(null);
-    const res = await fetch("/api/menu-import", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(tab === "url" ? { url } : { text }),
-    }).then((r) => r.json()).catch(() => ({ ok: false, message: "Verbindung fehlgeschlagen." }));
+    const res = tab === "url"
+      ? await post({ url })
+      : pasted
+        ? await importCaptured({ html: pasted.html, url: pasted.url || url })
+        : await post({ text });
     setBusy(false);
     if (!res.ok) {
       setError(res.message);
-      if (/Text|kopiere/i.test(res.message)) setTab("text");
+      if (res.blocked) setTab("browser");
       return;
     }
     setResult(res.menu);
+  }
+
+  function onPaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const plain = e.clipboardData.getData("text/plain");
+    const captured = parseCapturePayload(plain);
+    const html = captured?.html ?? e.clipboardData.getData("text/html");
+    if (!html) return; // plain text: let the textarea take it
+    e.preventDefault();
+    const photos = (html.match(/<img\b/gi) ?? []).length;
+    setPasted({ html, url: captured?.url ?? "", photos });
+    setText(plain.startsWith("QLICK-MENU:") ? "" : plain.slice(0, 4000));
   }
 
   const count = result?.sections.reduce((n, s) => n + s.items.length, 0) ?? 0;
@@ -345,12 +411,18 @@ export function MenuImport({ onImport }: { onImport: (menu: ImportedMenuData, mo
         <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-lime text-night"><Download className="size-5" /></span>
         <span className="min-w-0 flex-1">
           <span className="block font-semibold">Speisekarte importieren</span>
-          <span className="block text-sm text-dim">Link von Lieferando, Wolt, Uber Eats oder deiner Website einfügen. Gerichte, Preise, Fotos und Allergene kommen automatisch.</span>
+          <span className="block text-sm text-dim">Von Lieferando, Wolt, Uber Eats oder deiner Website. Gerichte, Preise, Fotos und Allergene kommen automatisch.</span>
         </span>
         <ChevronDown className="size-4 -rotate-90 text-faint transition group-hover:translate-x-0.5" />
       </button>
     );
   }
+
+  const tabs = [
+    { id: "url", label: "Aus Link", icon: Link2 },
+    { id: "browser", label: "Aus dem Browser", icon: Globe },
+    { id: "paste", label: "Einfügen", icon: ClipboardPaste },
+  ] as const;
 
   return (
     <div className="card mb-4 p-4 sm:p-5">
@@ -358,34 +430,88 @@ export function MenuImport({ onImport }: { onImport: (menu: ImportedMenuData, mo
         <p className="font-display text-lg">Speisekarte importieren</p>
         <button type="button" onClick={() => setOpen(false)} aria-label="Schließen" className="grid size-8 place-items-center rounded-full text-faint hover:bg-hi/5 hover:text-fg"><X className="size-4" /></button>
       </div>
-      <div className="mt-3 inline-flex rounded-full border border-edge bg-hi/5 p-1 text-sm font-semibold">
-        {(["url", "text"] as const).map((t) => (
-          <button key={t} type="button" onClick={() => setTab(t)} className={cn("rounded-full px-4 py-1.5 transition", tab === t ? "bg-brand text-on-brand" : "text-dim hover:text-fg")}>
-            {t === "url" ? "Aus Link" : "Aus Text"}
+      <div className="mt-3 grid grid-cols-3 gap-1 rounded-2xl border border-edge bg-hi/5 p-1 text-[13px] font-semibold sm:inline-grid sm:rounded-full">
+        {tabs.map((t) => (
+          <button key={t.id} type="button" onClick={() => { setTab(t.id); setError(null); }} className={cn("inline-flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 transition sm:rounded-full sm:px-4", tab === t.id ? "bg-brand text-on-brand" : "text-dim hover:text-fg")}>
+            <t.icon className="size-3.5 shrink-0" /> <span className="truncate">{t.label}</span>
           </button>
         ))}
       </div>
-      {tab === "url" ? (
+
+      {tab === "url" && (
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.lieferando.de/speisekarte/dein-restaurant" className="flex-1" onKeyDown={(e) => e.key === "Enter" && url && run()} />
           <Button type="button" onClick={run} disabled={busy || !url.trim()}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Importieren</Button>
         </div>
-      ) : (
-        <div className="mt-3 space-y-2">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={6}
-            placeholder={"Speisekarte hier einfügen, zum Beispiel:\nPizza\nMargherita (A, G) ...... 8,90 €"}
-            className="w-full rounded-2xl border border-edge bg-bg/60 p-3 text-sm outline-none focus:border-brand"
-          />
-          <Button type="button" onClick={run} disabled={busy || !text.trim()}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} Gerichte erkennen</Button>
+      )}
+
+      {tab === "browser" && (
+        <div className="mt-4">
+          <p className="text-sm text-dim">Funktioniert mit <b className="text-fg">jeder Seite</b>, auch wenn sie automatische Abrufe blockiert: Dein Browser liest die Karte so, wie du sie siehst, mit allen Fotos.</p>
+          <ol className="mt-4 space-y-3 text-sm">
+            <li className="flex gap-3">
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand text-xs font-bold text-on-brand">1</span>
+              <span className="min-w-0 flex-1">
+                Ziehe diesen Button einmalig in deine Lesezeichenleiste
+                <span className="mt-2 flex flex-wrap items-center gap-2">
+                  <a
+                    ref={bm}
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); setError("Nicht klicken, sondern in die Lesezeichenleiste ziehen. Am Handy: Lesezeichen anlegen und die Adresse durch den kopierten Code ersetzen."); }}
+                    draggable
+                    className="inline-flex cursor-grab items-center gap-2 rounded-full bg-lime px-4 py-2 font-bold text-night shadow-[0_6px_18px_-8px_#bdfb04] active:cursor-grabbing"
+                  >
+                    <Sparkles className="size-4" /> Speisekarte holen
+                  </a>
+                  <button type="button" onClick={() => app && navigator.clipboard.writeText(bookmarkletHref(app)).then(() => setError("Code kopiert. Neues Lesezeichen anlegen und als Adresse einfügen."))} className="inline-flex items-center gap-1.5 text-xs font-semibold text-dim underline-offset-4 hover:text-fg hover:underline">
+                    <Copy className="size-3.5" /> Code kopieren
+                  </button>
+                </span>
+                <span className="mt-1.5 block text-xs text-faint">Lesezeichenleiste nicht sichtbar? Strg+Umschalt+B (Mac: ⌘+Umschalt+B).</span>
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand text-xs font-bold text-on-brand">2</span>
+              <span>Öffne die Speisekarte des Restaurants (Lieferando, Wolt, Website …) in einem neuen Tab.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand text-xs font-bold text-on-brand">3</span>
+              <span>Klicke dort auf das Lesezeichen „Speisekarte holen“ und dann auf <b className="text-fg">An Qlick senden</b>. Die Karte erscheint automatisch hier.</span>
+            </li>
+          </ol>
         </div>
       )}
+
+      {tab === "paste" && (
+        <div className="mt-3 space-y-2">
+          <p className="text-sm text-dim">Auf der Seite des Restaurants <b className="text-fg">Strg+A</b> und <b className="text-fg">Strg+C</b> drücken, dann hier mit <b className="text-fg">Strg+V</b> einfügen. Fotos werden mit übernommen.</p>
+          {pasted ? (
+            <div className="flex items-center gap-3 rounded-2xl border border-edge-strong bg-hi/5 p-3 text-sm">
+              <ImagePlus className="size-5 shrink-0 text-mint" />
+              <span className="min-w-0 flex-1">Seite eingefügt · {pasted.photos} Bilder erkannt{pasted.url ? ` · ${new URL(pasted.url).hostname}` : ""}</span>
+              <button type="button" onClick={() => { setPasted(null); setText(""); }} className="text-xs font-semibold text-dim hover:text-fg">Leeren</button>
+            </div>
+          ) : (
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onPaste={onPaste}
+              rows={6}
+              placeholder={"Hier einfügen (Strg+V) …\n\nOder Text eintippen, zum Beispiel:\nPizza\nMargherita (A, G) ...... 8,90 €"}
+              className="w-full rounded-2xl border border-edge bg-bg/60 p-3 text-sm outline-none focus:border-brand"
+            />
+          )}
+          {pasted && !pasted.url && (
+            <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Link der Seite (optional, hilft bei Fotos)" />
+          )}
+          <Button type="button" onClick={run} disabled={busy || (!pasted && !text.trim())}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} Gerichte erkennen</Button>
+        </div>
+      )}
+
       {busy && <p className="mt-3 text-sm text-dim">Lese die Karte … das kann bis zu einer Minute dauern.</p>}
-      {error && <p className="mt-3 rounded-xl border border-rose/30 bg-rose/10 px-3 py-2 text-sm text-rose">{error}</p>}
+      {error && <p className={cn("mt-3 rounded-xl border px-3 py-2 text-sm", tab === "browser" ? "border-edge bg-hi/5 text-fg" : "border-rose/30 bg-rose/10 text-rose")}>{error}</p>}
       {result && (
-        <div className="mt-4 rounded-2xl border border-edge-strong bg-hi/5 p-4">
+        <div className="mt-4 rounded-2xl border border-edge-strong bg-hi/5 p-4 animate-rise">
           <p className="font-semibold">{count} Gerichte in {result.sections.length} Kategorien gefunden{result.name ? ` · ${result.name}` : ""}</p>
           <p className="mt-1 text-sm text-dim">{photos.length ? `${photos.length} mit Foto · ` : "Keine Fotos gefunden · "}{result.sections.slice(0, 8).map((s) => `${s.title} (${s.items.length})`).join(" · ")}{result.sections.length > 8 ? " …" : ""}</p>
           {photos.length > 0 && (

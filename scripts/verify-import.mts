@@ -1,8 +1,8 @@
 /** Menu import parsers against small fixtures. Run: npm run verify:import */
-import { extractBlobs, finishImages, fromEmbedded, fromJsonLd, fromText, resolveImage } from "../src/lib/menu-import";
+import { extractBlobs, finishImages, fromDom, fromEmbedded, fromJsonLd, fromText, resolveImage } from "../src/lib/menu-import";
 
 function check(name: string, ok: boolean | undefined, info?: unknown) {
-  console.log(`${ok ? "OK  " : "FAIL"} ${name}`, ok ? "" : JSON.stringify(info).slice(0, 400));
+  console.log(`${ok ? "OK  " : "FAIL"} ${name}`, ok ? "" : String(JSON.stringify(info)).slice(0, 400));
   if (!ok) process.exitCode = 1;
 }
 
@@ -104,3 +104,41 @@ const dish = (n: string) => plain?.sections.flatMap((s) => s.items).find((i) => 
 check("html: lazy image matched to dish", dish("Pizza Margherita")?.image === "https://pizzeria.de/fotos/margherita.jpg", dish("Pizza Margherita"));
 check("html: second dish gets its own photo", dish("Pizza Salami")?.image === "https://pizzeria.de/fotos/salami.webp", dish("Pizza Salami"));
 check("html: dish without photo gets none (no banner, no neighbour)", dish("Tiramisu")?.image === "", dish("Tiramisu"));
+
+// ───────── page structure (rendered pages, browser capture) ─────────
+const cards = `<header><img src="/logo.png" alt="Logo"><nav><a>Pizza</a><a>Pasta</a></nav></header>
+<h2>Pizza</h2>
+<div class="card"><img data-qlick-src="https://cdn.x.de/d0.jpg" src="data:x"><div><h3>Pizza Margherita</h3><p>Tomaten, Mozzarella, Basilikum (A, G)</p><span>8,90 €</span></div></div>
+<div class="card"><div class="bg" data-qlick-bg="https://cdn.x.de/d2.jpg"></div><div><h3>Pizza Tonno</h3><p>Thunfisch, Zwiebeln</p><span>10,50 €</span></div></div>
+<h2>Pasta</h2>
+<div class="card"><div><h3>Spaghetti Carbonara</h3><p>Ei, Speck, Pecorino</p><span>11,90 €</span></div></div>
+<div class="card"><div><h3>Penne Arrabbiata</h3><p>Scharfe Tomatensoße</p><span>9,50 €</span></div></div>`;
+const dm = fromDom(cards);
+const dish2 = (n: string) => dm?.sections.flatMap((s) => s.items).find((i) => i.name === n);
+check("dom: categories from headings", dm?.sections.map((s) => s.title).join("|") === "Pizza|Pasta", dm?.sections.map((s) => s.title));
+check("dom: dish without photo stays a dish (no fake category)", dish2("Penne Arrabbiata")?.price === "9,50" && dish2("Penne Arrabbiata")?.description === "Scharfe Tomatensoße", dish2("Penne Arrabbiata"));
+check("dom: captured img + allergens", dish2("Pizza Margherita")?.image === "https://cdn.x.de/d0.jpg" && dish2("Pizza Margherita")?.tags === "A, G", dish2("Pizza Margherita"));
+check("dom: captured CSS background photo", dish2("Pizza Tonno")?.image === "https://cdn.x.de/d2.jpg", dish2("Pizza Tonno"));
+check("dom: no photo where there is none", dish2("Spaghetti Carbonara")?.image === "", dish2("Spaghetti Carbonara"));
+
+const sizes = `<section><h2>Pizza</h2>
+<article><h3>Diavolo</h3><p>Scharfe Salami</p><ul><li>Ø 26 cm <b>9,90 €</b></li><li>Ø 32 cm <b>12,90 €</b></li></ul></article>
+<article><h3>Funghi</h3><p>Champignons</p><ul><li>Ø 26 cm <b>9,50 €</b></li><li>Ø 32 cm <b>12,50 €</b></li></ul></article></section>`;
+const sz = fromDom(sizes);
+const dia = sz?.sections[0]?.items.find((i) => i.name === "Diavolo");
+check("dom: sizes become variants of one dish", sz?.sections[0]?.items.length === 2 && dia?.variants.map((v) => `${v.label}=${v.price}`).join("|") === "Ø 26 cm=9,90|Ø 32 cm=12,90", sz);
+
+const boldList = `<h2>Getränke</h2><div><p><strong>Cola 0,33 l</strong> 2,50 €</p><p><strong>Fanta 0,33 l</strong> 2,50 €</p><p><strong>Wasser 0,5 l</strong> 2,00 €</p></div>`;
+const bl = fromDom(boldList);
+check("dom: bold names in a list stay separate dishes", bl?.sections[0]?.items.map((i) => `${i.name}=${i.price}`).join("|") === "Cola 0,33 l=2,50|Fanta 0,33 l=2,50|Wasser 0,5 l=2,00", bl?.sections[0]?.items);
+
+const plainList = `<h2>Salate</h2><ul><li>Gemischter Salat mit Hausdressing 6,50 €</li><li>Griechischer Salat mit Feta 8,50 €</li></ul>`;
+const pl = fromDom(plainList);
+check("dom: plain list rows are separate dishes", pl?.sections[0]?.items.length === 2 && pl.sections[0].items[1].price === "8,50", pl?.sections[0]?.items);
+{
+  const html = cards.replace('<div class="card"><div><h3>Spaghetti Carbonara', '<div class="card"><img src="https://cdn.x.de/d3.jpg"><div><h3>Spaghetti Carbonara');
+  const m = fromDom(html);
+  if (m) finishImages({ ...m, source: "dom" }, html, "https://x.de/");
+  const pen = m?.sections.flatMap((s) => s.items).find((i) => i.name === "Penne Arrabbiata");
+  check("html: neighbour's photo is not copied to a dish without photo", pen?.image === "", pen);
+}

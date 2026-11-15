@@ -2,6 +2,7 @@ import "server-only";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import type { MenuItemData, MenuSectionData } from "@/lib/codes/types";
+import { fromDom } from "./menu-dom";
 
 /**
  * Imports a menu from any web page: delivery platforms (Lieferando, Wolt, …),
@@ -20,10 +21,10 @@ export interface ImportedMenu {
   phone?: string;
   address?: string;
   sections: MenuSectionData[];
-  source: "jsonld" | "embedded" | "ai" | "text";
+  source: "jsonld" | "embedded" | "dom" | "ai" | "text";
 }
 
-export type ImportResult = { ok: true; menu: ImportedMenu } | { ok: false; message: string };
+export type ImportResult = { ok: true; menu: ImportedMenu } | { ok: false; message: string; blocked?: boolean };
 
 type J = Record<string, unknown>;
 const isObj = (v: unknown): v is J => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -98,12 +99,17 @@ function htmlImages(html: string, base: string): { at: number; url: string; smal
   const attr = (tag: string, name: string) => tag.match(new RegExp(`\\s${name}\\s*=\\s*["']([^"']+)["']`, "i"))?.[1] ?? "";
   for (const m of html.matchAll(/<(img|source)\b[^>]*>/gi)) {
     const tag = m[0];
-    const cand = attr(tag, "data-srcset") || attr(tag, "srcset") || attr(tag, "data-src") || attr(tag, "data-lazy-src") || attr(tag, "data-original") || attr(tag, "data-lazy") || attr(tag, "src");
+    const cand = attr(tag, "data-qlick-src") || attr(tag, "data-srcset") || attr(tag, "srcset") || attr(tag, "data-src") || attr(tag, "data-lazy-src") || attr(tag, "data-original") || attr(tag, "data-lazy") || attr(tag, "src");
     const url = resolveImage(cand, base);
     if (!url) continue;
     const w = parseInt(attr(tag, "width") || "0", 10);
     const h = parseInt(attr(tag, "height") || "0", 10);
     out.push({ at: m.index!, url, small: (w > 0 && w < 64) || (h > 0 && h < 64) || /\b(logo|icon)\b/i.test(attr(tag, "alt") + attr(tag, "class")) });
+  }
+  // background images resolved by the browser capture (computed CSS, not visible in the markup)
+  for (const m of html.matchAll(/\sdata-qlick-bg\s*=\s*["']([^"']+)["']/gi)) {
+    const url = resolveImage(decodeEntities(m[1]), base);
+    if (url) out.push({ at: m.index!, url, small: false });
   }
   for (const m of html.matchAll(/background(?:-image)?\s*:\s*url\(\s*["']?([^"')]+)["']?\s*\)/gi)) {
     const url = resolveImage(decodeEntities(m[1]), base);
@@ -123,9 +129,10 @@ function attachHtmlImages(menu: ImportedMenu, html: string, base: string) {
   const lower = decodeEntities(html).toLowerCase();
   const dishes: { item: MenuItemData; at: number }[] = [];
   let from = 0;
+  // Photos already assigned (structured data, page structure) are taken.
+  const taken = new Set(menu.sections.flatMap((sec) => sec.items.map((it) => it.image)).filter(Boolean));
   for (const section of menu.sections) {
     for (const item of section.items) {
-      if (item.image) continue;
       const needle = item.name.toLowerCase().slice(0, 60);
       if (needle.length < 3) continue;
       // menus are in page order: search after the previous dish first, then anywhere
@@ -139,7 +146,9 @@ function attachHtmlImages(menu: ImportedMenu, html: string, base: string) {
   // One photo per dish and one dish per photo, closest pairs first.
   // Images above the name (card layout) count as closer than images below it.
   const pairs: { d: number; dish: number; img: number }[] = [];
-  dishes.forEach((dish, di) => imgs.forEach((img, ii) => {
+  // Every dish counts as a boundary, but only dishes without a photo get one.
+  dishes.forEach((dish, di) => !dish.item.image && imgs.forEach((img, ii) => {
+    if (taken.has(img.url)) return;
     const d = img.at < dish.at ? (dish.at - img.at) * 0.8 : (img.at - dish.at) * 1.25;
     if (d >= 1800) return;
     // same card only: no other dish name between the photo and this dish
@@ -400,7 +409,7 @@ ${text.slice(0, 90000)}`;
 }
 
 // ───────── 4. plain text ─────────
-export { fromJsonLd, fromEmbedded, extractBlobs, finishImages };
+export { fromJsonLd, fromEmbedded, extractBlobs, finishImages, fromDom };
 
 const NOISE = /^(schmeckt mir!?|merken!?|bild lädt noch.*|item info|produktinfo|hinzufügen|add|\+|in den warenkorb|mehr anzeigen|einem gaumenfreund.*|.*gaumenfreunde.*|klassisch sortiert|speisekarte filtern|zuletzt aktualisiert.*|beliebt|popular|from|ab|vegetarisch|vegan)$/i;
 const PRICE_ONLY = /^(?:ab\s+|from\s+)?(?:€\s*)?(\d{1,3}(?:[.,]\d{2}))\s*(?:€|eur|euro)?$/i;
@@ -527,8 +536,16 @@ async function fetchPage(input: string): Promise<{ html: string; url: string } |
       redirect: "manual",
       headers: {
         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15",
-        accept: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8",
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "accept-language": "de-DE,de;q=0.9,en;q=0.7",
+        "accept-encoding": "gzip, deflate, br",
+        "cache-control": "no-cache",
+        pragma: "no-cache",
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "none",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1",
       },
       signal: AbortSignal.timeout(15000),
     }).catch(() => null);
@@ -584,7 +601,7 @@ function extractBlobs(html: string): { ld: unknown[]; embedded: unknown[] } {
 function pageTextWithImages(html: string, base: string): string {
   const marked = html.replace(/<img\b[^>]*>/gi, (tag) => {
     const a = (n: string) => tag.match(new RegExp(`\\s${n}\\s*=\\s*["']([^"']+)["']`, "i"))?.[1] ?? "";
-    const url = resolveImage(a("data-srcset") || a("srcset") || a("data-src") || a("data-lazy-src") || a("data-original") || a("src"), base);
+    const url = resolveImage(a("data-qlick-src") || a("data-srcset") || a("srcset") || a("data-src") || a("data-lazy-src") || a("data-original") || a("src"), base);
     return url ? `\n[Bild: ${url}]\n` : " ";
   });
   return pageText(marked);
@@ -613,7 +630,35 @@ function finishImages(menu: ImportedMenu, html?: string, base?: string) {
   if (html && base) attachHtmlImages(menu, html, base);
 }
 
-export async function importMenu(input: { url?: string; text?: string }): Promise<ImportResult> {
+/** Runs every extraction strategy on a page's HTML (fetched by us, or captured in the user's browser). */
+export async function importFromHtml(html: string, url: string): Promise<ImportResult> {
+  const { ld, embedded } = extractBlobs(html);
+  const base = { name: meta(html, "og:site_name") || "", cover: resolveImage(decodeEntities(meta(html, "og:image")), url) };
+  const dom = (): ImportedMenu | null => {
+    const d = fromDom(html);
+    return d ? { sections: d.sections, source: "dom" } : null;
+  };
+  // Every structured source may see only part of the page: take the richest one.
+  const size = (m: ImportedMenu | null) => (m ? m.sections.reduce((n, sec) => n + sec.items.length, 0) : 0);
+  const structured = [fromJsonLd(ld), fromEmbedded([...embedded, ...ld]), dom()].reduce<ImportedMenu | null>((best, m) => (size(m) > size(best) ? m : best), null);
+  const menu = structured ?? (await fromAi(pageTextWithImages(html, url), url)) ?? fromText(pageText(html));
+  if (!menu) {
+    return { ok: false, message: "Auf dieser Seite wurde keine Speisekarte erkannt. Öffne direkt die Seite mit den Gerichten und versuche es noch einmal." };
+  }
+  finishImages(menu, html, url);
+  return { ok: true, menu: { ...base, ...Object.fromEntries(Object.entries(menu).filter(([, v]) => v)) } as ImportedMenu };
+}
+
+export async function importMenu(input: { url?: string; text?: string; html?: string }): Promise<ImportResult> {
+  if (input.html?.trim()) {
+    let base = "https://example.invalid/";
+    try {
+      base = new URL(input.url?.trim() || base).toString();
+    } catch {
+      /* relative images then stay unresolved */
+    }
+    return importFromHtml(input.html, base);
+  }
   if (input.text?.trim()) {
     const text = input.text.slice(0, 120000);
     const menu = (await fromAi(text)) ?? fromText(text);
@@ -623,19 +668,9 @@ export async function importMenu(input: { url?: string; text?: string }): Promis
   if (!input.url?.trim()) return { ok: false, message: "Bitte einen Link einfügen." };
   const page = await fetchPage(input.url.trim());
   if ("error" in page) {
-    return {
-      ok: false,
-      message: page.error === "BLOCKED"
-        ? "Diese Seite blockiert automatische Abrufe. Öffne die Speisekarte im Browser, markiere alles (Strg+A), kopiere es und füge es unten als Text ein."
-        : page.error,
-    };
+    return page.error === "BLOCKED"
+      ? { ok: false, blocked: true, message: "Diese Seite lässt keine automatischen Abrufe zu. Hol die Karte stattdessen über deinen Browser (Tab „Aus dem Browser“): alle Gerichte und Fotos, in 10 Sekunden." }
+      : { ok: false, message: page.error };
   }
-  const { ld, embedded } = extractBlobs(page.html);
-  const base = { name: meta(page.html, "og:site_name") || "", cover: resolveImage(decodeEntities(meta(page.html, "og:image")), page.url) };
-  const menu = fromJsonLd(ld) ?? fromEmbedded([...embedded, ...ld]) ?? (await fromAi(pageTextWithImages(page.html, page.url), page.url)) ?? fromText(pageText(page.html));
-  if (!menu) {
-    return { ok: false, message: "Auf dieser Seite wurde keine Speisekarte erkannt. Kopiere den Text der Karte und füge ihn unten ein." };
-  }
-  finishImages(menu, page.html, page.url);
-  return { ok: true, menu: { ...base, ...Object.fromEntries(Object.entries(menu).filter(([, v]) => v)) } as ImportedMenu };
+  return importFromHtml(page.html, page.url);
 }
