@@ -7,7 +7,8 @@ import { ArrowLeft, ArrowRight, Check, Copy, ExternalLink, Infinity as InfinityI
 import { CODE_TYPES, TYPE_ORDER, validateContent, type CodeTypeId } from "@/lib/codes/types";
 import { staticPayload } from "@/lib/codes/payload";
 import { renderQrSvg } from "@/lib/qr/render";
-import { DEFAULT_STYLE, normalizeStyle, type QrStyle } from "@/lib/qr/style";
+import { DEFAULT_STYLE, STYLE_PRESETS, normalizeStyle, type QrStyle } from "@/lib/qr/style";
+import { STARTERS, type Starter } from "@/lib/templates";
 import { defaultPoster, type PosterSettings } from "@/lib/print/types";
 import { getLocalCode, listLocalCodes, saveLocalCode } from "@/lib/codes/local-store";
 import { newSlug } from "@/lib/codes/slug";
@@ -208,6 +209,16 @@ function WizardEditor({ init }: { init: Init }) {
     go(2);
   }
 
+  function applyStarter(st: Starter) {
+    setType(st.type);
+    setContent(structuredClone(st.content));
+    const preset = STYLE_PRESETS.find((p) => p.id === st.preset);
+    if (preset) setStyle(normalizeStyle({ ...DEFAULT_STYLE, ...preset.style, logo: style.logo }));
+    setPoster(null);
+    setErrors({});
+    go(2);
+  }
+
   function nextFromContent() {
     const res = validateContent(type, content);
     if (!res.ok) {
@@ -349,6 +360,31 @@ function WizardEditor({ init }: { init: Init }) {
               <span>Du kannst den Typ wechseln, zum Beispiel von Website zu Speisekarte. Dein gedruckter Code bleibt exakt gleich und zeigt nach dem Veröffentlichen den neuen Inhalt.</span>
             </p>
           )}
+          <section className="mt-10">
+            <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2 className="font-display text-xl">Mit Vorlage starten</h2>
+              <span className="text-sm text-faint">Fertige Mini-Website mit passendem QR-Design. Alles danach frei änderbar.</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {STARTERS.map((st, i) => (
+                <button key={st.id} type="button" onClick={() => applyStarter(st)} style={{ animationDelay: `${i * 50}ms` }} className="card group overflow-hidden p-0 text-left transition duration-300 animate-rise hover:-translate-y-1 hover:border-edge-strong">
+                  <div className="pointer-events-none relative h-56 overflow-hidden border-b border-edge bg-bg/40">
+                    <div className="absolute left-1/2 top-3 w-[390px] origin-top -translate-x-1/2 scale-[0.46] overflow-hidden rounded-[36px] border-[10px] border-[#111] shadow-lift transition duration-500 group-hover:scale-[0.48]">
+                      <HostedPage code={{ id: st.id, slug: st.id, name: String(st.content.name), type: st.type, mode: "static", status: "active", content: st.content }} />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3.5">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-hi/10 text-fg"><TypeIcon name={st.icon} className="size-4" /></span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">{st.name}</span>
+                      <span className="block truncate text-xs text-faint">{st.hint}</span>
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+
           {GROUPS.map((group, gi) => (
             <section key={group.id} className="mt-10">
               <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
