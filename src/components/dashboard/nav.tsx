@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard, LayoutGrid, Plus, Zap } from "lucide-react";
+import { ClipboardList, CreditCard, LayoutGrid, Plus, Zap } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const ITEMS = [
   { href: "/dashboard", label: "Heute", icon: Zap, match: (p: string) => p === "/dashboard" },
   { href: "/dashboard/codes", label: "Meine Codes", icon: LayoutGrid, match: (p: string) => p.startsWith("/dashboard/codes") },
+  { href: "/dashboard/forms", label: "Formulare", icon: ClipboardList, match: (p: string) => p.startsWith("/dashboard/forms") },
   { href: "/dashboard/new", label: "Neuer Code", icon: Plus, match: (p: string) => p.startsWith("/dashboard/new") },
   { href: "/dashboard/billing", label: "Tarif", icon: CreditCard, match: (p: string) => p.startsWith("/dashboard/billing") },
 ];

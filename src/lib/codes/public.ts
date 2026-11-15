@@ -12,6 +12,8 @@ export interface PublicCode {
   mode: CodeMode;
   status: "active" | "paused";
   content: Record<string, unknown>;
+  /** false only for paying owners: hides "Erstellt mit Qlick" */
+  branding?: boolean;
 }
 
 /**

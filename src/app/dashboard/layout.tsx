@@ -26,7 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
           <div className="hidden flex-1 md:block"><DashboardNav /></div>
           <div className="ml-auto flex items-center gap-2">
-            <span className="hidden sm:block"><ButtonLink href="/dashboard/new" size="sm"><Plus className="size-4" /> Neuer Code</ButtonLink></span>
+            <span className="hidden sm:block"><ButtonLink href="/studio" size="sm"><Plus className="size-4" /> Neuer Code</ButtonLink></span>
             <span className="hidden items-center gap-2 rounded-xl border border-edge bg-surface px-3 py-1.5 text-sm font-semibold lg:flex">
               <span className="grid size-6 place-items-center rounded-lg bg-brand font-display text-xs text-on-brand">{displayName.charAt(0).toUpperCase()}</span>
               {displayName}

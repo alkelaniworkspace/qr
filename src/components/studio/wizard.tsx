@@ -71,7 +71,7 @@ export function editLink(slug: string, token: string) {
   return `${env.appUrl}/studio?code=${slug}#k=${token}`;
 }
 
-function loadInit(editId: string | null, startType: string | null, startStep: Step): Init {
+function loadInit(editId: string | null, startType: string | null, startStep: Step, prefillUrl?: string | null): Init {
   const base: Init = { step: 1, reached: 1, id: newId(), type: "url", name: "", content: structuredClone(CODE_TYPES.url.defaults), style: normalizeStyle(DEFAULT_STYLE), poster: null, editing: false, mode: DEFAULT_MODE, slug: newSlug(), token: null };
   const c = editId ? getLocalCode(editId) : null;
   if (c) {
@@ -82,7 +82,9 @@ function loadInit(editId: string | null, startType: string | null, startStep: St
   }
   if (startType && startType in CODE_TYPES) {
     const t = startType as CodeTypeId;
-    return { ...base, step: 2, reached: 2, type: t, content: structuredClone(CODE_TYPES[t].defaults) };
+    const content = structuredClone(CODE_TYPES[t].defaults);
+    if (t === "url" && prefillUrl && /^https?:\/\//.test(prefillUrl)) content.url = prefillUrl;
+    return { ...base, step: 2, reached: 2, type: t, content };
   }
   return base;
 }
@@ -99,7 +101,7 @@ export function Wizard() {
   const remote = params.get("code");
   if (!client) return <div className="mx-auto h-[70vh] w-full max-w-[1600px]" />;
   if (remote) return <RemoteWizard key={remote} slug={remote} />;
-  return <WizardEditor key={`${editId ?? ""}|${startType ?? ""}`} init={loadInit(editId, startType, startStep)} />;
+  return <WizardEditor key={`${editId ?? ""}|${startType ?? ""}`} init={loadInit(editId, startType, startStep, params.get("url"))} />;
 }
 
 /** Opens a dynamic code from its private edit link (/studio?code=slug#k=token). */

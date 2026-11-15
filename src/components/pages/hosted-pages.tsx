@@ -33,15 +33,17 @@ function themeVars(theme: Theme, accent: string): Record<string, string> {
   return { "--pg-bg": "#f7f5f0", "--pg-fg": "#14130f", "--pg-card": "#ffffff", "--pg-line": "#e2ddd1", "--pg-muted": "#6f6a5f", "--pg-soft": "#efebe2" };
 }
 
-function Shell({ accent, theme, children }: { accent: string; theme: Theme; children: React.ReactNode }) {
+function Shell({ accent, theme, children, branding = true }: { accent: string; theme: Theme; children: React.ReactNode; branding?: boolean }) {
   // On a colour page the accent IS the background, so buttons switch to the contrast colour.
   const btn = theme === "color" ? { "--accent": onAccent(accent), "--on-accent": accent } : { "--accent": accent, "--on-accent": onAccent(accent) };
   return (
     <div className="min-h-screen bg-[var(--pg-bg)] text-[var(--pg-fg)]" style={{ ...themeVars(theme, accent), ...btn, colorScheme: theme === "dark" ? "dark" : "light" } as React.CSSProperties}>
       <main className="mx-auto max-w-md px-5 pb-16 pt-8 animate-rise">{children}</main>
-      <footer className="pb-8 text-center">
-        <Link href="/" className="text-xs text-[var(--pg-muted)]/70 hover:text-[var(--pg-muted)]">Erstellt mit {site.name}</Link>
-      </footer>
+      {branding && (
+        <footer className="pb-8 text-center">
+          <Link href="/" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pg-line)] px-3 py-1.5 text-xs text-[var(--pg-muted)] hover:text-[var(--pg-fg)]">Erstellt mit <b>{site.name.toLowerCase()}</b> · Eigenen Code erstellen</Link>
+        </footer>
+      )}
     </div>
   );
 }
@@ -345,7 +347,7 @@ export function HostedPage({ code, links }: { code: PublicCode; links?: PageLink
     case "site": body = <SitePage c={c} />; break;
   }
   const theme: Theme = c.theme === "dark" || c.theme === "color" ? c.theme : "light";
-  return <Shell accent={accent} theme={theme}>{body}</Shell>;
+  return <Shell accent={accent} theme={theme} branding={code.branding !== false}>{body}</Shell>;
 }
 
 export function hostedTitle(code: PublicCode): string {

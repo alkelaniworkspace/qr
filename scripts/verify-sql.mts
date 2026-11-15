@@ -33,7 +33,8 @@ async function as(user: string | null, sql: string) {
   }
 }
 
-function check(name: string, ok: boolean) {
+function check(name: string, ok: boolean, info?: unknown) {
+  if (!ok && info) console.log(JSON.stringify(info));
   console.log(`${ok ? "OK  " : "FAIL"} ${name}`);
   if (!ok) process.exitCode = 1;
 }
@@ -119,3 +120,22 @@ const right = (await as(C, `select public.claim_guest_code('claim01', '${T}') as
 check("claim with token moves code into the account", right.ok && (await as(C, `select slug from public.qr_codes`)).rows.length === 1);
 await expectError("anon cannot claim", () => asAnon(`select public.claim_guest_code('claim01', $1)`, [T]), /permission denied|NOT_SIGNED_IN/);
 check("plan limits: free=3, business unlimited", ((await db.query(`select public.plan_dynamic_limit('free') a, public.plan_dynamic_limit('business') b`)).rows[0] as { a: number; b: number | null }).a === 3);
+
+// ───────── forms ─────────
+await as(B, `insert into public.forms (slug, title, fields) values ('feedB1', 'Feedback', '[{"id":"q1","type":"rating","label":"Wie war es?"}]')`);
+check("user can create a form", true);
+await expectError("free plan: only 1 form", () => as(B, `insert into public.forms (slug, title) values ('feedB2', 'Zweites')`), /FORM_LIMIT_REACHED/);
+check("anon reads public form", (await asAnon(`select * from public.public_form('feedB1')`)).rows.length === 1);
+const sub = (await asAnon(`select public.submit_form_response('feedB1', '{"q1":5}', '{}') as r`)).rows[0] as { r: string };
+check("anon can submit a response", sub.r === "OK");
+check("owner sees responses", (await as(B, `select * from public.form_responses`)).rows.length === 1);
+check("others don't see responses", (await as(A, `select * from public.form_responses`)).rows.length === 0);
+await expectError("anon cannot insert responses directly", () => asAnon(`insert into public.form_responses (form_id, answers) select id, '{}' from public.forms`), /permission denied/);
+await as(B, `update public.forms set status = 'closed' where slug = 'feedB1'`);
+check("closed form rejects", ((await asAnon(`select public.submit_form_response('feedB1', '{"q1":3}', '{}') as r`)).rows[0] as { r: string }).r === "CLOSED");
+check("response counter", ((await as(B, `select response_count from public.forms`)).rows[0] as { response_count: number }).response_count === 1);
+await as(B, `update public.forms set status = 'open', settings = '{"showResults": true}' where slug = 'feedB1'`);
+await asAnon(`select public.submit_form_response('feedB1', '{"q2":"Pizza","q3":["A","B"]}', '{}')`);
+await asAnon(`select public.submit_form_response('feedB1', '{"q2":"Pizza","q3":["A"]}', '{}')`);
+const poll = ((await asAnon(`select public.form_poll_results('feedB1') as p`)).rows[0] as { p: Record<string, Record<string, number>> }).p;
+check("poll results counted", poll.q2?.Pizza === 2 && poll.q3?.A === 2 && poll.q3?.B === 1, poll);
