@@ -8,6 +8,7 @@ import { mapsUrl } from "@/lib/codes/payload";
 import { site } from "@/lib/site";
 import { CopyButton } from "./copy-button";
 import { MenuPage } from "./menu-page";
+import { PollPage } from "./poll-page";
 import { DEFAULT_ACCENT, menuStyle } from "@/lib/menu-styles";
 
 type C = Record<string, unknown>;
@@ -347,6 +348,7 @@ export function HostedPage({ code, links }: { code: PublicCode; links?: PageLink
     case "pdf": body = <PdfPage c={c} />; break;
     case "event": body = <EventPage code={code} c={c} links={links} />; break;
     case "site": body = <SitePage c={c} />; break;
+    case "poll": body = <PollPage c={c} slug={code.slug} demo={code.mode !== "dynamic" || code.id === "preview" || code.slug === "preview"} />; break;
   }
   const theme: Theme = c.theme === "dark" || c.theme === "color" ? c.theme : "light";
   if (code.type === "menu") {

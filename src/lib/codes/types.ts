@@ -10,7 +10,7 @@ import { z } from "zod";
 export type CodeMode = "dynamic" | "static";
 export type CodeTypeId =
   | "url" | "vcard" | "links" | "menu" | "review" | "coupon" | "pdf" | "event" | "site"
-  | "location" | "app" | "wifi" | "email" | "sms" | "phone" | "text";
+  | "location" | "app" | "wifi" | "email" | "sms" | "phone" | "text" | "poll";
 
 export type Field =
   | {
@@ -30,6 +30,7 @@ export type Field =
   | { kind: "image"; name: string; label: string; hint?: string; shape?: "square" | "wide"; half?: boolean }
   | { kind: "layout"; name: string; label: string }
   | { kind: "menustyle"; name: string; label: string }
+  | { kind: "pollOptions"; name: string; label: string }
   | { kind: "review"; name: string; label: string; hint?: string }
   | { kind: "theme"; name: string; label: string };
 
@@ -82,6 +83,9 @@ const menuItem = z.object({
 const menuSection = z.object({ title: reqStr("Kategorie", 80), note: str(160), items: z.array(menuItem).max(120) });
 export type MenuItemData = z.infer<typeof menuItem>;
 export type MenuSectionData = z.infer<typeof menuSection>;
+
+const pollOption = z.object({ label: reqStr("Antwort", 80), image: imageUrl() });
+export const POLL_RESULTS = ["after", "always", "never"] as const;
 
 const ACCENT: Field = { kind: "color", name: "accent", label: "Akzentfarbe", half: true };
 const THEME: Field = { kind: "theme", name: "theme", label: "Seiten-Stil" };
@@ -246,6 +250,49 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       theme,
     }),
     defaults: { business: "", message: "", googleUrl: "", secondaryUrl: "", accent: "#191919", theme: "light" },
+  },
+  poll: {
+    id: "poll",
+    label: "Abstimmung",
+    description: "Gäste scannen und stimmen ab, Ergebnisse live",
+    icon: "BarChart3",
+    group: "page",
+    modes: ["dynamic"],
+    hostedPage: true,
+    fields: [
+      { kind: "text", name: "question", label: "Frage", required: true, placeholder: "Welches Gericht soll auf die neue Karte?" },
+      { kind: "textarea", name: "description", label: "Beschreibung (optional)", placeholder: "Unter allen Teilnehmern verlosen wir einen Gutschein." },
+      { kind: "pollOptions", name: "options", label: "Antworten" },
+      { kind: "select", name: "results", label: "Ergebnisse zeigen", half: true, options: [
+        { value: "after", label: "Nach der Abstimmung" },
+        { value: "always", label: "Immer, auch vorher" },
+        { value: "never", label: "Nur mir" },
+      ] },
+      { kind: "datetime", name: "closesAt", label: "Endet am (optional)", half: true },
+      { kind: "checkbox", name: "multiple", label: "Mehrere Antworten erlauben" },
+      ACCENT,
+      THEME,
+    ],
+    schema: z.object({
+      question: reqStr("Frage", 160),
+      description: str(400),
+      options: z.array(pollOption).min(2, "Mindestens zwei Antworten").max(12, "Höchstens 12 Antworten"),
+      results: z.enum(POLL_RESULTS).default("after"),
+      closesAt: str(40),
+      multiple: z.boolean().default(false),
+      accent: color,
+      theme,
+    }),
+    defaults: {
+      question: "",
+      description: "",
+      options: [{ label: "", image: "" }, { label: "", image: "" }],
+      results: "after",
+      closesAt: "",
+      multiple: false,
+      accent: "#191919",
+      theme: "light",
+    },
   },
   coupon: {
     id: "coupon",
@@ -479,7 +526,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
 };
 
 export const TYPE_ORDER: CodeTypeId[] = [
-  "url", "menu", "review", "vcard", "site", "links", "coupon", "pdf", "event", "location", "app", "wifi", "email", "sms", "phone", "text",
+  "url", "menu", "review", "poll", "vcard", "site", "links", "coupon", "pdf", "event", "location", "app", "wifi", "email", "sms", "phone", "text",
 ];
 
 export function getType(id: string): CodeTypeDef | null {

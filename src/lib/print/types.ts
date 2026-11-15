@@ -72,6 +72,7 @@ const COPY: Partial<Record<CodeTypeId, { template: PosterTemplateId; headline: s
   pdf: { template: "classic", headline: "Unser Katalog", subline: "Alle Produkte und Preise als PDF.", cta: "Katalog öffnen" },
   app: { template: "bold", headline: "Hol dir die App", subline: "iPhone und Android landen automatisch im richtigen Store.", cta: "Jetzt laden" },
   site: { template: "classic", headline: "Besuch uns online", subline: "Leistungen, Öffnungszeiten und Kontakt.", cta: "Scannen" },
+  poll: { template: "bold", headline: "Stimm mit ab!", subline: "Deine Meinung zählt. Scannen, antippen, fertig.", cta: "Jetzt abstimmen" },
   location: { template: "classic", headline: "So findest du uns", subline: "Scannen und direkt in Google Maps öffnen.", cta: "Route starten" },
 };
 

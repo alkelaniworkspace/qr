@@ -139,3 +139,36 @@ await asAnon(`select public.submit_form_response('feedB1', '{"q2":"Pizza","q3":[
 await asAnon(`select public.submit_form_response('feedB1', '{"q2":"Pizza","q3":["A"]}', '{}')`);
 const poll = ((await asAnon(`select public.form_poll_results('feedB1') as p`)).rows[0] as { p: Record<string, Record<string, number>> }).p;
 check("poll results counted", poll.q2?.Pizza === 2 && poll.q3?.A === 2 && poll.q3?.B === 1, poll);
+
+// ───────── polls ─────────
+const PT = "p".repeat(40);
+const pollContent = (extra: Record<string, unknown> = {}) => JSON.stringify({ question: "Gericht des Monats?", options: [{ label: "Pizza" }, { label: "Pasta" }, { label: "Salat" }], multiple: false, results: "after", ...extra });
+await asAnon(`select public.create_guest_code('pollG1', $1, 'Umfrage', 'poll', $2::jsonb, '{}')`, [PT, pollContent()]);
+async function vote(slug: string, choices: number[], hash: string) {
+  await db.exec(`set role service_role;`);
+  try {
+    return ((await db.query(`select public.cast_vote($1, $2::smallint[], $3) as r`, [slug, `{${choices.join(",")}}`, hash])).rows[0] as { r: string }).r;
+  } finally {
+    await db.exec("reset role;");
+  }
+}
+check("poll: first vote OK", (await vote("pollG1", [0], "h".repeat(32))) === "OK");
+check("poll: same device cannot vote twice", (await vote("pollG1", [1], "h".repeat(32))) === "ALREADY");
+check("poll: second device OK", (await vote("pollG1", [0], "i".repeat(32))) === "OK");
+check("poll: third device OK", (await vote("pollG1", [2], "j".repeat(32))) === "OK");
+check("poll: out-of-range option rejected", (await vote("pollG1", [7], "k".repeat(32))) === "INVALID");
+check("poll: two choices on single-choice poll rejected", (await vote("pollG1", [0, 1], "k".repeat(32))) === "INVALID");
+check("poll: unknown slug", (await vote("nopeX1", [0], "k".repeat(32))) === "NOT_FOUND");
+await expectError("poll: anon cannot cast votes directly", () => asAnon(`select public.cast_vote('pollG1', '{0}', '${"z".repeat(32)}')`), /permission denied/);
+await expectError("poll: anon cannot insert votes", () => asAnon(`insert into public.poll_votes (code_id, choices, voter_hash) select id, '{0}', '${"z".repeat(32)}' from public.qr_codes where slug = 'pollG1'`), /permission denied/);
+const res = ((await asAnon(`select public.poll_results('pollG1') as r`)).rows[0] as { r: { total: number; counts: number[] } }).r;
+check("poll: public tally", res.total === 3 && res.counts.join(",") === "2,0,1", res);
+
+await asAnon(`select public.update_guest_code('pollG1', $1, 'Umfrage', 'poll', $2::jsonb, '{}')`, [PT, pollContent({ results: "never", multiple: true })]);
+check("poll: hidden results not public", ((await asAnon(`select public.poll_results('pollG1') as r`)).rows[0] as { r: unknown }).r === null);
+check("poll: edit token still sees results", (((await asAnon(`select public.poll_results('pollG1', $1) as r`, [PT])).rows[0] as { r: { total: number } | null }).r?.total) === 3);
+check("poll: multiple choice allowed when enabled", (await vote("pollG1", [0, 2], "m".repeat(32))) === "OK");
+check("poll: duplicate choices rejected", (await vote("pollG1", [1, 1], "n".repeat(32))) === "INVALID");
+
+await asAnon(`select public.update_guest_code('pollG1', $1, 'Umfrage', 'poll', $2::jsonb, '{}')`, [PT, pollContent({ closesAt: "2020-01-01T00:00:00Z" })]);
+check("poll: closed after end date", (await vote("pollG1", [0], "o".repeat(32))) === "CLOSED");

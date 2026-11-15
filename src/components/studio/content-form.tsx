@@ -69,6 +69,13 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
                 {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}
               </div>
             );
+          case "pollOptions":
+            return (
+              <div key={field.name} className="col-span-2">
+                <PollOptionsEditor value={(value[field.name] as PollOption[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
+                {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}
+              </div>
+            );
           case "menu":
             return (
               <div key={field.name} className="col-span-2">
@@ -189,6 +196,39 @@ function move<T>(list: T[], i: number, dir: -1 | 1): T[] {
   const next = [...list];
   [next[i], next[j]] = [next[j], next[i]];
   return next;
+}
+
+type PollOption = { label: string; image: string };
+
+/** Poll answers: text plus an optional photo each (photos turn the poll into picture cards). */
+function PollOptionsEditor({ value, onChange, errors, prefix }: { value: PollOption[]; onChange: (v: PollOption[]) => void; errors: Errors; prefix: string }) {
+  const update = (i: number, patch: Partial<PollOption>) => onChange(value.map((o, k) => (k === i ? { ...o, ...patch } : o)));
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">Antworten</span>
+        <span className="text-xs text-faint">{value.length} / 12 · Foto optional</span>
+      </div>
+      <div className="space-y-2.5">
+        {value.map((o, i) => (
+          <div key={i} className="flex items-center gap-2.5 rounded-2xl border border-edge bg-surface p-2.5">
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-hi/10 font-mono text-xs font-bold text-dim">{String.fromCharCode(65 + i)}</span>
+            <ImageField value={o.image} onChange={(url) => update(i, { image: url })} label="Foto" className="w-14 shrink-0 [&_span]:p-1 [&_span]:text-[10px]" />
+            <div className="min-w-0 flex-1">
+              <Input value={o.label} maxLength={80} placeholder={`Antwort ${i + 1}`} aria-invalid={!!errors[`${prefix}.${i}.label`]} onChange={(e) => update(i, { label: e.target.value })} />
+              {errors[`${prefix}.${i}.label`] && <p className="mt-1 text-xs text-rose">{errors[`${prefix}.${i}.label`]}</p>}
+            </div>
+            <RowActions onUp={() => onChange(move(value, i, -1))} onDown={() => onChange(move(value, i, 1))} onRemove={() => value.length > 2 && onChange(value.filter((_, k) => k !== i))} />
+          </div>
+        ))}
+      </div>
+      {value.length < 12 && (
+        <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={() => onChange([...value, { label: "", image: "" }])}>
+          <Plus className="size-4" /> Antwort hinzufügen
+        </Button>
+      )}
+    </div>
+  );
 }
 
 function LinksEditor({ value, onChange, errors, prefix }: { value: LinkItem[]; onChange: (v: LinkItem[]) => void; errors: Errors; prefix: string }) {

@@ -18,6 +18,7 @@ import { ContentForm } from "./content-form";
 import { DesignPanel } from "./design-panel";
 import { Preview } from "./preview";
 import { PrintStudio } from "@/components/print/print-studio";
+import { PollResults } from "@/components/dashboard/poll-results";
 import { StickerStudio } from "@/components/print/sticker-studio";
 import { MotionStudio } from "@/components/print/motion-studio";
 import { HostedPage } from "@/components/pages/hosted-pages";
@@ -211,6 +212,8 @@ function WizardEditor({ init }: { init: Init }) {
       setPoster(null);
       setErrors({});
     }
+    // Some types need the server (e.g. polls store votes): they are always dynamic.
+    if (!CODE_TYPES[t].modes.includes("static") && !locked) setMode("dynamic");
     go(2);
   }
 
@@ -372,8 +375,8 @@ function WizardEditor({ init }: { init: Init }) {
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
               {STARTERS.map((st, i) => (
-                <button key={st.id} type="button" onClick={() => applyStarter(st)} style={{ animationDelay: `${i * 50}ms` }} className="card group overflow-hidden p-0 text-left transition duration-300 animate-rise hover:-translate-y-1 hover:border-edge-strong">
-                  <div className="pointer-events-none relative h-56 overflow-hidden border-b border-edge bg-bg/40">
+                <div key={st.id} role="button" tabIndex={0} onClick={() => applyStarter(st)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); applyStarter(st); } }} style={{ animationDelay: `${i * 50}ms` }} className="card group cursor-pointer overflow-hidden p-0 text-left transition duration-300 animate-rise hover:-translate-y-1 hover:border-edge-strong">
+                  <div inert className="pointer-events-none relative h-56 overflow-hidden border-b border-edge bg-bg/40">
                     <div className="mp-preview absolute left-1/2 top-3 w-[390px] origin-top -translate-x-1/2 scale-[0.46] overflow-hidden rounded-[36px] border-[10px] border-[#111] shadow-lift transition duration-500 group-hover:scale-[0.48]">
                       <HostedPage code={{ id: st.id, slug: st.id, name: String(st.content.name), type: st.type, mode: "static", status: "active", content: st.content }} />
                     </div>
@@ -385,7 +388,7 @@ function WizardEditor({ init }: { init: Init }) {
                       <span className="block truncate text-xs text-faint">{st.hint}</span>
                     </span>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </section>
@@ -455,7 +458,7 @@ function WizardEditor({ init }: { init: Init }) {
 
             {step === 2 ? (
               <div className="mt-8">
-                <ModeSwitch mode={mode} onChange={setMode} locked={locked} />
+                <ModeSwitch mode={mode} onChange={setMode} locked={locked} dynamicOnly={!def.modes.includes("static")} />
                 <div className="card p-5 sm:p-7">
                   <ContentForm fields={def.fields} value={content} errors={errors} onChange={setContent} />
                 </div>
@@ -514,7 +517,7 @@ function WizardEditor({ init }: { init: Init }) {
               <p className="mt-2 text-dim">{publishError ?? "Bitte erneut versuchen."}</p>
               <div className="mt-6 flex justify-center gap-2">
                 <Button type="button" onClick={() => void publish()}><RefreshCw className="size-4" /> Erneut versuchen</Button>
-                <Button type="button" variant="ghost" onClick={() => { setMode("static"); }}>Statisch weiter</Button>
+                {def.modes.includes("static") && <Button type="button" variant="ghost" onClick={() => { setMode("static"); }}>Statisch weiter</Button>}
               </div>
             </>
           )}
@@ -543,6 +546,7 @@ function WizardEditor({ init }: { init: Init }) {
             </div>
           </div>
           {live && token && <EditLinkCard slug={slug} token={token} copied={copied === "edit"} onCopy={() => copy(editLink(slug, token), "edit")} dirty={dirty} />}
+          {type === "poll" && live && token && <PollResults slug={slug} token={token} options={(content.options as { label: string }[]) ?? []} className="mt-5" />}
           {publishError && mode === "dynamic" && token && <p className="mt-4 rounded-xl border border-rose/30 bg-rose/10 px-4 py-2.5 text-sm font-semibold text-rose">{publishError}</p>}
           {saved !== "idle" && (
             <p className={cn("mt-4 rounded-xl border px-4 py-2.5 text-sm font-semibold", saved === "ok" ? "border-mint/30 bg-mint/10 text-mint" : "border-rose/30 bg-rose/10 text-rose")}>
@@ -586,7 +590,18 @@ function WizardEditor({ init }: { init: Init }) {
   );
 }
 
-function ModeSwitch({ mode, onChange, locked }: { mode: Mode; onChange: (m: Mode) => void; locked: boolean }) {
+function ModeSwitch({ mode, onChange, locked, dynamicOnly }: { mode: Mode; onChange: (m: Mode) => void; locked: boolean; dynamicOnly?: boolean }) {
+  if (dynamicOnly && !locked) {
+    return (
+      <p className="mb-5 flex gap-2.5 rounded-2xl border border-edge bg-hi/5 px-4 py-3 text-sm text-fg">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-mint" />
+        <span>
+          <b>Immer dynamisch.</b> Stimmen werden sicher gespeichert, die Ergebnisse siehst du live. Fragen und Antworten kannst du jederzeit ändern.
+          {!supabaseConfigured && <span className="mt-1 block text-rose">Abstimmungen sind verfügbar, sobald die Datenbank verbunden ist.</span>}
+        </span>
+      </p>
+    );
+  }
   if (locked) {
     return (
       <p className="mb-5 flex gap-2.5 rounded-2xl border border-mint/30 bg-mint/10 px-4 py-3 text-sm text-fg">
