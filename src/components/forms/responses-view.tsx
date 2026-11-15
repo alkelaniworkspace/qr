@@ -1,5 +1,6 @@
 "use client";
 
+import { DateTimeField } from "@/components/ui/date-time-field";
 import { useMemo, useState, useTransition } from "react";
 import { motion } from "motion/react";
 import { ArrowDownUp, FileSpreadsheet, FileText, Search, Star, Trash2 } from "lucide-react";
@@ -224,8 +225,8 @@ export function ResponsesView({ formId, title, fields, rows }: { formId: string;
             {filterOptions.map((o) => <option key={o}>{o}</option>)}
           </select>
         )}
-        <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-10 rounded-full border border-edge bg-surface px-4 text-sm" aria-label="Von" />
-        <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-10 rounded-full border border-edge bg-surface px-4 text-sm" aria-label="Bis" />
+        <div className="w-[220px]"><DateTimeField value={from} onChange={setFrom} withTime={false} placeholder="Von" /></div>
+        <div className="w-[220px]"><DateTimeField value={to} onChange={setTo} withTime={false} placeholder="Bis" /></div>
         <button type="button" onClick={() => setAsc((v) => !v)} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-edge px-4 text-sm font-semibold"><ArrowDownUp className="size-4" /> {asc ? "Älteste zuerst" : "Neueste zuerst"}</button>
       </div>
       {filtered.length !== list.length && <p className="mt-2 text-xs text-dim">{filtered.length} von {list.length} Antworten</p>}

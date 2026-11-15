@@ -7,6 +7,7 @@ import { FieldShell, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
+import { DateTimeField } from "@/components/ui/date-time-field";
 import { ImageField, LayoutPicker, MenuBuilder, MenuImport, MenuStylePicker } from "./menu-builder";
 import { DesignEditor } from "./design-editor";
 import { MenuTemplatePicker } from "./menu-template-picker";
@@ -118,13 +119,13 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
             );
           case "menutemplate":
             return (
-              <FieldShell key={field.name} label="Vorlage für die Speisekarte" hint="20 Vorlagen mit eigenem Aufbau. Die Vorschau zeigt deine Gerichte. Farben und Schriften passt du danach unter „Design der Seite“ an." className="col-span-2">
+              <FieldShell key={field.name} label="Vorlage für die Speisekarte" hint="20 Vorlagen mit eigenem Aufbau. Die Vorschau zeigt deine Gerichte. Farben und Schriften passt du danach unter „Farben & Schrift“ an." className="col-span-2">
                 <MenuTemplatePicker value={str(value[field.name])} content={value} onPick={(t) => onChange({ ...value, [field.name]: t.id, design: t.design })} />
               </FieldShell>
             );
           case "design":
             return (
-              <FieldShell key={field.name} label="Design der Seite" hint="Wähle eine Vorlage und passe Farben, Schrift, Buttons und Hintergrund an. Die Vorschau zeigt jede Änderung sofort." className="col-span-2">
+              <FieldShell key={field.name} label="Farben & Schrift" hint="Feinschliff für deine Seite. Die Vorschau zeigt jede Änderung sofort." className="col-span-2">
                 <DesignEditor content={value} onChange={(d) => set(field.name, d)} />
               </FieldShell>
             );
@@ -147,7 +148,14 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
               </FieldShell>
             );
           default: {
-            const type = field.kind === "datetime" ? "datetime-local" : field.kind;
+            if (field.kind === "datetime" || field.kind === "date") {
+              return (
+                <FieldShell key={field.name} label={field.label + (field.required ? " *" : "")} htmlFor={id} error={error} hint={field.hint} className={span}>
+                  <DateTimeField id={id} value={str(value[field.name])} onChange={(v) => set(field.name, v)} withTime={field.kind === "datetime"} invalid={!!error} />
+                </FieldShell>
+              );
+            }
+            const type = field.kind;
             return (
               <FieldShell key={field.name} label={field.label + (field.required ? " *" : "")} htmlFor={id} error={error} hint={field.hint} className={span}>
                 <Input

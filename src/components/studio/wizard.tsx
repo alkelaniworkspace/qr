@@ -17,6 +17,7 @@ import { loadGuestCode, publishGuestCode } from "@/app/studio/actions";
 import { ContentForm } from "./content-form";
 import { DesignPanel } from "./design-panel";
 import { Preview } from "./preview";
+import { StepDock } from "./step-dock";
 import { PrintStudio } from "@/components/print/print-studio";
 import { PollResults } from "@/components/dashboard/poll-results";
 import { RsvpList } from "@/components/dashboard/rsvp-list";
@@ -346,6 +347,12 @@ function WizardEditor({ init }: { init: Init }) {
   }, [publishNav, step, reached, def.label, def.hostedPage, name, designPreset, output]);
   useEffect(() => () => publishNav?.(null), [publishNav]);
 
+  const previewEl = svg ? (
+    <Preview key={step === 2 && phone ? "p2" : "p3"} svg={svg} data={data} style={style} name={name || def.label} phone={phone} />
+  ) : (
+    <div className="card grid aspect-square place-items-center p-8 text-center text-sm text-dim">Zu viel Inhalt für einen QR-Code.</div>
+  );
+
   return (
     <div className="mx-auto w-full max-w-[1600px]">
       {/* Stepper */}
@@ -457,7 +464,7 @@ function WizardEditor({ init }: { init: Init }) {
 
       {/* ───── Steps 2 + 3: editor with live preview ───── */}
       {(step === 2 || step === 3) && (
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-10">
+        <div className="grid gap-8 pb-28 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-10">
           <div className="min-w-0 animate-rise" key={step}>
             <div className="flex items-start gap-4">
               <button type="button" onClick={() => go(1)} title="Typ ändern" className="grid size-14 shrink-0 place-items-center rounded-2xl bg-brand text-on-brand shadow-[0_0_32px_-6px_rgb(var(--glow)/0.7)] transition hover:scale-105">
@@ -499,29 +506,26 @@ function WizardEditor({ init }: { init: Init }) {
                     <TriangleAlert className="mt-0.5 size-4 shrink-0" /> Viel Inhalt macht den Code dicht. Drucke ihn mindestens 4 cm groß.
                   </p>
                 )}
-                <div className="mt-6 flex flex-wrap justify-between gap-3">
-                  <Button type="button" variant="ghost" onClick={() => go(1)}><ArrowLeft className="size-4" /> Zurück</Button>
-                  <Button type="button" size="lg" onClick={nextFromContent} disabled={tooLong} className="shine">Weiter zum Design <ArrowRight className="size-4" /></Button>
-                </div>
               </div>
             ) : (
               <div className="mt-8">
                 <DesignPanel style={style} onChange={setStyle} data={data} />
-                <div className="mt-6 flex flex-wrap justify-between gap-3">
-                  <Button type="button" variant="ghost" onClick={() => go(2)}><ArrowLeft className="size-4" /> Inhalt</Button>
-                  <Button type="button" size="lg" onClick={toPrint} className="shine">{mode === "dynamic" && !token ? "Code aktivieren & drucken" : "Weiter zu Druck & Download"} <ArrowRight className="size-4" /></Button>
-                </div>
               </div>
             )}
           </div>
 
-          <aside className="lg:sticky lg:top-40 lg:self-start">
-            {svg ? (
-              <Preview key={step === 2 && phone ? "p2" : "p3"} svg={svg} data={data} style={style} name={name || def.label} phone={phone} />
-            ) : (
-              <div className="card grid aspect-square place-items-center p-8 text-center text-sm text-dim">Zu viel Inhalt für einen QR-Code.</div>
-            )}
+          <aside className="hidden lg:sticky lg:top-6 lg:mt-14 lg:block lg:self-start">
+            {previewEl}
           </aside>
+          <StepDock
+            step={step}
+            backLabel={step === 2 ? "Typ" : "Inhalt"}
+            nextLabel={step === 2 ? "Weiter zum Design" : mode === "dynamic" && !token ? "Aktivieren & drucken" : "Druck & Download"}
+            onBack={() => go(step === 2 ? 1 : 2)}
+            onNext={step === 2 ? nextFromContent : toPrint}
+            nextDisabled={step === 2 && tooLong}
+            preview={previewEl}
+          />
         </div>
       )}
 

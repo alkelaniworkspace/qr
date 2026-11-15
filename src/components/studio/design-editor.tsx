@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronDown, RotateCcw } from "lucide-react";
-import { BACKGROUNDS, BUTTONS, CARDS, FONTS, HEROES, MOTION, PRESETS, RADII, compactDesign, designVars, presetById, resolveDesign, type Design, type FontId, type RadiusId, type StoredDesign } from "@/lib/page-design";
+import { ChevronDown, RotateCcw } from "lucide-react";
+import { BACKGROUNDS, BUTTONS, CARDS, FONTS, HEROES, MOTION, RADII, compactDesign, designVars, presetById, resolveDesign, type Design, type FontId, type RadiusId, type StoredDesign } from "@/lib/page-design";
 import { ColorInput } from "./content-form";
 import { ImageField } from "./menu-builder";
 import { cn } from "@/lib/cn";
@@ -15,23 +15,6 @@ const LABELS = {
   motion: { none: "Aus", subtle: "Dezent", lively: "Lebendig" },
   radius: { none: "Eckig", sm: "Klein", md: "Mittel", lg: "Groß", xl: "Rund" },
 } as const;
-
-/** A tiny, real rendering of a design (same CSS as the live page). */
-function Mini({ d, className }: { d: Design; className?: string }) {
-  return (
-    <div className={cn("pg relative isolate overflow-hidden bg-[var(--pg-bg)] text-[var(--pg-fg)]", className)} data-btn={d.button} data-card={d.card} data-bg={d.background} data-motion="none" style={designVars(d) as React.CSSProperties}>
-      <div className="pg-bgfx" />
-      <div className="relative z-10 flex h-full flex-col items-center px-3 pt-3">
-        <span className="size-7 rounded-full bg-[var(--accent)] ring-2 ring-[var(--pg-bg)]" />
-        <span className="pg-display mt-1 block max-w-full truncate px-1 !leading-[1.25]" style={{ fontSize: "calc(14px * var(--pg-display-scale))" }}>Café Mira</span>
-        <span className="mt-1 h-1 w-14 rounded-full bg-[var(--pg-muted)] opacity-50" />
-        <span className="pg-btn mt-2.5 !min-h-0 !py-1.5 !text-[8px]">Bestellen</span>
-        <span className="pg-card mt-1.5 flex h-5 w-full items-center gap-1.5 px-1.5"><span className="size-2.5 rounded-full bg-[var(--accent)] opacity-70" /><span className="h-1 flex-1 rounded-full bg-[var(--pg-muted)] opacity-40" /></span>
-        <span className="pg-card mt-1 flex h-5 w-full items-center gap-1.5 px-1.5"><span className="size-2.5 rounded-full bg-[var(--accent-2)]" /><span className="h-1 flex-1 rounded-full bg-[var(--pg-muted)] opacity-40" /></span>
-      </div>
-    </div>
-  );
-}
 
 function Chip({ active, onClick, children, className, title }: { active: boolean; onClick: () => void; children: React.ReactNode; className?: string; title?: string }) {
   return (
@@ -61,32 +44,15 @@ export function DesignEditor({ content, onChange }: { content: Record<string, un
     const p = presetById(id);
     onChange(compactDesign({ ...d, ...p, preset: p.id, bgImage: d.bgImage } as Design));
   };
-  const preset = presetById(d.preset);
   const customised = Object.keys(compactDesign(d)).length > 1;
 
   return (
     <div className="space-y-4">
-      <div className="-mx-1 grid grid-cols-3 gap-2 px-1 sm:grid-cols-4 lg:grid-cols-5">
-        {PRESETS.map((p) => {
-          const pd = resolveDesign({ design: { preset: p.id } });
-          const active = d.preset === p.id;
-          return (
-            <button key={p.id} type="button" onClick={() => pickPreset(p.id)} aria-pressed={active} title={p.mood} className={cn("group overflow-hidden rounded-2xl border text-left transition", active ? "border-brand ring-2 ring-brand/25" : "border-edge hover:-translate-y-0.5 hover:border-edge-strong")}>
-              <Mini d={active ? d : pd} className="h-[120px]" />
-              <span className="flex items-center gap-1 px-2 py-1.5">
-                <span className="min-w-0 flex-1 truncate text-[12px] font-bold">{p.name}</span>
-                {active && <Check className="size-3.5 shrink-0 text-brand" />}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
       <div className="rounded-2xl border border-edge bg-surface">
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center gap-3 px-4 py-3 text-left">
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold">Anpassen</span>
-            <span className="block truncate text-xs text-faint">{preset.name}{customised ? " · angepasst" : ""} · Farben, Schrift, Buttons, Hintergrund</span>
+            <span className="block text-sm font-bold">Farben, Schrift und Stil anpassen</span>
+            <span className="block truncate text-xs text-faint">{customised ? "Angepasst · " : ""}Farben, Schrift, Buttons, Hintergrund, Animation</span>
           </span>
           {customised && (
             <span role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); pickPreset(d.preset); }} onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); pickPreset(d.preset); } }} className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-dim hover:bg-hi/5 hover:text-fg">
