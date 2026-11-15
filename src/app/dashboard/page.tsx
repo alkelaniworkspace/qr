@@ -32,7 +32,7 @@ export default async function TodayPage() {
   const name = (profile?.full_name || user!.email.split("@")[0]).split(" ")[0];
   const weekday = new Intl.DateTimeFormat("de-DE", { weekday: "long", timeZone: "Europe/Berlin" }).format(new Date());
   const date = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", timeZone: "Europe/Berlin" }).format(new Date());
-  const pct = Math.min(100, Math.round((quota.used / quota.limit) * 100));
+  const pct = isFinite(quota.limit) ? Math.min(100, Math.round((quota.used / quota.limit) * 100)) : 0;
 
   return (
     <div className="animate-rise">
@@ -69,7 +69,7 @@ export default async function TodayPage() {
         </div>
         <div className="card p-5">
           <p className="text-sm font-semibold text-dim">Dynamische Codes</p>
-          <p className="mt-2 font-display text-5xl text-gold">{quota.used}<span className="text-2xl text-faint">/{quota.limit}</span></p>
+          <p className="mt-2 font-display text-5xl">{quota.used}<span className="text-2xl text-faint">/{isFinite(quota.limit) ? quota.limit : "∞"}</span></p>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-hi/[0.06]">
             <div className="h-full rounded-full bg-gold transition-all duration-700" style={{ width: `${pct}%` }} />
           </div>

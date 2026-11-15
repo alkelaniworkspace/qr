@@ -64,8 +64,10 @@ export function MenuPage({ c }: { c: C }) {
 
   // Keep the active pill in view inside the horizontal nav.
   useEffect(() => {
-    const pill = navRef.current?.querySelector<HTMLElement>(`[data-pill="${active}"]`);
-    pill?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    // Scroll only the pill bar, never the page.
+    const nav = navRef.current;
+    const pill = nav?.querySelector<HTMLElement>(`[data-pill="${active}"]`);
+    if (nav && pill) nav.scrollTo({ left: pill.offsetLeft - nav.clientWidth / 2 + pill.clientWidth / 2, behavior: "smooth" });
   }, [active]);
 
   const q = query.trim().toLowerCase();

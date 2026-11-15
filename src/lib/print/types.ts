@@ -53,12 +53,11 @@ export const POSTER_PALETTES: { name: string; bg: string; accent: string; text: 
   { name: "Qlick", bg: "#191919", accent: "#bdfb04", text: "#ffffff" },
   { name: "Lime", bg: "#bdfb04", accent: "#191919", text: "#191919" },
   { name: "Silver", bg: "#dfded7", accent: "#191919", text: "#191919" },
-  { name: "Ultraviolet", bg: "#ffffff", accent: "#5b3df5", text: "#0d0d1a" },
   { name: "Granat", bg: "#ffffff", accent: "#b3173a", text: "#1b0a10" },
   { name: "Bordeaux", bg: "#3b0e1a", accent: "#e9b949", text: "#fff7ec" },
   { name: "Marine", bg: "#10204d", accent: "#e9b949", text: "#ffffff" },
   { name: "Gold", bg: "#fbf4e2", accent: "#1f3c88", text: "#1a1a1a" },
-  { name: "Nacht", bg: "#0f1113", accent: "#22d3ee", text: "#f7f7f8" },
+  { name: "Nacht", bg: "#0f1113", accent: "#ffffff", text: "#f7f7f8" },
   { name: "Papier", bg: "#f4f1e8", accent: "#0f1113", text: "#0f1113" },
 ];
 

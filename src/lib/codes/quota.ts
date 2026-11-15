@@ -10,5 +10,6 @@ export async function getQuota(userId: string) {
   ]);
   const plan = planOf(profile?.plan);
   const used = count ?? 0;
-  return { plan, used, limit: PLANS[plan].dynamic, locked: used >= PLANS[plan].dynamic };
+  const limit: number = PLANS[plan].dynamic ?? Infinity;
+  return { plan, used, limit, locked: used >= limit };
 }
