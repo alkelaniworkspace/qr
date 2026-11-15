@@ -18,7 +18,8 @@ export interface ReviewLinkResult {
   url?: string;
   placeId?: string;
   name?: string;
-  method?: "direct" | "api" | "page";
+  /** direct/api/page: Google's write-review link. maps: Maps link that opens the review panel. profile: opens the business profile. */
+  method?: "direct" | "api" | "page" | "maps" | "profile";
   message?: string;
 }
 
@@ -53,8 +54,12 @@ function parse(url: string) {
   const at = u.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
   const d3 = u.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
   const coords = d3 ? { lat: Number(d3[1]), lng: Number(d3[2]) } : at ? { lat: Number(at[1]), lng: Number(at[2]) } : null;
-  const q = new URL(url).searchParams.get("q") ?? undefined;
-  return { id, name: name || q, coords };
+  const params = new URL(url).searchParams;
+  const q = params.get("q") ?? undefined;
+  // Feature id "0x…:0x…" appears as !1s… in /maps/place links and as ftid= in shared links.
+  const ftid = u.match(/!1s(0x[0-9a-f]+:0x[0-9a-f]+)/i)?.[1] ?? params.get("ftid")?.match(/^0x[0-9a-f]+:0x[0-9a-f]+$/i)?.[0];
+  const cid = params.get("cid")?.match(/^\d{5,25}$/)?.[0];
+  return { id, name: name || q?.split(",")[0], coords, ftid, cid };
 }
 
 async function viaApi(name: string, coords: { lat: number; lng: number } | null, key: string) {
@@ -75,8 +80,8 @@ async function viaApi(name: string, coords: { lat: number; lng: number } | null,
 }
 
 async function viaPage(url: string) {
-  const res = await fetch(url, { headers: { "user-agent": UA, cookie: CONSENT, "accept-language": "de-DE,de;q=0.9" }, signal: AbortSignal.timeout(8000) });
-  if (!res.ok) return null;
+  const res = await fetch(url, { headers: { "user-agent": UA, cookie: CONSENT, "accept-language": "de-DE,de;q=0.9" }, signal: AbortSignal.timeout(8000) }).catch(() => null);
+  if (!res?.ok) return null;
   const html = await res.text();
   const counts = new Map<string, number>();
   for (const m of html.matchAll(/ChIJ[A-Za-z0-9_-]{23}/g)) counts.set(m[0], (counts.get(m[0]) ?? 0) + 1);
@@ -94,7 +99,7 @@ export async function resolveReviewLink(input: string): Promise<ReviewLinkResult
   } catch {
     return { ok: false, message: "Das ist kein gültiger Link." };
   }
-  if (!isGoogleHost(url.hostname)) return { ok: false, message: "Bitte einen Link aus Google Maps einfügen." };
+  if (!isGoogleHost(url.hostname) && !/^maps\.google\./.test(url.hostname)) return { ok: false, message: "Bitte einen Link aus Google Maps einfügen." };
   if (url.hostname === "search.google.com" && url.pathname.includes("writereview")) return { ok: true, url: url.toString(), method: "direct" };
 
   try {
@@ -111,8 +116,16 @@ export async function resolveReviewLink(input: string): Promise<ReviewLinkResult
     const fromPage = await viaPage(full);
     if (fromPage) return { ok: true, url: writeReview(fromPage), placeId: fromPage, name: info.name, method: "page" };
 
-    return { ok: false, name: info.name, message: "Ort nicht eindeutig erkannt. Öffne dein Geschäft in Google Maps, tippe auf „Teilen“ und füge diesen Link ein." };
+    // No place id available: Google Maps opens the place with the review panel (!12e1).
+    if (info.ftid) return { ok: true, url: `https://www.google.com/maps/place/data=!4m3!3m2!1s${info.ftid}!12e1`, name: info.name, method: "maps" };
+    if (info.cid) return { ok: true, url: `https://www.google.com/maps?cid=${info.cid}`, name: info.name, method: "profile" };
+    if (info.name) {
+      const q = encodeURIComponent([info.name, info.coords ? `${info.coords.lat},${info.coords.lng}` : ""].filter(Boolean).join(" "));
+      return { ok: true, url: `https://www.google.com/maps/search/?api=1&query=${q}`, name: info.name, method: "profile" };
+    }
+    return { ok: false, message: "Dieser Link zeigt auf keinen Ort. Öffne dein Geschäft in Google Maps und kopiere den Link aus der Adresszeile oder über „Teilen“." };
   } catch {
-    return { ok: false, message: "Google Maps ist gerade nicht erreichbar. Bitte gleich noch einmal versuchen." };
+    // Expansion failed (network): the original link still opens the business in Maps.
+    return { ok: true, url: url.toString(), method: "profile" };
   }
 }

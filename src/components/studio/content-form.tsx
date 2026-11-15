@@ -326,18 +326,19 @@ function ThemePicker({ value, onChange }: { value: string; onChange: (v: string)
 // ───────── Google review link ─────────
 function ReviewLinkField({ value, hint, onChange }: { value: string; hint?: string; onChange: (url: string, name?: string) => void }) {
   const [input, setInput] = useState(value);
-  const [state, setState] = useState<{ busy: boolean; error?: string; name?: string }>({ busy: false });
-  const resolved = value.startsWith("https://search.google.com/local/writereview");
+  const [state, setState] = useState<{ busy: boolean; error?: string; name?: string; method?: string }>({ busy: false });
+  const resolved = !!value && !state.busy;
+  const direct = value.startsWith("https://search.google.com/local/writereview");
 
-  async function resolve() {
-    if (!input.trim()) return setState({ busy: false, error: "Bitte zuerst einen Link einfügen" });
+  async function resolve(raw = input) {
+    if (!raw.trim()) return setState({ busy: false, error: "Bitte zuerst einen Link einfügen" });
     setState({ busy: true });
     try {
-      const res = await fetch("/api/review-link", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url: input.trim() }) });
-      const data = (await res.json()) as { ok: boolean; url?: string; name?: string; message?: string };
+      const res = await fetch("/api/review-link", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url: raw.trim() }) });
+      const data = (await res.json()) as { ok: boolean; url?: string; name?: string; message?: string; method?: string };
       if (data.ok && data.url) {
         onChange(data.url, data.name);
-        setState({ busy: false, name: data.name });
+        setState({ busy: false, name: data.name, method: data.method });
       } else setState({ busy: false, error: data.message ?? "Link konnte nicht erkannt werden" });
     } catch {
       setState({ busy: false, error: "Keine Verbindung. Bitte erneut versuchen." });
@@ -347,8 +348,17 @@ function ReviewLinkField({ value, hint, onChange }: { value: string; hint?: stri
   return (
     <div>
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Input value={input} placeholder="https://maps.app.goo.gl/…" onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), resolve())} />
-        <Button type="button" onClick={resolve} disabled={state.busy} className="shrink-0">
+        <Input
+          value={input}
+          placeholder="https://maps.app.goo.gl/… oder Link aus der Adresszeile"
+          onChange={(e) => setInput(e.target.value)}
+          onPaste={(e) => {
+            const pasted = e.clipboardData.getData("text");
+            if (pasted) setTimeout(() => resolve(pasted), 0);
+          }}
+          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), resolve())}
+        />
+        <Button type="button" onClick={() => resolve()} disabled={state.busy} className="shrink-0">
           {state.busy ? <Loader2 className="size-4 animate-spin" /> : <Star className="size-4" />} Link erzeugen
         </Button>
       </div>
@@ -357,7 +367,8 @@ function ReviewLinkField({ value, hint, onChange }: { value: string; hint?: stri
         <div className="mt-3 flex items-start gap-3 rounded-2xl border border-mint/30 bg-mint/10 p-3.5 text-sm">
           <Check className="mt-0.5 size-4 shrink-0 text-mint" />
           <div className="min-w-0">
-            <p className="font-bold text-mint">Bewertungs-Link bereit{state.name ? ` für ${state.name}` : ""}</p>
+            <p className="font-bold text-mint">{direct || state.method === "maps" ? "Bewertungs-Link bereit" : "Link zu deinem Google-Profil bereit"}{state.name ? ` für ${state.name}` : ""}</p>
+            {!direct && <p className="mt-0.5 text-xs text-dim">{state.method === "maps" ? "Öffnet dein Geschäft in Google Maps direkt bei den Bewertungen." : "Öffnet dein Geschäft in Google Maps. Für das direkte Bewertungsfenster kann der Betreiber einen Google-Maps-API-Schlüssel hinterlegen."}</p>}
             <a href={value} target="_blank" rel="noreferrer" className="mt-0.5 block truncate font-mono text-xs text-dim hover:text-fg">{value}</a>
           </div>
         </div>
