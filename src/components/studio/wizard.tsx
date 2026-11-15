@@ -18,6 +18,8 @@ import { ContentForm } from "./content-form";
 import { DesignPanel } from "./design-panel";
 import { Preview } from "./preview";
 import { PrintStudio } from "@/components/print/print-studio";
+import { StickerStudio } from "@/components/print/sticker-studio";
+import { MotionStudio } from "@/components/print/motion-studio";
 import { HostedPage } from "@/components/pages/hosted-pages";
 import { TypeIcon } from "@/components/type-icon";
 import { Button } from "@/components/ui/button";
@@ -154,6 +156,7 @@ function WizardEditor({ init }: { init: Init }) {
   const [saved, setSaved] = useState<"idle" | "ok" | "error">("idle");
   const [saveMsg, setSaveMsg] = useState("");
   const [copied, setCopied] = useState<"page" | "edit" | null>(null);
+  const [output, setOutput] = useState<"print" | "sticker" | "motion">("print");
   const [mode, setMode] = useState<Mode>(init.mode);
   const [slug, setSlug] = useState(init.slug);
   const [token, setToken] = useState<string | null>(init.token);
@@ -547,7 +550,16 @@ function WizardEditor({ init }: { init: Init }) {
 
           <div className="mt-6 grid gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0">
-              <PrintStudio settings={posterSettings} onChange={setPoster} qrSvg={posterQr} name={name || def.label} />
+              <div className="mb-5 inline-flex rounded-full border border-edge bg-hi/5 p-1 text-sm font-semibold">
+                {([["print", "Poster & Druck"], ["sticker", "Sticker"], ["motion", "Animation & Video"]] as const).map(([k, label]) => (
+                  <button key={k} type="button" onClick={() => setOutput(k)} className={cn("rounded-full px-4 py-2 transition", output === k ? "bg-brand text-on-brand" : "text-dim hover:text-fg")}>
+                    {label}{k === "motion" && <span className="badge ml-1.5 bg-lime text-night">Neu</span>}
+                  </button>
+                ))}
+              </div>
+              {output === "print" && <PrintStudio settings={posterSettings} onChange={setPoster} qrSvg={posterQr} name={name || def.label} />}
+              {output === "sticker" && <StickerStudio qrSvg={posterQr} name={name || def.label} defaults={{ text: posterSettings.cta || "SCAN MICH", bg: "#191919", fg: "#ffffff", accent: "#bdfb04" }} />}
+              {output === "motion" && <MotionStudio qrSvg={posterQr} name={name || def.label} defaults={{ headline: posterSettings.headline, sub: posterSettings.subline, cta: posterSettings.cta, footer: posterSettings.footer, bg: "#191919", fg: "#ffffff", accent: "#bdfb04" }} />}
             </div>
             <aside className="grid gap-4 sm:grid-cols-2 2xl:block 2xl:space-y-4 2xl:sticky 2xl:top-40 2xl:self-start">
               <Preview svg={svg} data={data} style={style} name={name || def.label} />
