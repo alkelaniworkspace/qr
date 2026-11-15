@@ -1,15 +1,18 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Copy, ExternalLink, Info, PenLine, Printer, Palette, Save, Shapes, TriangleAlert } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Copy, ExternalLink, Infinity as InfinityIcon, KeyRound, Loader2, Lock, PenLine, Printer, Palette, RefreshCw, Save, Shapes, ShieldCheck, TriangleAlert } from "lucide-react";
 import { CODE_TYPES, TYPE_ORDER, validateContent, type CodeTypeId } from "@/lib/codes/types";
 import { staticPayload } from "@/lib/codes/payload";
 import { renderQrSvg } from "@/lib/qr/render";
 import { DEFAULT_STYLE, normalizeStyle, type QrStyle } from "@/lib/qr/style";
 import { defaultPoster, type PosterSettings } from "@/lib/print/types";
-import { getLocalCode, saveLocalCode } from "@/lib/codes/local-store";
+import { getLocalCode, listLocalCodes, saveLocalCode } from "@/lib/codes/local-store";
+import { newSlug } from "@/lib/codes/slug";
+import { env, shortLink, supabaseConfigured } from "@/lib/env";
+import { loadGuestCode, publishGuestCode } from "@/app/studio/actions";
 import { ContentForm } from "./content-form";
 import { DesignPanel } from "./design-panel";
 import { Preview } from "./preview";
@@ -52,13 +55,27 @@ interface Init {
   style: QrStyle;
   poster: PosterSettings | null;
   editing: boolean;
+  mode: Mode;
+  slug: string;
+  /** set once the dynamic code exists on the server */
+  token: string | null;
+}
+
+type Mode = "dynamic" | "static";
+const DEFAULT_MODE: Mode = supabaseConfigured ? "dynamic" : "static";
+
+export function editLink(slug: string, token: string) {
+  return `${env.appUrl}/studio?code=${slug}#k=${token}`;
 }
 
 function loadInit(editId: string | null, startType: string | null, startStep: Step): Init {
-  const base: Init = { step: 1, reached: 1, id: newId(), type: "url", name: "", content: structuredClone(CODE_TYPES.url.defaults), style: normalizeStyle(DEFAULT_STYLE), poster: null, editing: false };
+  const base: Init = { step: 1, reached: 1, id: newId(), type: "url", name: "", content: structuredClone(CODE_TYPES.url.defaults), style: normalizeStyle(DEFAULT_STYLE), poster: null, editing: false, mode: DEFAULT_MODE, slug: newSlug(), token: null };
   const c = editId ? getLocalCode(editId) : null;
   if (c) {
-    return { step: startStep, reached: 4, id: c.id, createdAt: c.createdAt, type: c.type, name: c.name, content: c.content, style: normalizeStyle(c.style), poster: c.poster ?? null, editing: true };
+    return {
+      step: startStep, reached: 4, id: c.id, createdAt: c.createdAt, type: c.type, name: c.name, content: c.content, style: normalizeStyle(c.style),
+      poster: c.poster ?? null, editing: true, mode: c.dynamic ? "dynamic" : "static", slug: c.dynamic?.slug ?? newSlug(), token: c.dynamic?.token ?? null,
+    };
   }
   if (startType && startType in CODE_TYPES) {
     const t = startType as CodeTypeId;
@@ -76,8 +93,50 @@ export function Wizard() {
   const editId = params.get("edit");
   const startType = params.get("type");
   const startStep: Step = params.get("step") === "4" ? 4 : 2;
+  const remote = params.get("code");
   if (!client) return <div className="mx-auto h-[70vh] w-full max-w-[1600px]" />;
+  if (remote) return <RemoteWizard key={remote} slug={remote} />;
   return <WizardEditor key={`${editId ?? ""}|${startType ?? ""}`} init={loadInit(editId, startType, startStep)} />;
+}
+
+/** Opens a dynamic code from its private edit link (/studio?code=slug#k=token). */
+function RemoteWizard({ slug }: { slug: string }) {
+  const [state, setState] = useState<{ init: Init } | { error: string } | null>(null);
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.hash.slice(1)).get("k") ?? "";
+    let alive = true;
+    loadGuestCode(slug, token).then((code) => {
+      if (!alive) return;
+      if (!code) return setState({ error: "Dieser Bearbeitungs-Link ist ungültig oder unvollständig." });
+      const local = listLocalCodes().find((c) => c.dynamic?.slug === slug);
+      const init: Init = {
+        step: 2, reached: 4, id: local?.id ?? newId(), createdAt: local?.createdAt, type: code.type, name: code.name, content: code.content,
+        style: normalizeStyle(code.style), poster: local?.poster ?? null, editing: true, mode: "dynamic", slug, token,
+      };
+      // Remember it in this browser too, so it shows up under "Meine Codes".
+      try {
+        saveLocalCode({ id: init.id, name: code.name, type: code.type, content: code.content, style: code.style, poster: local?.poster, dynamic: { slug, token }, createdAt: local?.createdAt });
+      } catch {
+        // storage full: editing still works
+      }
+      setState({ init });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [slug]);
+  if (!state) return <div className="mx-auto grid h-[60vh] w-full max-w-[1600px] place-items-center text-dim"><Loader2 className="size-6 animate-spin" /></div>;
+  if ("error" in state) {
+    return (
+      <div className="card mx-auto mt-16 max-w-lg p-8 text-center">
+        <Lock className="mx-auto size-8 text-brand" />
+        <p className="mt-4 font-display text-2xl uppercase">Kein Zugriff</p>
+        <p className="mt-2 text-dim">{state.error} Öffne den vollständigen Link, den du beim Erstellen bekommen hast.</p>
+        <Link href="/studio" className="mt-6 inline-block font-semibold text-brand hover:underline">Neuen Code erstellen</Link>
+      </div>
+    );
+  }
+  return <WizardEditor init={state.init} />;
 }
 
 function WizardEditor({ init }: { init: Init }) {
@@ -93,10 +152,20 @@ function WizardEditor({ init }: { init: Init }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState<"idle" | "ok" | "error">("idle");
   const [saveMsg, setSaveMsg] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"page" | "edit" | null>(null);
+  const [mode, setMode] = useState<Mode>(init.mode);
+  const [slug, setSlug] = useState(init.slug);
+  const [token, setToken] = useState<string | null>(init.token);
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const signature = JSON.stringify([name, type, content, style]);
+  const [publishedSig, setPublishedSig] = useState<string | null>(init.token ? signature : null);
+  const live = mode === "dynamic" && !!token;
+  const dirty = live && publishedSig !== signature;
+  const locked = mode === "dynamic" && !!init.token; // printed already: stays dynamic
 
   const def = CODE_TYPES[type];
-  const data = useMemo(() => staticPayload(type, content, name || undefined), [type, content, name]);
+  const data = useMemo(() => (mode === "dynamic" ? shortLink(slug) : staticPayload(type, content, name || undefined)), [mode, slug, type, content, name]);
   const tooLong = data.length > MAX_AT;
   const svg = useMemo(() => {
     if (tooLong) return "";
@@ -150,10 +219,60 @@ function WizardEditor({ init }: { init: Init }) {
     go(3);
   }
 
+  const displayName = name || String(content.business ?? content.name ?? content.title ?? "").trim() || def.label;
+
+  async function publish(): Promise<boolean> {
+    setPublishing(true);
+    setPublishError(null);
+    let currentSlug = slug;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const res = await publishGuestCode({ slug: currentSlug, token: token ?? undefined, name: displayName, type, content, style });
+      if (res.ok) {
+        setToken(res.token);
+        setSlug(res.slug);
+        setPublishedSig(signature);
+        setPublishing(false);
+        try {
+          const c = saveLocalCode({ id, name: displayName, type, content, style, poster: posterSettings, dynamic: { slug: res.slug, token: res.token }, createdAt });
+          setCreatedAt(c.createdAt);
+        } catch {
+          // ignore: the server copy is what counts
+        }
+        return true;
+      }
+      if (res.message === "SLUG_TAKEN" && !token) {
+        currentSlug = newSlug();
+        setSlug(currentSlug);
+        continue;
+      }
+      setPublishing(false);
+      setPublishError(res.message);
+      if (res.fieldErrors) {
+        setErrors(res.fieldErrors);
+        go(2);
+      }
+      return false;
+    }
+    setPublishing(false);
+    setPublishError("Speichern fehlgeschlagen. Bitte erneut versuchen.");
+    return false;
+  }
+
+  function toPrint() {
+    go(4);
+    if (mode === "dynamic" && (!token || dirty)) void publish();
+  }
+
   function save() {
+    if (mode === "dynamic") {
+      void publish().then((ok) => {
+        setSaved(ok ? "ok" : "error");
+        setSaveMsg(ok ? "Veröffentlicht. Gedruckte Codes zeigen sofort den neuen Stand." : "Speichern fehlgeschlagen.");
+      });
+      return;
+    }
     try {
-      const fallback = String(content.business ?? content.name ?? content.title ?? "").trim();
-      const c = saveLocalCode({ id, name: name || fallback || def.label, type, content, style, poster: posterSettings, createdAt });
+      const c = saveLocalCode({ id, name: displayName, type, content, style, poster: posterSettings, createdAt });
       setCreatedAt(c.createdAt);
       setSaved("ok");
       setSaveMsg("In „Meine Codes“ gespeichert. Nur in diesem Browser.");
@@ -163,13 +282,26 @@ function WizardEditor({ init }: { init: Init }) {
     }
   }
 
-  async function copyLink() {
-    await navigator.clipboard.writeText(data).catch(() => undefined);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+  async function copy(text: string, what: "page" | "edit") {
+    await navigator.clipboard.writeText(text).catch(() => undefined);
+    setCopied(what);
+    setTimeout(() => setCopied(null), 1500);
   }
 
+  // Keep the poster copy in sync locally when the dynamic code is already live.
+  const posterRef = useRef(poster);
+  useEffect(() => {
+    if (!live || posterRef.current === poster) return;
+    posterRef.current = poster;
+    try {
+      saveLocalCode({ id, name: displayName, type, content, style, poster: posterSettings, dynamic: { slug, token: token! }, createdAt });
+    } catch {
+      // ignore
+    }
+  }, [poster, live, id, displayName, type, content, style, posterSettings, slug, token, createdAt]);
+
   const canOpen = (s: Step) => s <= reached || (s === 2 && step === 1);
+  const stepClick = (s: Step) => (s === 3 && step === 2 ? nextFromContent() : s === 4 ? toPrint() : go(s));
 
   return (
     <div className="mx-auto w-full max-w-[1600px]">
@@ -184,7 +316,7 @@ function WizardEditor({ init }: { init: Init }) {
               <button
                 type="button"
                 disabled={!canOpen(s.id as Step)}
-                onClick={() => (s.id === 3 && step === 2 ? nextFromContent() : go(s.id as Step))}
+                onClick={() => stepClick(s.id as Step)}
                 className={cn(
                   "flex w-full min-w-0 items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition",
                   active ? "border-brand bg-brand/15 shadow-[0_0_24px_-8px_rgb(var(--glow)/0.9)]" : done ? "border-edge bg-surface hover:border-hi/25" : "border-transparent opacity-50",
@@ -211,6 +343,12 @@ function WizardEditor({ init }: { init: Init }) {
             Was soll dein Code <span className="text-brand glow-text">können?</span>
           </h1>
           <p className="mt-3 max-w-2xl text-dim">Wähle einen Typ. Du kommst automatisch zum nächsten Schritt. Kein Konto nötig.</p>
+          {live && (
+            <p className="mt-5 flex max-w-3xl gap-2.5 rounded-2xl border border-mint/30 bg-mint/10 px-4 py-3 text-sm text-fg">
+              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-mint" />
+              <span>Du kannst den Typ wechseln, zum Beispiel von Website zu Speisekarte. Dein gedruckter Code bleibt exakt gleich und zeigt nach dem Veröffentlichen den neuen Inhalt.</span>
+            </p>
+          )}
           {GROUPS.map((group, gi) => (
             <section key={group.id} className="mt-10">
               <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -276,12 +414,7 @@ function WizardEditor({ init }: { init: Init }) {
 
             {step === 2 ? (
               <div className="mt-8">
-                {def.hostedPage && (
-                  <p className="mb-4 flex gap-2.5 rounded-2xl border border-cyan/25 bg-cyan/10 px-4 py-3 text-sm text-dim">
-                    <Info className="mt-0.5 size-4 shrink-0 text-cyan" />
-                    <span>Die Handy-Seite steckt komplett im Code. Kein Konto, kein Server, sie funktioniert für immer. Rechts siehst du sie live.</span>
-                  </p>
-                )}
+                <ModeSwitch mode={mode} onChange={setMode} locked={locked} />
                 <div className="card p-5 sm:p-7">
                   <ContentForm fields={def.fields} value={content} errors={errors} onChange={setContent} />
                 </div>
@@ -308,7 +441,7 @@ function WizardEditor({ init }: { init: Init }) {
                 <DesignPanel style={style} onChange={setStyle} data={data} />
                 <div className="mt-6 flex flex-wrap justify-between gap-3">
                   <Button type="button" variant="ghost" onClick={() => go(2)}><ArrowLeft className="size-4" /> Inhalt</Button>
-                  <Button type="button" size="lg" onClick={() => go(4)} className="shine">Weiter zu Druck & Download <ArrowRight className="size-4" /></Button>
+                  <Button type="button" size="lg" onClick={toPrint} className="shine">{mode === "dynamic" && !token ? "Code aktivieren & drucken" : "Weiter zu Druck & Download"} <ArrowRight className="size-4" /></Button>
                 </div>
               </div>
             )}
@@ -325,7 +458,29 @@ function WizardEditor({ init }: { init: Init }) {
       )}
 
       {/* ───── Step 4: print + download ───── */}
-      {step === 4 && svg && (
+      {step === 4 && svg && mode === "dynamic" && !token && (
+        <div className="card mx-auto mt-10 max-w-xl p-10 text-center">
+          {publishing ? (
+            <>
+              <Loader2 className="mx-auto size-8 animate-spin text-brand" />
+              <p className="mt-4 font-display text-2xl uppercase">Code wird aktiviert</p>
+              <p className="mt-2 text-dim">Einen Moment. Danach gehört dieser Link für immer dir.</p>
+            </>
+          ) : (
+            <>
+              <TriangleAlert className="mx-auto size-8 text-rose" />
+              <p className="mt-4 font-display text-2xl uppercase">Nicht aktiviert</p>
+              <p className="mt-2 text-dim">{publishError ?? "Bitte erneut versuchen."}</p>
+              <div className="mt-6 flex justify-center gap-2">
+                <Button type="button" onClick={() => void publish()}><RefreshCw className="size-4" /> Erneut versuchen</Button>
+                <Button type="button" variant="ghost" onClick={() => { setMode("static"); }}>Statisch weiter</Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {step === 4 && svg && (mode === "static" || !!token) && (
         <div className="animate-rise">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -336,9 +491,18 @@ function WizardEditor({ init }: { init: Init }) {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="ghost" onClick={() => go(3)}><ArrowLeft className="size-4" /> Design</Button>
-              <Button type="button" variant="secondary" onClick={save}><Save className="size-4" /> {saved === "ok" ? "Gespeichert" : "Speichern"}</Button>
+              {mode === "dynamic" ? (
+                <Button type="button" variant={dirty ? "primary" : "secondary"} onClick={save} disabled={publishing || !dirty}>
+                  {publishing ? <Loader2 className="size-4 animate-spin" /> : dirty ? <RefreshCw className="size-4" /> : <Check className="size-4" />}
+                  {dirty ? "Änderungen veröffentlichen" : "Live"}
+                </Button>
+              ) : (
+                <Button type="button" variant="secondary" onClick={save}><Save className="size-4" /> {saved === "ok" ? "Gespeichert" : "Speichern"}</Button>
+              )}
             </div>
           </div>
+          {live && token && <EditLinkCard slug={slug} token={token} copied={copied === "edit"} onCopy={() => copy(editLink(slug, token), "edit")} dirty={dirty} />}
+          {publishError && mode === "dynamic" && token && <p className="mt-4 rounded-xl border border-rose/30 bg-rose/10 px-4 py-2.5 text-sm font-semibold text-rose">{publishError}</p>}
           {saved !== "idle" && (
             <p className={cn("mt-4 rounded-xl border px-4 py-2.5 text-sm font-semibold", saved === "ok" ? "border-mint/30 bg-mint/10 text-mint" : "border-rose/30 bg-rose/10 text-rose")}>
               {saveMsg} {saved === "ok" && <Link href="/codes" className="underline">Meine Codes öffnen</Link>}
@@ -351,12 +515,13 @@ function WizardEditor({ init }: { init: Init }) {
             </div>
             <aside className="grid gap-4 sm:grid-cols-2 2xl:block 2xl:space-y-4 2xl:sticky 2xl:top-40 2xl:self-start">
               <Preview svg={svg} data={data} style={style} name={name || def.label} />
-              {isPageLink && (
+              {(isPageLink || live) && (
                 <div className="card p-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-faint">Link der Handy-Seite</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-faint">{live ? "Link im Code" : "Link der Handy-Seite"}</p>
+                  {live && <p className="mt-2 break-all font-mono text-sm text-fg">{data.replace(/^https?:\/\//, "")}</p>}
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     <a href={data} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold uppercase text-dim hover:border-hi/25 hover:text-fg"><ExternalLink className="size-4" /> Öffnen</a>
-                    <button type="button" onClick={copyLink} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold uppercase text-dim hover:border-hi/25 hover:text-fg">{copied ? <Check className="size-4 text-mint" /> : <Copy className="size-4" />} Kopieren</button>
+                    <button type="button" onClick={() => copy(data, "page")} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold uppercase text-dim hover:border-hi/25 hover:text-fg">{copied === "page" ? <Check className="size-4 text-mint" /> : <Copy className="size-4" />} Kopieren</button>
                   </div>
                 </div>
               )}
@@ -364,6 +529,54 @@ function WizardEditor({ init }: { init: Init }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ModeSwitch({ mode, onChange, locked }: { mode: Mode; onChange: (m: Mode) => void; locked: boolean }) {
+  if (locked) {
+    return (
+      <p className="mb-5 flex gap-2.5 rounded-2xl border border-mint/30 bg-mint/10 px-4 py-3 text-sm text-fg">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-mint" />
+        <span><b>Dynamischer Code.</b> Was du hier änderst, erscheint nach dem Veröffentlichen sofort hinter deinem gedruckten Code. Der Code selbst ändert sich nie.</span>
+      </p>
+    );
+  }
+  const options = [
+    { id: "dynamic" as const, title: "Dynamisch", badge: "Empfohlen", icon: ShieldCheck, text: "Der Code bleibt für immer gleich. Inhalt, Typ und Seite jederzeit ändern, ohne neu zu drucken. Mit Bildern und großen Karten.", disabled: !supabaseConfigured },
+    { id: "static" as const, title: "Statisch", badge: "Offline", icon: InfinityIcon, text: "Inhalt steckt direkt im Code. Jede Änderung ergibt einen neuen Code. Gut für WLAN, Kontakt und kurze Texte.", disabled: false },
+  ];
+  return (
+    <div className="mb-5 grid gap-3 sm:grid-cols-2">
+      {options.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          disabled={o.disabled}
+          onClick={() => onChange(o.id)}
+          className={cn("card p-4 text-left transition disabled:opacity-40", mode === o.id ? "card-glow" : "hover:border-hi/25")}
+        >
+          <span className="flex items-center gap-2 font-display text-base uppercase">
+            <o.icon className={cn("size-4", mode === o.id ? "text-brand" : "text-faint")} /> {o.title}
+            <span className={cn("badge", o.id === "dynamic" ? "bg-brand text-on-brand" : "bg-hi/10 text-dim")}>{o.badge}</span>
+          </span>
+          <span className="mt-1.5 block text-xs leading-relaxed text-dim">{o.text}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function EditLinkCard({ slug, token, copied, onCopy, dirty }: { slug: string; token: string; copied: boolean; onCopy: () => void; dirty: boolean }) {
+  return (
+    <div className="mt-5 grid gap-4 rounded-2xl border border-gold/35 bg-gold/[0.07] p-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
+      <span className="grid size-11 place-items-center rounded-xl bg-gold text-night"><KeyRound className="size-5" /></span>
+      <div className="min-w-0">
+        <p className="font-bold">Dein privater Bearbeitungs-Link {dirty && <span className="badge ml-1 bg-gold text-night">Ungespeichert</span>}</p>
+        <p className="mt-0.5 text-xs text-dim">Wer diesen Link hat, kann den Inhalt ändern. Speichere ihn gut, zum Beispiel per E-Mail an dich selbst. Der Code ist in „Meine Codes“ in diesem Browser gemerkt.</p>
+        <p className="mt-1.5 truncate font-mono text-xs text-faint">{editLink(slug, token).replace(/#k=.*/, "#k=••••••••")}</p>
+      </div>
+      <Button type="button" variant="secondary" onClick={onCopy}>{copied ? <Check className="size-4 text-mint" /> : <Copy className="size-4" />} Link kopieren</Button>
     </div>
   );
 }

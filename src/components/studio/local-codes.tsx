@@ -8,13 +8,15 @@ import { CODE_TYPES } from "@/lib/codes/types";
 import { staticPayload } from "@/lib/codes/payload";
 import { renderQrSvg } from "@/lib/qr/render";
 import { normalizeStyle } from "@/lib/qr/style";
+import { shortLink } from "@/lib/env";
 import { downloadPng } from "@/lib/qr/export";
 import { ButtonLink } from "@/components/ui/button";
 import { TypeIcon } from "@/components/type-icon";
 
 function svgFor(c: LocalCode, size: number) {
   try {
-    return renderQrSvg(staticPayload(c.type, c.content, c.name), normalizeStyle(c.style), { size, id: `l${c.id}` });
+    const data = c.dynamic ? shortLink(c.dynamic.slug) : staticPayload(c.type, c.content, c.name);
+    return renderQrSvg(data, normalizeStyle(c.style), { size, id: `l${c.id}` });
   } catch {
     return "";
   }
@@ -68,7 +70,7 @@ export function LocalCodes() {
                   <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-elevated text-brand"><TypeIcon name={def.icon} className="size-4" /></span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold">{c.name}</p>
-                    <p className="text-xs text-faint">{def.label} · {new Date(c.updatedAt).toLocaleDateString("de-DE")}</p>
+                    <p className="flex items-center gap-1.5 text-xs text-faint">{c.dynamic ? <span className="badge bg-brand text-on-brand">Dynamisch</span> : <span className="badge bg-hi/10 text-dim">Statisch</span>} {def.label} · {new Date(c.updatedAt).toLocaleDateString("de-DE")}</p>
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-4 gap-1.5">

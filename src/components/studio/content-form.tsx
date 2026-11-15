@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { ArrowDown, ArrowUp, Check, FileUp, GripVertical, Loader2, Moon, Palette, Plus, Star, Sun, Trash2 } from "lucide-react";
-import type { Field } from "@/lib/codes/types";
+import type { Field, MenuSectionData } from "@/lib/codes/types";
 import { FieldShell, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
+import { ImageField, LayoutPicker, MenuBuilder } from "./menu-builder";
 
 type Content = Record<string, unknown>;
 type Errors = Record<string, string>;
@@ -71,7 +72,8 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
           case "menu":
             return (
               <div key={field.name} className="col-span-2">
-                <MenuEditor value={(value[field.name] as MenuSection[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
+                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-dim">{field.label}</p>
+                <MenuBuilder value={(value[field.name] as MenuSectionData[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
                 {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}
               </div>
             );
@@ -79,6 +81,18 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
             return (
               <FieldShell key={field.name} label={field.label + " *"} error={error} className="col-span-2">
                 <ReviewLinkField value={str(value[field.name])} hint={field.hint} onChange={(url, name) => onChange({ ...value, [field.name]: url, ...(name && !str(value.business) ? { business: name } : {}) })} />
+              </FieldShell>
+            );
+          case "image":
+            return (
+              <FieldShell key={field.name} label={field.label} hint={field.hint} className={field.shape === "wide" ? "col-span-2 sm:col-span-1" : "col-span-1"}>
+                <ImageField value={str(value[field.name])} shape={field.shape} onChange={(v) => set(field.name, v)} className={field.shape === "wide" ? "" : "max-w-[140px]"} />
+              </FieldShell>
+            );
+          case "layout":
+            return (
+              <FieldShell key={field.name} label={field.label} className="col-span-2">
+                <LayoutPicker value={str(value[field.name]) || "cards"} onChange={(v) => set(field.name, v)} />
               </FieldShell>
             );
           case "theme":
@@ -212,64 +226,6 @@ function RowActions({ onUp, onDown, onRemove }: { onUp: () => void; onDown: () =
       <button type="button" className={btn} onClick={onUp} aria-label="Nach oben"><ArrowUp className="size-4" /></button>
       <button type="button" className={btn} onClick={onDown} aria-label="Nach unten"><ArrowDown className="size-4" /></button>
       <button type="button" className={cn(btn, "hover:text-rose")} onClick={onRemove} aria-label="Entfernen"><Trash2 className="size-4" /></button>
-    </div>
-  );
-}
-
-// ───────── Menu ─────────
-type MenuItem = { name: string; description: string; price: string; tags: string };
-type MenuSection = { title: string; items: MenuItem[] };
-const emptyItem = (): MenuItem => ({ name: "", description: "", price: "", tags: "" });
-
-function MenuEditor({ value, onChange, errors, prefix }: { value: MenuSection[]; onChange: (v: MenuSection[]) => void; errors: Errors; prefix: string }) {
-  const setSection = (i: number, s: MenuSection) => onChange(value.map((x, k) => (k === i ? s : x)));
-  return (
-    <div className="space-y-4">
-      {value.map((section, i) => (
-        <div key={i} className="rounded-2xl border border-edge bg-surface">
-          <div className="flex items-center gap-2 border-b border-edge p-3">
-            <Input
-              value={section.title}
-              placeholder="Kategorie, z. B. Hauptgerichte"
-              className="border-transparent bg-transparent font-display uppercase"
-              aria-invalid={!!errors[`${prefix}.${i}.title`]}
-              onChange={(e) => setSection(i, { ...section, title: e.target.value })}
-            />
-            <RowActions onUp={() => onChange(move(value, i, -1))} onDown={() => onChange(move(value, i, 1))} onRemove={() => onChange(value.filter((_, k) => k !== i))} />
-          </div>
-          <div className="divide-y divide-edge">
-            {section.items.map((item, j) => {
-              const setItem = (patch: Partial<MenuItem>) =>
-                setSection(i, { ...section, items: section.items.map((x, k) => (k === j ? { ...x, ...patch } : x)) });
-              const err = errors[`${prefix}.${i}.items.${j}.name`];
-              return (
-                <div key={j} className="flex items-start gap-2 p-3">
-                  <div className="grid flex-1 grid-cols-[1fr_96px] gap-2">
-                    <Input value={item.name} placeholder="Gericht" aria-invalid={!!err} onChange={(e) => setItem({ name: e.target.value })} />
-                    <Input value={item.price} placeholder="12,90" inputMode="decimal" onChange={(e) => setItem({ price: e.target.value })} />
-                    <Input className="col-span-2" value={item.description} placeholder="Beschreibung (optional)" onChange={(e) => setItem({ description: e.target.value })} />
-                    <Input className="col-span-2" value={item.tags} placeholder="Hinweise: vegan, scharf, A, G …" onChange={(e) => setItem({ tags: e.target.value })} />
-                    {err && <p className="col-span-2 text-xs text-rose">{err}</p>}
-                  </div>
-                  <RowActions
-                    onUp={() => setSection(i, { ...section, items: move(section.items, j, -1) })}
-                    onDown={() => setSection(i, { ...section, items: move(section.items, j, 1) })}
-                    onRemove={() => setSection(i, { ...section, items: section.items.filter((_, k) => k !== j) })}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <div className="p-3 pt-0">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setSection(i, { ...section, items: [...section.items, emptyItem()] })}>
-              <Plus className="size-4" /> Gericht
-            </Button>
-          </div>
-        </div>
-      ))}
-      <Button type="button" variant="secondary" size="sm" onClick={() => onChange([...value, { title: "", items: [emptyItem()] }])}>
-        <Plus className="size-4" /> Kategorie hinzufügen
-      </Button>
     </div>
   );
 }

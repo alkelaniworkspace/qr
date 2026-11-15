@@ -11,6 +11,8 @@ export interface LocalCode {
   content: Record<string, unknown>;
   style: unknown;
   poster?: PosterSettings;
+  /** Dynamic code on the server: printed link stays the same, content can change. */
+  dynamic?: { slug: string; token: string };
   createdAt: string;
   updatedAt: string;
 }

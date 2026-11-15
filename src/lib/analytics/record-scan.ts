@@ -24,6 +24,7 @@ function decode(v: string | null): string | null {
 export async function recordScan(codeId: string, h: Headers): Promise<void> {
   const ua = h.get("user-agent") ?? "";
   if (!ua || isBot(ua)) return;
+  if (!serverEnv().secretKey) return; // stats switch on once SUPABASE_SECRET_KEY is set
 
   const ip = (h.get("x-forwarded-for") ?? h.get("x-real-ip") ?? "").split(",")[0].trim();
   const day = new Date().toISOString().slice(0, 10);

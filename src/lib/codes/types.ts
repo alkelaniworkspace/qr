@@ -27,6 +27,8 @@ export type Field =
   | { kind: "links"; name: string; label: string }
   | { kind: "menu"; name: string; label: string }
   | { kind: "file"; name: string; label: string; accept: string; hint?: string }
+  | { kind: "image"; name: string; label: string; hint?: string; shape?: "square" | "wide"; half?: boolean }
+  | { kind: "layout"; name: string; label: string }
   | { kind: "review"; name: string; label: string; hint?: string }
   | { kind: "theme"; name: string; label: string };
 
@@ -63,13 +65,22 @@ const optUrl = () =>
   z.string().trim().max(2000).default("").transform(normalizeUrl).refine((v) => !v || isHttpUrl(v), "Ungültiger Link");
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#6e50ff");
 const linkItem = z.object({ label: reqStr("Bezeichnung", 80), url: url() });
+/** Images are uploaded to our storage (or any https URL). */
+const imageUrl = () => z.string().trim().max(600).default("").refine((v) => !v || /^https:\/\/[^\s"'<>]+$/.test(v), "Ungültiges Bild");
+export const MENU_BADGES = ["beliebt", "neu", "vegan", "vegetarisch", "scharf", "hausgemacht"] as const;
 const menuItem = z.object({
   name: reqStr("Gericht", 120),
   description: str(300),
   price: str(20),
   tags: str(80),
+  image: imageUrl(),
+  variants: z.array(z.object({ label: str(40), price: str(20) })).max(8).default([]),
+  badges: z.array(z.enum(MENU_BADGES)).max(6).default([]),
+  soldOut: z.boolean().default(false),
 });
-const menuSection = z.object({ title: reqStr("Kategorie", 80), items: z.array(menuItem).max(80) });
+const menuSection = z.object({ title: reqStr("Kategorie", 80), note: str(160), items: z.array(menuItem).max(120) });
+export type MenuItemData = z.infer<typeof menuItem>;
+export type MenuSectionData = z.infer<typeof menuSection>;
 
 const ACCENT: Field = { kind: "color", name: "accent", label: "Akzentfarbe", half: true };
 const THEME: Field = { kind: "theme", name: "theme", label: "Seiten-Stil" };
@@ -155,32 +166,53 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
   menu: {
     id: "menu",
     label: "Speisekarte",
-    description: "Digitale Karte mit Kategorien und Preisen",
+    description: "Mini-Website fürs Restaurant: Logo, Kategorien, Fotos, Preise",
     icon: "UtensilsCrossed",
     group: "page",
     modes: ["dynamic", "static"],
     hostedPage: true,
     fields: [
+      { kind: "image", name: "logo", label: "Logo", shape: "square", half: true },
+      { kind: "image", name: "cover", label: "Titelbild", shape: "wide", half: true },
       { kind: "text", name: "name", label: "Name des Lokals", required: true, half: true },
-      { kind: "text", name: "subtitle", label: "Untertitel", placeholder: "Griechische Küche seit 1998", half: true },
+      { kind: "text", name: "subtitle", label: "Untertitel", placeholder: "Döner, Pizza & Pasta seit 1998", half: true },
       { kind: "menu", name: "sections", label: "Karte" },
+      { kind: "tel", name: "phone", label: "Telefon (Bestellung)", half: true },
+      { kind: "text", name: "address", label: "Adresse", placeholder: "Hauptstraße 1, 46282 Dorsten", half: true },
+      { kind: "textarea", name: "hours", label: "Öffnungszeiten (eine Zeile pro Tag)", placeholder: "Mo–Fr 11–22 Uhr\nSa–So 12–23 Uhr" },
       { kind: "textarea", name: "footer", label: "Hinweis unten", placeholder: "Allergene und Zusatzstoffe erfragen Sie bitte beim Personal." },
+      { kind: "layout", name: "layout", label: "Darstellung der Karte" },
       ACCENT,
       THEME,
     ],
     schema: z.object({
       name: reqStr("Name", 80),
       subtitle: str(120),
+      logo: imageUrl(),
+      cover: imageUrl(),
       sections: z.array(menuSection).min(1, "Mindestens eine Kategorie").max(40),
+      phone: str(40),
+      address: str(200),
+      hours: str(400),
       footer: str(600),
+      layout: z.enum(["cards", "list", "grid", "elegant"]).default("cards"),
       accent: color,
       theme,
     }),
     defaults: {
       name: "",
       subtitle: "",
-      sections: [{ title: "Vorspeisen", items: [{ name: "", description: "", price: "", tags: "" }] }],
+      logo: "",
+      cover: "",
+      sections: [
+        { title: "Döner", note: "", items: [{ name: "Döner im Brot", description: "Kalbfleisch, Salat, Tomaten, Zwiebeln, Soße nach Wahl", price: "7,50", tags: "A, G", image: "", variants: [], badges: ["beliebt"], soldOut: false }] },
+        { title: "Pizza", note: "", items: [{ name: "Pizza Margherita", description: "Tomatensoße, Mozzarella, Basilikum", price: "", tags: "A, G", image: "", variants: [{ label: "Ø 26 cm", price: "8,90" }, { label: "Ø 32 cm", price: "11,90" }], badges: ["vegetarisch"], soldOut: false }] },
+      ],
+      phone: "",
+      address: "",
+      hours: "",
       footer: "",
+      layout: "cards",
       accent: "#6e50ff",
       theme: "light",
     },

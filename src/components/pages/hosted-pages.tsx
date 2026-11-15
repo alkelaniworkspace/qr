@@ -7,6 +7,7 @@ import { contrastRatio } from "@/lib/qr/scannability";
 import { mapsUrl } from "@/lib/codes/payload";
 import { site } from "@/lib/site";
 import { CopyButton } from "./copy-button";
+import { MenuPage } from "./menu-page";
 
 type C = Record<string, unknown>;
 const s = (v: unknown) => String(v ?? "").trim();
@@ -150,61 +151,6 @@ function LinksPage({ c }: { c: C }) {
 }
 
 // ───────── Menu ─────────
-type MenuSection = { title: string; items: { name: string; description: string; price: string; tags: string }[] };
-const slugify = (t: string, i: number) => `k-${i}-${t.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-
-function MenuPage({ c }: { c: C }) {
-  const sections = (c.sections as MenuSection[]) ?? [];
-  return (
-    <>
-      <header className="text-center">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Speisekarte</p>
-        <h1 className="mt-2 font-display text-5xl leading-none">{s(c.name)}</h1>
-        {s(c.subtitle) && <p className="mt-2 text-[var(--pg-muted)]">{s(c.subtitle)}</p>}
-      </header>
-      {sections.length > 1 && (
-        <nav className="sticky top-0 z-10 -mx-5 mt-6 flex gap-2 overflow-x-auto border-b border-[var(--pg-line)] bg-[var(--pg-bg)]/95 px-5 py-3 backdrop-blur">
-          {sections.map((sec, i) => (
-            <a key={i} href={`#${slugify(sec.title, i)}`} className="shrink-0 rounded-full border border-[var(--pg-line)] bg-[var(--pg-card)] px-3.5 py-1.5 text-sm">
-              {sec.title}
-            </a>
-          ))}
-        </nav>
-      )}
-      <div className="mt-6 space-y-10">
-        {sections.map((sec, i) => (
-          <section key={i} id={slugify(sec.title, i)} className="scroll-mt-20">
-            <h2 className="mb-4 flex items-center gap-3 font-display text-3xl">
-              {sec.title}
-              <span className="h-px flex-1 bg-line" />
-            </h2>
-            <ul className="space-y-5">
-              {sec.items.map((item, j) => (
-                <li key={j}>
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-medium">{item.name}</span>
-                    <span className="mb-1 flex-1 border-b border-dotted border-muted/40" />
-                    {item.price && <span className="font-medium tabular-nums">{/\d$/.test(item.price) ? `${item.price} €` : item.price}</span>}
-                  </div>
-                  {item.description && <p className="mt-0.5 text-sm leading-relaxed text-[var(--pg-muted)]">{item.description}</p>}
-                  {item.tags && (
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      {item.tags.split(",").map((t) => t.trim()).filter(Boolean).map((t) => (
-                        <span key={t} className="rounded-full bg-[var(--pg-soft)] px-2 py-0.5 text-[11px] text-[var(--pg-fg)]/80">{t}</span>
-                      ))}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-      {s(c.footer) && <p className="mt-12 whitespace-pre-line border-t border-[var(--pg-line)] pt-6 text-center text-xs leading-relaxed text-[var(--pg-muted)]">{s(c.footer)}</p>}
-    </>
-  );
-}
-
 // ───────── Review ─────────
 function ReviewPage({ c }: { c: C }) {
   return (
