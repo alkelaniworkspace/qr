@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3, Check, ChevronRight, ChevronsUpDown, Clapperboard, ClipboardList, CreditCard, FolderOpen, HelpCircle, LayoutTemplate, LogIn, LogOut, Menu,
-  Moon, PenLine, Plus, Printer, Shapes, Sparkles, Sticker, Sun, Palette, UserRound, X, Zap,
+  Bell, Gem, Moon, PenLine, Plus, Printer, Shapes, Sparkles, Sticker, Sun, Palette, UserRound, X, Zap,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/cn";
@@ -41,7 +41,7 @@ export function AppShell({ user, plan, localCodes = 0, children }: { user: Shell
         <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-edge bg-bg/85 px-4 backdrop-blur-xl lg:hidden">
           <button type="button" onClick={() => setOpen(true)} aria-label="Menü öffnen" className="grid size-10 place-items-center rounded-xl border border-edge bg-surface"><Menu className="size-5" /></button>
           <Logo href={user ? "/dashboard" : "/"} />
-          <Link href="/studio" className="ml-auto inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand px-3.5 text-sm font-semibold text-on-brand"><Plus className="size-4" /> Neu</Link>
+          <Link href="/studio" className="btn-cta ml-auto inline-flex h-10 items-center gap-1.5 rounded-xl px-3.5 text-sm font-semibold"><Plus className="size-4" /> Neu</Link>
         </header>
 
         {/* drawer backdrop */}
@@ -62,7 +62,21 @@ export function AppShell({ user, plan, localCodes = 0, children }: { user: Shell
           <SidebarFooter user={user} plan={plan} localCodes={localCodes} />
         </aside>
 
-        <div className="min-w-0">{children}</div>
+        <div className="relative min-w-0">
+          <div className="pointer-events-none absolute right-8 top-6 z-30 hidden items-center gap-2 lg:flex">
+            {user ? (
+              plan?.id !== "business" && (
+                <Link href="/dashboard/billing" className="btn-cta pointer-events-auto inline-flex h-10 items-center gap-2 rounded-full px-4 text-[14px] font-semibold"><Gem className="size-4" /> Upgrade</Link>
+              )
+            ) : (
+              <>
+                <Link href="/login" className="pointer-events-auto inline-flex h-10 items-center rounded-full px-4 text-[14px] font-semibold text-dim hover:text-fg">Anmelden</Link>
+                <Link href="/signup" className="btn-cta pointer-events-auto inline-flex h-10 items-center gap-2 rounded-full px-4 text-[14px] font-semibold"><Sparkles className="size-4" /> Kostenlos starten</Link>
+              </>
+            )}
+          </div>
+          {children}
+        </div>
       </div>
     </StudioNavProvider>
   );
@@ -209,6 +223,12 @@ function SidebarFooter({ user, plan, localCodes }: { user: ShellUser | null; pla
 
   return (
     <div className="shrink-0 space-y-2 border-t border-edge p-3">
+      {plan?.id !== "business" && (
+        <Link href="/#preise" className="group flex items-center gap-2.5 rounded-xl px-3 py-2 text-[14px] font-semibold text-[#ff4f9a] transition hover:bg-[#ff2e88]/10">
+          <Gem className="size-4" /> Preise
+          <span className="sale-pill ml-auto rounded-md px-1.5 py-0.5 text-[11px] font-bold text-white">−40 %</span>
+        </Link>
+      )}
       {/* plan / usage card */}
       <div className="plan-card relative overflow-hidden rounded-2xl border border-edge p-3.5">
         <div className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-lime/20 blur-3xl" />
@@ -244,20 +264,49 @@ function SidebarFooter({ user, plan, localCodes }: { user: ShellUser | null; pla
       {/* account */}
       <div className="relative">
         {menu && (
-          <div className="absolute bottom-full left-0 right-0 mb-2 overflow-hidden rounded-2xl border border-edge bg-solid p-1.5 shadow-lift animate-rise">
-            <button type="button" onClick={toggleTheme} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg">
-              {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />} {theme === "dark" ? "Helles Design" : "Dunkles Design"}
-            </button>
-            {user ? (
-              <>
-                <Link href="/dashboard/billing" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><CreditCard className="size-4" /> Tarif & Rechnungen</Link>
+          <div className="absolute bottom-full left-0 z-10 mb-2 w-[300px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-edge bg-solid p-2 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] animate-rise">
+            <div className="flex items-center gap-3 rounded-xl px-2.5 py-2">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-hi/[0.08] text-[15px] font-semibold">{user ? user.name.charAt(0).toUpperCase() : <UserRound className="size-4" />}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[14px] font-semibold">{user ? user.name : "Gast"}</span>
+                <span className="block truncate text-[12px] text-faint">{plan ? `${plan.label}-Tarif` : "Ohne Konto"}</span>
+              </span>
+            </div>
+            {plan && (
+              <div className="mt-1 rounded-xl bg-hi/[0.04] p-3">
+                <div className="flex items-center justify-between text-[13px]">
+                  <span className="font-semibold">Dynamische Codes</span>
+                  <span className="text-faint">{plan.limit === null ? "unbegrenzt" : `${Math.max(0, plan.limit - plan.used)} übrig`}</span>
+                </div>
+                <div className="mt-2.5 flex flex-wrap gap-[5px]" aria-hidden>
+                  {Array.from({ length: 24 }, (_, i) => <span key={i} className={cn("meter-dot", (plan.limit === null || i < Math.round((plan.used / Math.max(1, plan.limit)) * 24)) && "on")} style={{ transitionDelay: `${i * 18}ms` }} />)}
+                </div>
+                {plan.id !== "business" && (
+                  <Link href="/dashboard/billing" className="mt-3 flex items-center justify-between rounded-lg px-1 text-[13px] font-semibold">
+                    <span className="flex items-center gap-2"><Gem className="size-4 text-faint" /> Mehr Codes</span>
+                    <span className="btn-cta rounded-full px-3 py-1 text-[12px]">Upgrade</span>
+                  </Link>
+                )}
+              </div>
+            )}
+            <div className="mt-1 space-y-0.5">
+              <button type="button" onClick={toggleTheme} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg">
+                {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />} {theme === "dark" ? "Helles Design" : "Dunkles Design"}
+                <span className={cn("ml-auto h-5 w-9 rounded-full p-0.5 transition", theme === "light" ? "bg-cta" : "bg-hi/15")}><span className={cn("block size-4 rounded-full bg-white transition", theme === "light" && "translate-x-4")} /></span>
+              </button>
+              {user && <Link href="/dashboard" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><Bell className="size-4" /> Übersicht & Statistik</Link>}
+              {user && <Link href="/dashboard/billing" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><CreditCard className="size-4" /> Konto & Tarif</Link>}
+              <a href="mailto:hallo@qlick.codes" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><HelpCircle className="size-4" /> Hilfecenter</a>
+            </div>
+            <div className="mt-1 border-t border-edge pt-1">
+              {user ? (
                 <form action="/auth/signout" method="post">
                   <button className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><LogOut className="size-4" /> Abmelden</button>
                 </form>
-              </>
-            ) : (
-              <Link href="/login" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><LogIn className="size-4" /> Anmelden</Link>
-            )}
+              ) : (
+                <Link href="/login" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><LogIn className="size-4" /> Anmelden</Link>
+              )}
+            </div>
           </div>
         )}
         <button type="button" onClick={() => setMenu((v) => !v)} aria-expanded={menu} className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition hover:bg-hi/[0.05]">

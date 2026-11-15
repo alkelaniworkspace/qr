@@ -15,6 +15,8 @@
   --color-brand: var(--t-brand);
   --color-brand-deep: #9bd000;
   --color-brand-shadow: var(--t-brand-shadow);
+  --color-cta: var(--t-cta);
+  --color-on-cta: var(--t-on-cta);
   --color-on-brand: var(--t-on-brand);
   --color-solid: var(--t-solid);
   --color-lime: #bdfb04;
@@ -46,12 +48,15 @@
 @layer base {
   :root {
     /* Qlick: Casual Black, Lime, Silver Feather, White */
-    --t-bg: #0d0d0d;
-    --t-surface: rgb(30 30 30 / 0.62);
-    --t-elevated: rgb(48 48 48 / 0.7);
-    --t-solid: #191919;
-    --t-edge: rgb(255 255 255 / 0.09);
-    --t-edge-strong: rgb(255 255 255 / 0.18);
+    --t-bg: #0a0a0b;
+    --t-surface: rgb(24 24 27 / 0.72);
+    --t-elevated: rgb(39 39 42 / 0.75);
+    --t-solid: #141416;
+    --t-edge: rgb(255 255 255 / 0.075);
+    --t-edge-strong: rgb(255 255 255 / 0.16);
+    --t-cta: #c8ff2e;
+    --t-on-cta: #0a0a0b;
+    --t-cta-glow: 200 255 46;
     --t-fg: #ffffff;
     --t-dim: #b9b8b1;
     --t-faint: #7c7b76;
@@ -67,6 +72,9 @@
     --glass-blur: 22px;
   }
   :root[data-theme="light"] {
+    --t-cta: #141414;
+    --t-on-cta: #ffffff;
+    --t-cta-glow: 20 20 20;
     --t-bg: #efeee8;
     --t-surface: rgb(255 255 255 / 0.66);
     --t-elevated: rgb(223 222 215 / 0.7);
@@ -436,3 +444,10 @@
 @keyframes mn-zoom { from { transform: scale(1.06); opacity: .6; } to { transform: none; opacity: 1; } }
 .pg[data-motion="none"] .mn [data-reveal] { opacity: 1; transform: none; transition: none; }
 @media (prefers-reduced-motion: reduce) { .mn [data-reveal] { opacity: 1; transform: none; transition: none; } }
+
+/* Primary action: lime in dark mode (the one thing to press), black in light mode */
+.btn-cta { background: var(--color-cta); color: var(--color-on-cta); box-shadow: 0 0 0 1px rgb(var(--t-cta-glow) / .25), 0 10px 30px -12px rgb(var(--t-cta-glow) / .55); }
+.btn-cta:hover { box-shadow: 0 0 0 1px rgb(var(--t-cta-glow) / .4), 0 14px 38px -10px rgb(var(--t-cta-glow) / .7); filter: brightness(1.04); }
+.sale-pill { background: linear-gradient(100deg, #ff2e88, #ff6aa8); box-shadow: 0 0 18px -4px rgb(255 46 136 / .6); }
+.meter-dot { width: 6px; height: 6px; border-radius: 999px; background: rgb(var(--glow) / .14); transition: background .3s, box-shadow .3s; }
+.meter-dot.on { background: var(--color-cta); box-shadow: 0 0 8px rgb(var(--t-cta-glow) / .7); }

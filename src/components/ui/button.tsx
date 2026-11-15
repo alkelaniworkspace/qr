@@ -10,8 +10,7 @@ const base =
 const variants: Record<Variant, string> = {
   // Chunky 3D brand button: sits on its own shadow, presses down on click
   // Solid lime (dark) / black with lime text (light), soft halo
-  primary:
-    "bg-brand text-on-brand shadow-[0_8px_24px_-10px_rgb(var(--glow)/0.7)] hover:shadow-[0_10px_34px_-8px_rgb(var(--glow)/0.85)] hover:brightness-105",
+  primary: "btn-cta",
   // Frosted glass
   secondary:
     "bg-elevated text-fg border border-edge backdrop-blur-xl hover:border-edge-strong hover:bg-hi/10",
