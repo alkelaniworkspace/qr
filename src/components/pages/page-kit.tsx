@@ -103,9 +103,8 @@ export function Hero({ d, cover, avatar, square, title, eyebrow, subtitle, child
 /** Decorative cover when there is no photo: brand gradient with soft light and grain. */
 export function CoverArt() {
   return (
-    <div className="relative size-full bg-[linear-gradient(135deg,var(--accent),var(--accent-2))]">
-      <div className="absolute inset-0 bg-[radial-gradient(60%_80%_at_20%_10%,rgb(255_255_255/0.35),transparent_60%),radial-gradient(50%_70%_at_90%_90%,rgb(0_0_0/0.25),transparent_60%)]" />
-      <div className="absolute inset-0 opacity-[0.18] [background-image:radial-gradient(rgb(255_255_255/0.9)_1px,transparent_1.2px)] [background-size:14px_14px]" />
+    <div className="relative size-full bg-[var(--accent-2)]">
+      <div className="absolute inset-0 bg-[radial-gradient(70%_90%_at_15%_0%,color-mix(in_srgb,var(--accent)_22%,transparent),transparent_65%)]" />
     </div>
   );
 }
