@@ -11,7 +11,7 @@ export function SiteFooter() {
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-dim">{site.description}</p>
         </div>
         <div>
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-faint">Produkt</p>
+          <p className="mb-3 text-xs font-bold text-faint">Produkt</p>
           <ul className="space-y-2 text-sm text-dim">
             <li><Link href="/studio" className="hover:text-brand">Studio</Link></li>
             <li><Link href="/codes" className="hover:text-brand">Meine Codes</Link></li>
@@ -20,7 +20,7 @@ export function SiteFooter() {
           </ul>
         </div>
         <div>
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-faint">Rechtliches</p>
+          <p className="mb-3 text-xs font-bold text-faint">Rechtliches</p>
           <ul className="space-y-2 text-sm text-dim">
             <li><Link href="/impressum" className="hover:text-brand">Impressum</Link></li>
             <li><Link href="/datenschutz" className="hover:text-brand">Datenschutz</Link></li>

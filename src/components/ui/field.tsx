@@ -5,7 +5,7 @@ export const inputClass =
 
 export function Label({ children, htmlFor, className }: { children: React.ReactNode; htmlFor?: string; className?: string }) {
   return (
-    <label htmlFor={htmlFor} className={cn("mb-2 block text-[12px] font-semibold uppercase tracking-[0.08em] text-dim", className)}>
+    <label htmlFor={htmlFor} className={cn("mb-2 block text-[12px] font-semibold text-dim", className)}>
       {children}
     </label>
   );

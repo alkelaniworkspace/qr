@@ -92,7 +92,7 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
                     });
                   }}
                 />
-                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-dim">{field.label}</p>
+                <p className="mb-2 text-xs font-bold text-dim">{field.label}</p>
                 <MenuBuilder value={(value[field.name] as MenuSectionData[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
                 {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}
               </div>
@@ -186,7 +186,7 @@ export function ColorInput({ id, value, onChange }: { id?: string; value: string
           setText(v);
           if (/^#[0-9a-fA-F]{6}$/.test(v)) onChange(v.toLowerCase());
         }}
-        className="w-full min-w-0 bg-transparent font-mono text-[12px] uppercase tracking-tighter text-fg outline-none"
+        className="w-full min-w-0 bg-transparent font-mono text-[12px] tracking-tighter text-fg outline-none"
       />
     </div>
   );
@@ -213,7 +213,7 @@ function PollOptionsEditor({ value, onChange, errors, prefix }: { value: PollOpt
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">Antworten</span>
+        <span className="text-[12px] font-semibold text-dim">Antworten</span>
         <span className="text-xs text-faint">{value.length} / 12 · Foto optional</span>
       </div>
       <div className="space-y-2.5">
@@ -243,7 +243,7 @@ function LinksEditor({ value, onChange, errors, prefix }: { value: LinkItem[]; o
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">Links</span>
+        <span className="text-[12px] font-semibold text-dim">Links</span>
         <span className="text-xs text-faint">{value.length} / 30</span>
       </div>
       <div className="space-y-2.5">

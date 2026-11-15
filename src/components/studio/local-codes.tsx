@@ -78,7 +78,7 @@ export function LocalCodes() {
                   <Link href={`/studio?edit=${c.id}&step=4`} title="Drucken" className="grid h-10 place-items-center rounded-xl border border-edge text-dim hover:border-hi/25 hover:text-fg"><Printer className="size-4" /></Link>
                   <button type="button" title="PNG laden" onClick={() => downloadPng(svgFor(c, 1024), c.name, 2048)} className="grid h-10 place-items-center rounded-xl border border-edge text-dim hover:border-hi/25 hover:text-fg"><Download className="size-4" /></button>
                   {confirm === c.id ? (
-                    <button type="button" onClick={() => remove(c.id)} className="h-10 rounded-xl bg-rose text-[11px] font-bold uppercase text-night">Löschen?</button>
+                    <button type="button" onClick={() => remove(c.id)} className="h-10 rounded-xl bg-rose text-[11px] font-bold text-night">Löschen?</button>
                   ) : (
                     <button type="button" title="Löschen" onClick={() => setConfirm(c.id)} className="grid h-10 place-items-center rounded-xl border border-edge text-dim hover:border-rose/50 hover:text-rose"><Trash2 className="size-4" /></button>
                   )}

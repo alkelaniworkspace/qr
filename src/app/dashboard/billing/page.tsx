@@ -45,7 +45,7 @@ export default async function BillingPage() {
                   <li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-brand" /> {f}</li>
                 ))}
               </ul>
-              <button disabled className={cn("mt-6 h-11 rounded-xl text-xs font-bold uppercase tracking-wide", current ? "bg-brand/15 text-brand" : "border border-edge text-faint")}>
+              <button disabled className={cn("mt-6 h-11 rounded-xl text-xs font-bold", current ? "bg-brand/15 text-brand" : "border border-edge text-faint")}>
                 {current ? "Aktueller Tarif" : "Online-Zahlung folgt"}
               </button>
             </div>

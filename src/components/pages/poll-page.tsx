@@ -118,7 +118,7 @@ export function PollPage({ c, slug, demo }: { c: C; slug: string; demo: boolean 
         <span className="mx-auto grid size-16 place-items-center rounded-[calc(var(--pg-radius)+8px)] bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_14px_30px_-14px_var(--accent)]">
           <BarChart3 className="size-7" />
         </span>
-        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--pg-muted)]">
+        <p className="mt-5 text-xs font-semibold text-[var(--pg-muted)]">
           {closed ? "Beendet" : multiple ? "Abstimmung · mehrere Antworten" : "Abstimmung"}
         </p>
         <h1 className="mt-2 pg-display text-[32px] leading-[1.05]">{s(c.question) || "Deine Frage"}</h1>

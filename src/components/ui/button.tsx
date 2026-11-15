@@ -5,7 +5,7 @@ type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "relative inline-flex items-center justify-center gap-2 rounded-[14px] font-display font-bold tracking-[0.03em] transition-all duration-150 select-none whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none";
+  "relative inline-flex items-center justify-center gap-2 rounded-[14px] font-display font-bold transition-all duration-150 select-none whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none";
 
 const variants: Record<Variant, string> = {
   // Chunky 3D brand button: sits on its own shadow, presses down on click

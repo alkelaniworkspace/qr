@@ -77,7 +77,7 @@ function SocialButtons({ next, mode }: { next?: string; mode: "login" | "signup"
         {compact ? <span className="sr-only">{verb} {p.label}</span> : <span>{verb} {p.label}</span>}
         {!p.enabled && (
           compact
-            ? <span className="absolute -right-1 -top-1 rounded-full bg-lime px-1.5 py-px text-[9px] font-bold uppercase text-night">Bald</span>
+            ? <span className="absolute -right-1 -top-1 rounded-full bg-lime px-1.5 py-px text-[9px] font-bold text-night">Bald</span>
             : <span className="badge bg-lime text-night">Bald</span>
         )}
       </>
@@ -106,7 +106,7 @@ function SocialButtons({ next, mode }: { next?: string; mode: "login" | "signup"
         <button type="button" title="Passkey: kommt bald" onClick={() => setSoon("Passkey")} className="relative flex h-12 items-center justify-center rounded-2xl border border-edge-strong bg-surface opacity-70 transition hover:bg-hi/5 hover:opacity-100 active:scale-[0.98]">
           <Fingerprint className="size-5" />
           <span className="sr-only">Mit Passkey anmelden</span>
-          <span className="absolute -right-1 -top-1 rounded-full bg-lime px-1.5 py-px text-[9px] font-bold uppercase text-night">Bald</span>
+          <span className="absolute -right-1 -top-1 rounded-full bg-lime px-1.5 py-px text-[9px] font-bold text-night">Bald</span>
         </button>
       </div>
       {soon && (

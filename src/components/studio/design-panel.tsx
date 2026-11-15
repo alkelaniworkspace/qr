@@ -104,7 +104,7 @@ function Segmented<T extends string>({ value, options, onChange }: { value: T; o
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
-          className={cn("rounded-[10px] px-4 py-2 text-xs font-bold uppercase tracking-wide transition", value === o.value ? "bg-brand text-on-brand shadow-[0_2px_0_var(--color-brand-shadow)]" : "text-dim hover:text-fg")}
+          className={cn("rounded-[10px] px-4 py-2 text-xs font-bold transition", value === o.value ? "bg-brand text-on-brand shadow-[0_2px_0_var(--color-brand-shadow)]" : "text-dim hover:text-fg")}
         >
           {o.label}
         </button>
@@ -117,7 +117,7 @@ function Slider({ label, value, min, max, step, onChange, format }: { label: str
   return (
     <div>
       <div className="mb-2 flex justify-between">
-        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">{label}</span>
+        <span className="text-[12px] font-semibold text-dim">{label}</span>
         <span className="font-mono text-xs text-brand">{format ? format(value) : value}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full" />
@@ -207,7 +207,7 @@ export function DesignPanel({ style, onChange, data }: Props) {
       </Section>
 
       <Section title="Ecken" hint="Rahmen und Kern getrennt wählen" defaultOpen>
-        <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">Rahmen</p>
+        <p className="mb-2.5 text-[12px] font-semibold text-dim">Rahmen</p>
         <div className="mb-6 grid grid-cols-3 gap-2 sm:grid-cols-6">
           {FRAMES.map((f) => (
             <Tile key={f.value} label={f.label} active={style.eyeFrame === f.value} onClick={() => set({ eyeFrame: f.value })}>
@@ -215,7 +215,7 @@ export function DesignPanel({ style, onChange, data }: Props) {
             </Tile>
           ))}
         </div>
-        <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">Kern</p>
+        <p className="mb-2.5 text-[12px] font-semibold text-dim">Kern</p>
         <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
           {BALLS.map((b) => (
             <Tile key={b.value} label={b.label} active={style.eyeBall === b.value} onClick={() => set({ eyeBall: b.value })}>
@@ -326,7 +326,7 @@ export function DesignPanel({ style, onChange, data }: Props) {
             </Select>
           </FieldShell>
           <div className="flex items-end">
-            <button type="button" onClick={() => onChange({ ...DEFAULT_STYLE, logo: style.logo, ecc: style.logo ? "H" : DEFAULT_STYLE.ecc })} className="inline-flex h-12 items-center gap-2 rounded-[14px] border border-edge px-4 text-xs font-bold uppercase tracking-wide text-dim transition hover:border-hi/25 hover:text-fg">
+            <button type="button" onClick={() => onChange({ ...DEFAULT_STYLE, logo: style.logo, ecc: style.logo ? "H" : DEFAULT_STYLE.ecc })} className="inline-flex h-12 items-center gap-2 rounded-[14px] border border-edge px-4 text-xs font-bold text-dim transition hover:border-hi/25 hover:text-fg">
               <RotateCcw className="size-4" /> Zurücksetzen
             </button>
           </div>

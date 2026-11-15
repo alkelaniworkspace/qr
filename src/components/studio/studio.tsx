@@ -218,7 +218,7 @@ export function Studio({ variant, userId, code, dynamicLocked = false, initialTy
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={cn("inline-flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold uppercase tracking-wide transition", tab === t ? "bg-brand text-on-brand shadow-[0_3px_0_var(--color-brand-shadow)]" : "text-dim hover:text-fg")}
+              className={cn("inline-flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition", tab === t ? "bg-brand text-on-brand shadow-[0_3px_0_var(--color-brand-shadow)]" : "text-dim hover:text-fg")}
             >
               <span className={cn("grid size-5 place-items-center rounded-md text-[11px]", tab === t ? "bg-on-brand/15" : "bg-hi/[0.06]")}>{i + 1}</span>
               <Icon className="size-4" /> {label}

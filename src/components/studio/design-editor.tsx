@@ -45,7 +45,7 @@ function Group({ title, children, right }: { title: string; children: React.Reac
   return (
     <div className="border-t border-edge pt-4">
       <div className="mb-2.5 flex items-center justify-between">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-dim">{title}</p>
+        <p className="text-[12px] font-semibold text-dim">{title}</p>
         {right}
       </div>
       {children}

@@ -23,7 +23,7 @@ interface Props {
 function ScoreRing({ score, tone }: { score: number; tone: "ok" | "warn" | "bad" }) {
   const r = 22;
   const c = 2 * Math.PI * r;
-  const color = tone === "ok" ? "#3ee6a8" : tone === "warn" ? "#e9b949" : "#ff5d6c";
+  const color = tone === "ok" ? "#bdfb04" : tone === "warn" ? "#e9b949" : "#ff5d6c";
   return (
     <svg viewBox="0 0 56 56" className="size-14 shrink-0 -rotate-90" aria-hidden>
       <circle cx="28" cy="28" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
@@ -61,7 +61,7 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
       {phone && (
         <div className="mb-4 grid grid-cols-2 gap-1 rounded-[14px] border border-edge bg-bg/60 p-1">
           {([["code", "Code", QrCode], ["phone", "Handy-Seite", Smartphone]] as const).map(([v, label, Icon]) => (
-            <button key={v} type="button" onClick={() => setView(v)} className={cn("inline-flex items-center justify-center gap-1.5 rounded-[10px] py-2 text-xs font-bold uppercase tracking-wide transition", view === v ? "bg-brand text-on-brand" : "text-dim hover:text-fg")}>
+            <button key={v} type="button" onClick={() => setView(v)} className={cn("inline-flex items-center justify-center gap-1.5 rounded-[10px] py-2 text-xs font-bold transition", view === v ? "bg-brand text-on-brand" : "text-dim hover:text-fg")}>
               <Icon className="size-3.5" /> {label}
             </button>
           ))}
@@ -120,7 +120,7 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
         <button
           type="button"
           onClick={() => downloadPng(svg, name, pngSize)}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-elevated font-display text-[13px] font-bold tracking-wide text-fg shadow-[0_4px_0_rgba(0,0,0,0.45)] transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-elevated font-display text-[13px] font-bold text-fg shadow-[0_4px_0_rgba(0,0,0,0.45)] transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none"
         >
           <Download className="size-4" /> PNG
         </button>
@@ -132,7 +132,7 @@ export function Preview({ svg, data, style, name, footer, phone }: Props) {
         <button
           type="button"
           onClick={() => downloadSvg(svg, name)}
-          className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-[14px] border border-edge text-xs font-bold uppercase tracking-wide text-dim transition hover:border-hi/25 hover:text-fg"
+          className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-[14px] border border-edge text-xs font-bold text-dim transition hover:border-hi/25 hover:text-fg"
         >
           SVG für Druck · Vektor
         </button>

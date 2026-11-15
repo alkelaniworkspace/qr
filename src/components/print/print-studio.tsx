@@ -140,11 +140,11 @@ export function PrintStudio({ settings: p, onChange, qrSvg, name }: Props) {
           <div className="mt-4 flex flex-wrap gap-2">
             {p.format !== "custom" && (
               <>
-                <button type="button" onClick={() => set({ landscape: false })} className={cn("inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold uppercase", !p.landscape ? "border-brand text-fg" : "border-edge text-dim")}><RectangleVertical className="size-4" /> Hoch</button>
-                <button type="button" onClick={() => set({ landscape: true })} className={cn("inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold uppercase", p.landscape ? "border-brand text-fg" : "border-edge text-dim")}><RectangleHorizontal className="size-4" /> Quer</button>
+                <button type="button" onClick={() => set({ landscape: false })} className={cn("inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold", !p.landscape ? "border-brand text-fg" : "border-edge text-dim")}><RectangleVertical className="size-4" /> Hoch</button>
+                <button type="button" onClick={() => set({ landscape: true })} className={cn("inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold", p.landscape ? "border-brand text-fg" : "border-edge text-dim")}><RectangleHorizontal className="size-4" /> Quer</button>
               </>
             )}
-            <button type="button" onClick={() => set({ bleed: !p.bleed })} className={cn("inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold uppercase", p.bleed ? "border-gold text-gold" : "border-edge text-dim")}>
+            <button type="button" onClick={() => set({ bleed: !p.bleed })} className={cn("inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold", p.bleed ? "border-gold text-gold" : "border-edge text-dim")}>
               <Scissors className="size-4" /> 3 mm Beschnitt
             </button>
           </div>

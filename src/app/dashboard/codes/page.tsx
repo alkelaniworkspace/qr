@@ -53,7 +53,7 @@ export default async function CodesPage({ searchParams }: { searchParams: Promis
           <option value="active">Aktiv</option>
           <option value="paused">Pausiert</option>
         </select>
-        <button className="h-11 rounded-xl bg-hi/[0.07] px-5 text-sm font-bold uppercase tracking-wide transition hover:bg-brand hover:text-on-brand">Filtern</button>
+        <button className="h-11 rounded-xl bg-hi/[0.07] px-5 text-sm font-bold transition hover:bg-brand hover:text-on-brand">Filtern</button>
         {filtered && <Link href="/dashboard/codes" className="px-2 text-sm text-dim hover:text-fg">Zurücksetzen</Link>}
       </form>
 

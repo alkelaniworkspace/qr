@@ -25,6 +25,8 @@ import { HostedPage } from "@/components/pages/hosted-pages";
 import { TypeIcon } from "@/components/type-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { usePublishStudioNav } from "@/components/shell/studio-nav";
+import { presetById } from "@/lib/page-design";
 
 const STEPS = [
   { id: 1, label: "Typ", icon: Shapes },
@@ -322,10 +324,31 @@ function WizardEditor({ init }: { init: Init }) {
   const canOpen = (s: Step) => s <= reached || (s === 2 && step === 1);
   const stepClick = (s: Step) => (s === 3 && step === 2 ? nextFromContent() : s === 4 ? toPrint() : go(s));
 
+  // Tell the sidebar where we are (numbered path + output sub-menu).
+  const publishNav = usePublishStudioNav();
+  const stepClickRef = useRef(stepClick);
+  useEffect(() => {
+    stepClickRef.current = stepClick;
+  });
+  const designPreset = (content.design as { preset?: string } | undefined)?.preset;
+  useEffect(() => {
+    publishNav?.({
+      step,
+      reached,
+      typeLabel: def.label,
+      name: name.trim(),
+      designLabel: def.hostedPage ? (designPreset ? `Seite: ${presetById(designPreset).name}` : "Seite und Code") : "Farben und Formen",
+      output,
+      go: (n) => stepClickRef.current(n as Step),
+      setOutput: (o) => setOutput(o),
+    });
+  }, [publishNav, step, reached, def.label, def.hostedPage, name, designPreset, output]);
+  useEffect(() => () => publishNav?.(null), [publishNav]);
+
   return (
     <div className="mx-auto w-full max-w-[1600px]">
       {/* Stepper */}
-      <ol className="sticky top-16 z-30 -mx-5 mb-8 flex gap-1.5 overflow-x-auto border-b border-edge bg-bg/80 px-5 py-3 backdrop-blur-xl [scrollbar-width:none] sm:-mx-8 sm:px-8">
+      <ol className="sticky top-14 z-30 -mx-5 mb-8 flex gap-1.5 lg:hidden overflow-x-auto border-b border-edge bg-bg/80 px-5 py-3 backdrop-blur-xl [scrollbar-width:none] sm:-mx-8 sm:px-8">
         {STEPS.map((s, i) => {
           const done = s.id < step || (s.id <= reached && s.id !== step && s.id < reached);
           const active = s.id === step;
@@ -345,7 +368,7 @@ function WizardEditor({ init }: { init: Init }) {
                   {done && !active ? <Check className="size-4" /> : <Icon className="size-4" />}
                 </span>
                 <span className={cn("min-w-0", !active && "hidden sm:block")}>
-                  <span className="block text-[10px] font-bold uppercase tracking-widest text-faint">Schritt {s.id}</span>
+                  <span className="block text-[10px] font-bold text-faint">Schritt {s.id}</span>
                   <span className={cn("block truncate text-sm font-bold", active ? "text-fg" : "text-dim")}>{s.label}</span>
                 </span>
               </button>
@@ -370,7 +393,7 @@ function WizardEditor({ init }: { init: Init }) {
           )}
           <section className="mt-10">
             <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="font-display text-xl">Mit Vorlage starten</h2>
+              <h2 id="vorlagen" className="scroll-mt-24 font-display text-xl">Mit Vorlage starten</h2>
               <span className="text-sm text-faint">Fertige Mini-Website mit passendem QR-Design. Alles danach frei änderbar.</span>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
@@ -574,11 +597,11 @@ function WizardEditor({ init }: { init: Init }) {
               <Preview svg={svg} data={data} style={style} name={name || def.label} />
               {(isPageLink || live) && (
                 <div className="card p-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-faint">{live ? "Link im Code" : "Link der Handy-Seite"}</p>
+                  <p className="text-xs font-bold text-faint">{live ? "Link im Code" : "Link der Handy-Seite"}</p>
                   {live && <p className="mt-2 break-all font-mono text-sm text-fg">{data.replace(/^https?:\/\//, "")}</p>}
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    <a href={data} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold uppercase text-dim hover:border-hi/25 hover:text-fg"><ExternalLink className="size-4" /> Öffnen</a>
-                    <button type="button" onClick={() => copy(data, "page")} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold uppercase text-dim hover:border-hi/25 hover:text-fg">{copied === "page" ? <Check className="size-4 text-mint" /> : <Copy className="size-4" />} Kopieren</button>
+                    <a href={data} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold text-dim hover:border-hi/25 hover:text-fg"><ExternalLink className="size-4" /> Öffnen</a>
+                    <button type="button" onClick={() => copy(data, "page")} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-edge text-xs font-bold text-dim hover:border-hi/25 hover:text-fg">{copied === "page" ? <Check className="size-4 text-mint" /> : <Copy className="size-4" />} Kopieren</button>
                   </div>
                 </div>
               )}

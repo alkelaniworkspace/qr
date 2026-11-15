@@ -61,7 +61,7 @@ export function ForeverStory({ qrSvg }: { qrSvg: string }) {
           transition={{ type: "spring", stiffness: 120, damping: 18 }}
         >
           <div className="rounded-[22px] bg-white p-4 shadow-lift">
-            <p className="text-center text-[11px] font-bold uppercase tracking-[0.2em] text-[#191919]">Tisch 7</p>
+            <p className="text-center text-[11px] font-bold text-[#191919]">Tisch 7</p>
             <div className="mt-2 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: qrSvg }} />
             <p className="mt-2 text-center text-sm font-bold text-[#191919]">Scan für die Karte</p>
           </div>

@@ -28,7 +28,7 @@ export function Countdown({ start, end }: { start: string; end?: string }) {
       {parts.map(([v, l]) => (
         <div key={l} className="pg-card px-2 py-3 text-center">
           <p className="pg-display tabular-nums" style={{ fontSize: "calc(2rem * var(--pg-display-scale))" }}>{v}</p>
-          <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--pg-muted)]">{l}</p>
+          <p className="mt-1 text-[11px] font-semibold text-[var(--pg-muted)]">{l}</p>
         </div>
       ))}
     </div>
@@ -68,7 +68,7 @@ export function Hours({ lines }: { lines: string[] }) {
           <li key={l} className={`flex items-center gap-2 rounded-[calc(var(--pg-radius)*0.5)] px-2 py-1 ${on ? "bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] font-semibold" : "text-[var(--pg-muted)]"}`}>
             {on && <span className="size-1.5 rounded-full bg-[var(--accent)]" />}
             {l}
-            {on && <span className="ml-auto text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">Heute</span>}
+            {on && <span className="ml-auto text-[11px] font-bold text-[var(--accent)]">Heute</span>}
           </li>
         );
       })}

@@ -51,7 +51,7 @@ export function CodeCard({ code }: { code: Row }) {
         ) : (
           <p className="text-xs text-dim">Inhalt steckt im Code</p>
         )}
-        <Link href={href} className="inline-flex items-center gap-1.5 rounded-xl bg-hi/[0.06] px-3 py-2 text-xs font-bold uppercase tracking-wide transition hover:bg-brand hover:text-on-brand">
+        <Link href={href} className="inline-flex items-center gap-1.5 rounded-xl bg-hi/[0.06] px-3 py-2 text-xs font-bold transition hover:bg-brand hover:text-on-brand">
           {dynamic ? <><BarChart3 className="size-3.5" /> Statistik</> : "Bearbeiten"}
         </Link>
       </div>

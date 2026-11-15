@@ -27,10 +27,10 @@ export function CodeActions({ id, name, svg, status, dynamic, compact }: Props) 
     <div className="relative flex items-center gap-1.5">
       {!compact && (
         <>
-          <Link href={`/dashboard/codes/${id}/edit`} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-edge-strong bg-elevated px-4 text-xs font-bold uppercase tracking-wide transition hover:border-hi/30">
+          <Link href={`/dashboard/codes/${id}/edit`} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-edge-strong bg-elevated px-4 text-xs font-bold transition hover:border-hi/30">
             <Pencil className="size-3.5" /> Bearbeiten
           </Link>
-          <button onClick={() => downloadPng(svg, name, 2048)} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand px-4 text-xs font-bold uppercase tracking-wide text-on-brand shadow-[0_3px_0_var(--color-brand-shadow)] transition hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none">
+          <button onClick={() => downloadPng(svg, name, 2048)} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand px-4 text-xs font-bold text-on-brand shadow-[0_3px_0_var(--color-brand-shadow)] transition hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none">
             <Download className="size-3.5" /> PNG
           </button>
         </>

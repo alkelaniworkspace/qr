@@ -110,7 +110,7 @@ export function MenuStylePicker({ value, onChange }: { value: string; onChange: 
         return (
           <button key={st.id} type="button" onClick={() => onChange(st.id, st.layout)} aria-pressed={active} className={cn("group overflow-hidden rounded-2xl border text-left transition", active ? "border-brand ring-2 ring-brand/25" : "border-edge hover:-translate-y-0.5 hover:border-hi/25")}>
             <span className="relative block h-20 overflow-hidden" style={{ background: bg, color: fg }}>
-              <span className="absolute left-3 top-2.5 text-[28px] leading-none" style={{ fontFamily: st.display, fontWeight: st.id === "cafe" ? 700 : st.id === "street" ? 400 : 600, textTransform: st.uppercase ? "uppercase" : undefined }}>Aa</span>
+              <span className="absolute left-3 top-2.5 text-[28px] leading-none" style={{ fontFamily: st.display, fontWeight: st.id === "cafe" ? 700 : st.id === "street" ? 400 : 600, textTransform: undefined }}>Aa</span>
               <span className="absolute bottom-2.5 left-3 right-3 space-y-1">
                 <span className="block h-1.5 w-3/4 rounded-full opacity-25" style={{ background: fg }} />
                 <span className="flex items-center gap-1.5"><span className="block h-1.5 w-1/2 rounded-full opacity-15" style={{ background: fg }} /><span className="ml-auto block h-1.5 w-6 rounded-full" style={{ background: st.accent ?? fg }} /></span>
@@ -235,7 +235,7 @@ export function MenuBuilder({ value, onChange, errors, prefix }: { value: Partia
                   {expanded && (
                     <div className="space-y-4 border-t border-edge p-3 sm:pl-[96px]">
                       <div>
-                        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-faint">Kennzeichen</p>
+                        <p className="mb-1.5 text-[11px] font-bold text-faint">Kennzeichen</p>
                         <div className="flex flex-wrap gap-1.5">
                           {MENU_BADGES.map((b) => {
                             const on = item.badges.includes(b);
@@ -248,7 +248,7 @@ export function MenuBuilder({ value, onChange, errors, prefix }: { value: Partia
                         </div>
                       </div>
                       <div>
-                        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-faint">Größen & Preise (optional)</p>
+                        <p className="mb-1.5 text-[11px] font-bold text-faint">Größen & Preise (optional)</p>
                         <div className="space-y-1.5">
                           {item.variants.map((v, k) => (
                             <div key={k} className="grid grid-cols-[1fr_92px_auto] gap-1.5">
@@ -264,7 +264,7 @@ export function MenuBuilder({ value, onChange, errors, prefix }: { value: Partia
                       </div>
                       <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
                         <label className="block">
-                          <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-faint">Allergene & Zusatzstoffe</span>
+                          <span className="mb-1.5 block text-[11px] font-bold text-faint">Allergene & Zusatzstoffe</span>
                           <Input value={item.tags} placeholder="z. B. A, C, G, 3" onChange={(e) => setItem(j, { tags: e.target.value })} />
                         </label>
                         <label className="flex h-12 items-center gap-2 rounded-xl border border-edge px-3 text-sm font-semibold">

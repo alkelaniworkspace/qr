@@ -142,7 +142,7 @@ export function MenuPage({ c }: { c: C }) {
 
       {highlights.length >= 2 && !q && (
         <section className="mt-8" aria-label="Empfehlungen">
-          <p className="px-5 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--pg-muted)]">{st.id === "street" ? "Must eat" : "Empfehlungen"}</p>
+          <p className="px-5 text-xs font-semibold text-[var(--pg-muted)]">{st.id === "street" ? "Must eat" : "Empfehlungen"}</p>
           <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-2 [scrollbar-width:none]">
             {highlights.map(({ it, key }, n) => (
               <button
@@ -158,7 +158,7 @@ export function MenuPage({ c }: { c: C }) {
                   <span className={`block text-sm font-semibold leading-tight ${itemFont ? "mp-display" : ""}`}>{it.name}</span>
                   <span className="mt-1 block text-xs font-semibold tabular-nums opacity-90">{money(it.price || it.variants[0]?.price || "")}</span>
                 </span>
-                {it.badges[0] && BADGES[it.badges[0]] && <span className="absolute left-2 top-2 rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--on-accent)]">{BADGES[it.badges[0]].label}</span>}
+                {it.badges[0] && BADGES[it.badges[0]] && <span className="absolute left-2 top-2 rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10px] font-bold text-[var(--on-accent)]">{BADGES[it.badges[0]].label}</span>}
               </button>
             ))}
           </div>
@@ -182,7 +182,7 @@ export function MenuPage({ c }: { c: C }) {
                   type="button"
                   data-pill={i}
                   onClick={() => document.getElementById(sectionId(i))?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                  className={`mp-pill shrink-0 px-4 py-2 text-sm font-semibold transition-all duration-300 ${st.uppercase ? "uppercase tracking-wide" : ""} ${i === active ? "bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_6px_16px_-8px_var(--accent)]" : "bg-[var(--pg-soft)] text-[var(--pg-fg)]/80"}`}
+                  className={`mp-pill shrink-0 px-4 py-2 text-sm font-semibold transition-all duration-300 ${i === active ? "bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_6px_16px_-8px_var(--accent)]" : "bg-[var(--pg-soft)] text-[var(--pg-fg)]/80"}`}
                 >
                   {sec.title}
                 </button>
@@ -315,12 +315,12 @@ function Hero({ c, st }: { c: C; st: MenuStyle }) {
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black" />
         <div className="relative px-6 pt-16">
           <Monogram c={c} className="mp-pop size-14 rounded-lg text-3xl" />
-          <h1 className="mp-display mp-rise mt-5 break-words text-[84px] uppercase leading-[0.82] text-[var(--accent)]" style={{ animationDelay: "100ms" }}>{name}</h1>
+          <h1 className="mp-display mp-rise mt-5 break-words text-[84px] leading-[0.82] text-[var(--accent)]" style={{ animationDelay: "100ms" }}>{name}</h1>
         </div>
         <div className="relative mt-8 -rotate-2 overflow-hidden bg-[var(--accent)] py-2 text-[var(--on-accent)] shadow-[0_10px_30px_-10px_var(--accent)]">
           <div className="mp-marquee flex w-max whitespace-nowrap">
-            <span className="mp-display px-2 text-2xl uppercase tracking-wide">{band}</span>
-            <span className="mp-display px-2 text-2xl uppercase tracking-wide" aria-hidden>{band}</span>
+            <span className="mp-display px-2 text-2xl">{band}</span>
+            <span className="mp-display px-2 text-2xl" aria-hidden>{band}</span>
           </div>
         </div>
       </header>
@@ -341,7 +341,7 @@ function Hero({ c, st }: { c: C; st: MenuStyle }) {
           <div className="mp-pop mx-auto grid size-20 place-items-center rounded-full border border-[var(--accent)] p-1.5">
             <Monogram c={c} className="size-full rounded-full !bg-transparent text-4xl !text-[var(--accent)]" />
           </div>
-          <h1 className="mp-display mp-rise mt-6 text-[46px] font-medium uppercase leading-none tracking-[0.12em]" style={{ animationDelay: "120ms" }}>{name}</h1>
+          <h1 className="mp-display mp-rise mt-6 text-[46px] font-medium leading-none" style={{ animationDelay: "120ms" }}>{name}</h1>
           <div className="mp-rise mx-auto mt-4 flex max-w-[220px] items-center gap-3 text-[var(--accent)]" style={{ animationDelay: "220ms" }}>
             <span className="h-px flex-1 bg-current opacity-60" /> <span className="text-xs">✦</span> <span className="h-px flex-1 bg-current opacity-60" />
           </div>
@@ -422,7 +422,7 @@ function Heading({ st, title, note, center }: { st: MenuStyle; title: string; no
     case "block":
       return (
         <div data-reveal>
-          <h2 className="mp-display relative inline-block uppercase leading-none" style={size}>
+          <h2 className="mp-display relative inline-block leading-none" style={size}>
             <span className="relative z-10">{title}</span>
             <span className="mp-grow absolute -inset-x-1 bottom-0.5 z-0 h-[38%] origin-left bg-[var(--accent)]/90" />
           </h2>
@@ -470,10 +470,10 @@ function Photo({ it, st, className = "" }: { it: MenuItemData; st: MenuStyle; cl
   return <SmartImg src={it.image} width={640} className={`object-cover transition duration-500 group-hover:scale-105 ${className}`} fallback={fb} />;
 }
 
-function PhotoFallback({ it, st, className = "" }: { it: MenuItemData; st: MenuStyle; className?: string }) {
+function PhotoFallback({ it, className = "" }: { it: MenuItemData; st: MenuStyle; className?: string }) {
   return (
     <div className={`grid place-items-center bg-[radial-gradient(circle_at_30%_25%,color-mix(in_srgb,var(--accent)_28%,var(--pg-soft)),var(--pg-soft)_70%)] ${className}`}>
-      <span className={`mp-display text-5xl text-[var(--accent)] opacity-80 ${st.uppercase ? "uppercase" : ""}`}>{it.name.slice(0, 1)}</span>
+      <span className={`mp-display text-5xl text-[var(--accent)] opacity-80`}>{it.name.slice(0, 1)}</span>
     </div>
   );
 }
@@ -569,7 +569,7 @@ function GridItem({ it, st, n, id, open, onToggle, itemFont }: ItemProps) {
           )}
         </div>
         <div className="p-3">
-          <p className={`text-sm font-semibold leading-snug ${itemFont ? "mp-display text-base" : ""} ${st.uppercase ? "mp-display text-xl font-normal uppercase tracking-wide" : ""}`}>{it.name}{allergenNote(it)}</p>
+          <p className={`text-sm font-semibold leading-snug ${itemFont ? "mp-display text-base" : ""} ${st.uppercase ? "mp-display text-xl font-normal" : ""}`}>{it.name}{allergenNote(it)}</p>
           {open && it.description && <p className="mt-1 text-sm leading-snug text-[var(--pg-muted)]">{it.description}</p>}
           <Badges it={it} />
           {!(st.id === "street" && !it.variants.length) && <Prices it={it} />}
@@ -606,7 +606,7 @@ function ElegantItem({ it, n, id, open, onToggle, itemFont }: ItemProps) {
   return (
     <li id={`it-${id}`} data-reveal style={{ "--i": n } as React.CSSProperties} className={`text-center ${it.soldOut ? "opacity-55" : ""}`}>
       <button type="button" disabled={!can} onClick={() => onToggle(open ? null : id)} aria-expanded={can ? open : undefined} className="block w-full">
-        <p className={`font-semibold uppercase tracking-[0.18em] ${itemFont ? "mp-display text-lg font-medium" : "text-sm"}`}>{it.name}{allergenNote(it)}</p>
+        <p className={`font-semibold ${itemFont ? "mp-display text-lg font-medium" : "text-sm"}`}>{it.name}{allergenNote(it)}</p>
         {it.description && <p className={`mx-auto mt-1 max-w-xs italic leading-relaxed text-[var(--pg-muted)] ${itemFont ? "mp-display text-[17px]" : "text-sm"}`}>{it.description}</p>}
         <Badges it={it} center />
         <Prices it={it} align="center" />

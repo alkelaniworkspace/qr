@@ -59,7 +59,7 @@ export function Hero({ d, cover, avatar, square, title, eyebrow, subtitle, child
       <header className="pt-4">
         <div className="flex items-center gap-3">
           <Avatar src={avatar} label={title} size={56} square={square} />
-          {eyebrow && <p className="pg-in text-xs font-semibold uppercase tracking-[0.18em] text-[var(--pg-muted)]">{eyebrow}</p>}
+          {eyebrow && <p className="pg-in text-xs font-semibold text-[var(--pg-muted)]">{eyebrow}</p>}
         </div>
         <Display size="2.75rem" className="pg-in mt-6" style={{ "--i": 1 } as React.CSSProperties}>{title}</Display>
         {subtitle && <p className="pg-in mt-3 max-w-sm whitespace-pre-line text-[17px] leading-relaxed text-[var(--pg-muted)]" style={{ "--i": 2 } as React.CSSProperties}>{subtitle}</p>}
@@ -72,7 +72,7 @@ export function Hero({ d, cover, avatar, square, title, eyebrow, subtitle, child
     return (
       <header className="flex flex-col items-center pt-8 text-center">
         <Avatar src={avatar} label={title} size={120} square={square} className="pg-float" />
-        {eyebrow && <p className="pg-in mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--pg-muted)]">{eyebrow}</p>}
+        {eyebrow && <p className="pg-in mt-6 text-xs font-semibold text-[var(--pg-muted)]">{eyebrow}</p>}
         <Display size="2.6rem" className={`pg-in ${eyebrow ? "mt-2" : "mt-6"}`} style={{ "--i": 1 } as React.CSSProperties}>{title}</Display>
         {subtitle && <p className="pg-in mt-3 max-w-xs whitespace-pre-line leading-relaxed text-[var(--pg-muted)]" style={{ "--i": 2 } as React.CSSProperties}>{subtitle}</p>}
         {children && <div className="pg-in mt-6 w-full" style={{ "--i": 3 } as React.CSSProperties}>{children}</div>}
@@ -91,7 +91,7 @@ export function Hero({ d, cover, avatar, square, title, eyebrow, subtitle, child
       </div>
       <div className="relative -mt-16 flex flex-col items-center text-center">
         <Avatar src={avatar} label={title} size={112} square={square} />
-        {eyebrow && <p className="pg-in mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--pg-muted)]">{eyebrow}</p>}
+        {eyebrow && <p className="pg-in mt-5 text-xs font-semibold text-[var(--pg-muted)]">{eyebrow}</p>}
         <Display size="2.5rem" className={`pg-in ${eyebrow ? "mt-2" : "mt-5"}`} style={{ "--i": 1 } as React.CSSProperties}>{title}</Display>
         {subtitle && <p className="pg-in mt-3 max-w-xs whitespace-pre-line leading-relaxed text-[var(--pg-muted)]" style={{ "--i": 2 } as React.CSSProperties}>{subtitle}</p>}
         {children && <div className="pg-in mt-6 w-full" style={{ "--i": 3 } as React.CSSProperties}>{children}</div>}

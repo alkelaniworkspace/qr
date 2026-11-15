@@ -90,7 +90,7 @@ function VCardPage({ code, c, d, links }: { code: PublicCode; c: C; d: Design; l
             <a key={k} href={href} {...ugc} className="flex items-center gap-3.5 px-4 py-3.5 transition hover:bg-[var(--pg-soft)]">
               <IconTile><Icon className="size-[18px]" strokeWidth={1.8} /></IconTile>
               <span className="min-w-0 flex-1">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--pg-muted)]">{k}</span>
+                <span className="block text-[11px] font-semibold text-[var(--pg-muted)]">{k}</span>
                 <span className="block truncate font-medium">{v}</span>
               </span>
               <ChevronRight className="size-4 shrink-0 text-[var(--pg-muted)]" />
@@ -158,7 +158,7 @@ function ReviewPage({ c, d }: { c: C; d: Design }) {
       {(s(c.logo) || s(c.cover)) ? (
         <Hero d={d} cover={s(c.cover)} avatar={s(c.logo)} square title={business} />
       ) : (
-        <p className="pg-in pt-6 text-center text-sm font-semibold uppercase tracking-[0.2em] text-[var(--pg-muted)]">{business}</p>
+        <p className="pg-in pt-6 text-center text-sm font-semibold text-[var(--pg-muted)]">{business}</p>
       )}
       <div className="my-auto py-10 text-center">
         <div className="flex justify-center gap-2 text-[var(--accent)]">
@@ -185,7 +185,7 @@ function CouponPage({ c }: { c: C }) {
     <div className="pt-4">
       <div className="flex items-center justify-center gap-3">
         {s(c.logo) && <Avatar src={s(c.logo)} label={s(c.business)} size={44} square />}
-        <p className="pg-in text-sm font-semibold uppercase tracking-[0.2em] text-[var(--pg-muted)]">{s(c.business)}</p>
+        <p className="pg-in text-sm font-semibold text-[var(--pg-muted)]">{s(c.business)}</p>
       </div>
       <div className="pg-pop relative mt-6 overflow-hidden rounded-[calc(var(--pg-radius)+8px)] bg-[var(--pg-card)] shadow-[0_30px_60px_-30px_rgb(0_0_0/0.45)]">
         <div className="pg-shine relative overflow-hidden px-6 pb-9 pt-8 text-center text-[var(--on-accent)]">
@@ -196,7 +196,7 @@ function CouponPage({ c }: { c: C }) {
           )}
           <div className="absolute inset-0 bg-[linear-gradient(to_bottom,color-mix(in_srgb,var(--accent)_45%,transparent),color-mix(in_srgb,var(--accent)_85%,transparent))]" />
           <div className="relative">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-black/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em]"><Ticket className="size-3.5" /> Gutschein</p>
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-black/15 px-3 py-1 text-[11px] font-bold"><Ticket className="size-3.5" /> Gutschein</p>
             <Display size="5.5rem" className="mt-3 leading-[0.9]">{s(c.discount) || "-20 %"}</Display>
             {s(c.headline) && <p className="mx-auto mt-3 max-w-xs text-[17px] font-medium opacity-90">{s(c.headline)}</p>}
           </div>
@@ -208,9 +208,9 @@ function CouponPage({ c }: { c: C }) {
         <div className="space-y-4 px-6 pb-7 pt-6 text-center">
           {s(c.code) && (
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--pg-muted)]">Dein Code</p>
+              <p className="text-[11px] font-semibold text-[var(--pg-muted)]">Dein Code</p>
               <div className="mt-2 flex items-center justify-center gap-2">
-                <span className="rounded-[calc(var(--pg-radius)*0.5+6px)] border-2 border-dashed border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_8%,transparent)] px-5 py-2.5 font-mono text-2xl font-bold tracking-[0.2em]">{s(c.code)}</span>
+                <span className="rounded-[calc(var(--pg-radius)*0.5+6px)] border-2 border-dashed border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_8%,transparent)] px-5 py-2.5 font-mono text-2xl font-bold">{s(c.code)}</span>
                 <CopyButton value={s(c.code)} />
               </div>
             </div>
@@ -273,7 +273,7 @@ function EventPage({ code, c, links }: { code: PublicCode; c: C; links?: PageLin
         <div className="relative text-center text-white">
           {valid && (
             <div className="pg-pop mx-auto w-24 overflow-hidden rounded-[calc(var(--pg-radius)*0.6+10px)] bg-white text-center text-[#111] shadow-[0_20px_40px_-15px_rgb(0_0_0/0.6)]">
-              <p className="bg-[var(--accent)] py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--on-accent)]">{start.toLocaleDateString("de-DE", { month: "short" }).replace(".", "")}</p>
+              <p className="bg-[var(--accent)] py-1 text-[11px] font-bold text-[var(--on-accent)]">{start.toLocaleDateString("de-DE", { month: "short" }).replace(".", "")}</p>
               <p className="pg-display py-1.5 text-5xl leading-none">{start.getDate()}</p>
               <p className="pb-2 text-[11px] font-semibold text-black/50">{start.toLocaleDateString("de-DE", { weekday: "long" })}</p>
             </div>
