@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowDown, ArrowUp, Check, FileUp, GripVertical, Loader2, Moon, Palette, Plus, Star, Sun, Trash2 } from "lucide-react";
-import type { Field, MenuSectionData, PromoData, ReviewData } from "@/lib/codes/types";
+import type { CodeTypeId, Field, MenuSectionData, PromoData, ReviewData } from "@/lib/codes/types";
 import { FieldShell, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -11,11 +11,13 @@ import { DateTimeField } from "@/components/ui/date-time-field";
 import { ImageField, LayoutPicker, MenuBuilder, MenuImport, MenuStylePicker } from "./menu-builder";
 import { DesignEditor } from "./design-editor";
 import { MenuTemplatePicker } from "./menu-template-picker";
+import { PageLookPicker } from "./page-look-picker";
 
 type Content = Record<string, unknown>;
 type Errors = Record<string, string>;
 
 interface Props {
+  type?: CodeTypeId;
   fields: Field[];
   value: Content;
   errors: Errors;
@@ -25,7 +27,7 @@ interface Props {
 
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 
-export function ContentForm({ fields, value, errors, onChange, userId }: Props) {
+export function ContentForm({ type, fields, value, errors, onChange, userId }: Props) {
   const set = (name: string, v: unknown) => onChange({ ...value, [name]: v });
 
   return (
@@ -112,6 +114,12 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
                 <PromosEditor value={(value[field.name] as PromoData[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
               </div>
             );
+          case "gallery":
+            return (
+              <div key={field.name} className="col-span-2">
+                <GalleryEditor value={(value[field.name] as string[]) ?? []} onChange={(v) => set(field.name, v)} />
+              </div>
+            );
           case "reviews":
             return (
               <div key={field.name} className="col-span-2">
@@ -144,9 +152,16 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
             );
           case "design":
             return (
-              <FieldShell key={field.name} label="Farben & Schrift" hint="Feinschliff für deine Seite. Die Vorschau zeigt jede Änderung sofort." className="col-span-2">
+              <div key={field.name} className="col-span-2 space-y-5">
+                {type && type !== "menu" && (
+                  <FieldShell label="Look" hint="Komplette Designs mit deinem Inhalt. Danach kannst du unter „Farben & Schrift“ alles fein anpassen.">
+                    <PageLookPicker type={type} content={value} onPick={(d) => set(field.name, d)} />
+                  </FieldShell>
+                )}
+              <FieldShell label="Farben & Schrift" hint="Feinschliff für deine Seite. Die Vorschau zeigt jede Änderung sofort." className="col-span-2">
                 <DesignEditor content={value} onChange={(d) => set(field.name, d)} />
               </FieldShell>
+              </div>
             );
           case "menustyle":
             return (
@@ -384,6 +399,21 @@ function ReviewsEditor({ value, onChange, errors, prefix }: { value: ReviewData[
       {value.length < 12 && (
         <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={() => onChange([...value, { name: "", text: "", stars: 5, when: "" }])}><Plus className="size-4" /> Bewertung hinzufügen</Button>
       )}
+    </div>
+  );
+}
+
+function GalleryEditor({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const list = value.filter((v) => typeof v === "string");
+  return (
+    <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+      {list.map((url, i) => (
+        <div key={`${url}-${i}`} className="relative">
+          <ImageField value={url} onChange={(v) => onChange(v ? list.map((x, k) => (k === i ? v : x)) : list.filter((_, k) => k !== i))} label="Foto" />
+          <button type="button" onClick={() => onChange(list.filter((_, k) => k !== i))} aria-label="Foto entfernen" className="absolute -right-1.5 -top-1.5 grid size-6 place-items-center rounded-full border border-edge bg-surface text-faint shadow-sm hover:text-rose"><Trash2 className="size-3" /></button>
+        </div>
+      ))}
+      {list.length < 12 && <ImageField key={list.length} value="" onChange={(v) => v && onChange([...list, v])} label="Foto hinzufügen" />}
     </div>
   );
 }

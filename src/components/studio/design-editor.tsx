@@ -11,7 +11,7 @@ const LABELS = {
   button: { solid: "Voll", soft: "Sanft", outline: "Kontur", shadow: "3D", glass: "Glas", pill: "Pille" },
   card: { flat: "Flach", outline: "Linie", elevated: "Schatten", glass: "Glas" },
   background: { solid: "Farbe", gradient: "Verlauf", mesh: "Mesh", dots: "Punkte", grid: "Raster", waves: "Wellen", image: "Foto" },
-  hero: { cover: "Titelbild", centered: "Zentriert", minimal: "Editorial" },
+  hero: { card: "Karte", full: "Großes Foto", cover: "Klassisch", centered: "Zentriert", minimal: "Editorial" },
   motion: { none: "Aus", subtle: "Dezent", lively: "Lebendig" },
   radius: { none: "Eckig", sm: "Klein", md: "Mittel", lg: "Groß", xl: "Rund" },
 } as const;
@@ -84,10 +84,12 @@ export function DesignEditor({ content, onChange }: { content: Record<string, un
             </Group>
 
             <Group title="Kopfbereich">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                 {HEROES.map((h) => (
                   <Chip key={h} active={d.hero === h} onClick={() => set({ hero: h })}>
                     <span className="mx-auto mb-1.5 flex h-10 w-12 flex-col overflow-hidden rounded-md border border-edge bg-bg/60">
+                      {h === "card" && <><span className="h-4 bg-dim/40" /><span className="mx-1 -mt-1.5 flex-1 rounded-t-sm bg-surface"><span className="ml-1 mt-0.5 block size-2.5 rounded-sm bg-dim" /><span className="ml-1 mt-0.5 block h-1 w-6 rounded bg-dim/60" /></span></>}
+                      {h === "full" && <><span className="relative h-full bg-dim/45"><span className="absolute bottom-1 left-1 block h-1.5 w-7 rounded bg-white/90" /></span></>}
                       {h === "cover" && <><span className="h-3.5 bg-dim/40" /><span className="-mt-1.5 ml-auto mr-auto size-3 rounded-full bg-dim" /><span className="mx-auto mt-1 h-1 w-6 rounded bg-dim/60" /></>}
                       {h === "centered" && <><span className="mx-auto mt-1.5 size-4 rounded-full bg-dim" /><span className="mx-auto mt-1 h-1 w-7 rounded bg-dim/60" /></>}
                       {h === "minimal" && <><span className="ml-1.5 mt-1.5 size-2.5 rounded-full bg-dim" /><span className="ml-1.5 mt-1 h-1.5 w-8 rounded bg-dim/70" /><span className="ml-1.5 mt-1 h-1 w-6 rounded bg-dim/40" /></>}

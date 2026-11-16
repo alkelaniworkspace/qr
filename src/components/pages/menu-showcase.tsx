@@ -75,7 +75,7 @@ function layoutOf(sec: MenuSectionData): Layout {
   return withPhoto * 2 >= sec.items.length ? "list" : "compact";
 }
 
-function useReveal(root: React.RefObject<HTMLElement | null>, deps: unknown[]) {
+export function useReveal(root: React.RefObject<HTMLElement | null>, deps: unknown[]) {
   useEffect(() => {
     const el = root.current;
     if (!el) return;
@@ -370,7 +370,7 @@ const LIGHT = { "--pg-bg": "#f8f4ef", "--pg-card": "#ffffff", "--pg-fg": "#1c141
 const saved = new WeakMap<HTMLElement, Record<string, string>>();
 
 /** Flips the page between its own colours and the opposite brightness. Returns true when dark is shown. */
-function toggleTheme(root: HTMLElement | null): boolean | null {
+export function toggleTheme(root: HTMLElement | null): boolean | null {
   const pg = root?.closest(".pg") as HTMLElement | null;
   if (!pg) return null;
   const orig = saved.get(pg);
@@ -410,7 +410,7 @@ function Badge({ b }: { b: string }) {
   return <span className={`sc-bd ${def.tone ?? ""}`}><I />{def.label}</span>;
 }
 
-function Head({ title, note, right }: { title: string; note?: string; right?: string }) {
+export function Head({ title, note, right }: { title: string; note?: string; right?: string }) {
   return (
     <div className="sc-hd sc-rv">
       <div><h2 className="pg-display">{title}</h2>{note && <p>{note}</p>}</div>
@@ -468,11 +468,11 @@ function Promos({ promos }: { promos: PromoData[] }) {
   );
 }
 
-function Stars({ n, size = 15 }: { n: number; size?: number }) {
+export function Stars({ n, size = 15 }: { n: number; size?: number }) {
   return <span className="sc-stars">{[0, 1, 2, 3, 4].map((k) => <Star key={k} style={{ width: size, height: size, opacity: k < Math.round(n) ? 1 : 0.25 }} />)}</span>;
 }
 
-function Reviews({ rating, ratingNum, count, url, reviews }: { rating: string; ratingNum: number; count: string; url: string; reviews: ReviewData[] }) {
+export function Reviews({ rating, ratingNum, count, url, reviews }: { rating: string; ratingNum: number; count: string; url: string; reviews: ReviewData[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(rating ? "0,0" : "");
   useEffect(() => {
@@ -579,7 +579,7 @@ function Sheet({ it, section, phone, whatsapp, root, onClose }: { it?: MenuItemD
   );
 }
 
-function MapArt() {
+export function MapArt() {
   return (
     <svg viewBox="0 0 400 170" preserveAspectRatio="xMidYMid slice" aria-hidden>
       <rect width="400" height="170" fill="var(--pg-soft)" />

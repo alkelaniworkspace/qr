@@ -27,7 +27,7 @@ export type RadiusId = keyof typeof RADII;
 export const BUTTONS = ["solid", "soft", "outline", "shadow", "glass", "pill"] as const;
 export const CARDS = ["flat", "outline", "elevated", "glass"] as const;
 export const BACKGROUNDS = ["solid", "gradient", "mesh", "dots", "grid", "waves", "image"] as const;
-export const HEROES = ["cover", "centered", "minimal"] as const;
+export const HEROES = ["card", "full", "cover", "centered", "minimal"] as const;
 export const MOTION = ["none", "subtle", "lively"] as const;
 
 export interface Design {
@@ -177,3 +177,21 @@ export function designVars(d: Design): Record<string, string> {
     "--mp-hscale": String("scale" in f ? f.scale : 1),
   };
 }
+
+/** Ready-made looks for every hosted page except the menu (which has its own templates). */
+export const PAGE_LOOKS: { id: string; name: string; mood: string; design: StoredDesign }[] = [
+  { id: "studio", name: "Studio", mood: "Hell, klar, Karte über dem Titelbild", design: { preset: "studio", hero: "card" } },
+  { id: "feuer", name: "Feuer", mood: "Warmes Creme mit kräftigem Rot", design: { preset: "studio", bg: "#f8f4ef", surface: "#ffffff", text: "#1c1412", muted: "#8b807a", accent: "#e3242b", accent2: "#fff1e3", font: "grotesk", radius: "xl", hero: "card" } },
+  { id: "night", name: "Mitternacht", mood: "Dunkel mit Limette, großes Foto", design: { preset: "midnight", accent: "#c8ff2e", hero: "full", radius: "xl" } },
+  { id: "gold", name: "Schwarz & Gold", mood: "Edel, Serifen, großes Foto", design: { preset: "bordeaux", bg: "#0b0b0c", surface: "#161617", text: "#f5efe3", muted: "#a39e93", accent: "#d4af6a", accent2: "#221d15", font: "script", radius: "lg", button: "solid", card: "flat", hero: "full" } },
+  { id: "ocean", name: "Ozean", mood: "Blau, seriös, vertrauensvoll", design: { preset: "ocean", hero: "card", radius: "xl", font: "grotesk" } },
+  { id: "latte", name: "Latte", mood: "Café, weich, zentriert", design: { preset: "latte", hero: "centered" } },
+  { id: "rose", name: "Rosé", mood: "Beauty, Nails, Friseur", design: { preset: "peach", bg: "#fdf3f4", surface: "#ffffff", text: "#2b1a1f", muted: "#8d6f77", accent: "#e0457b", accent2: "#fde1e8", font: "grotesk", radius: "xl", hero: "centered" } },
+  { id: "citrus", name: "Zitrus", mood: "Frisch, sommerlich, Orange", design: { preset: "citrus", hero: "card", radius: "xl" } },
+  { id: "lavender", name: "Lavendel", mood: "Sanft, Serifen, zentriert", design: { preset: "lavender", hero: "centered" } },
+  { id: "terracotta", name: "Terracotta", mood: "Mediterran, Handwerk", design: { preset: "terracotta", hero: "card", radius: "lg" } },
+  { id: "editorial", name: "Editorial", mood: "Wie ein Magazin, viel Weißraum", design: { preset: "nordic", hero: "minimal", font: "editorial", accent: "#1c1b19" } },
+  { id: "street", name: "Street", mood: "Schwarz und Gelb, laut", design: { preset: "neon", hero: "full", radius: "xl" } },
+  { id: "slate", name: "Schiefer", mood: "Tech, dunkel, minimal", design: { preset: "slate", hero: "minimal", radius: "lg" } },
+  { id: "espresso", name: "Espresso", mood: "Warm, dunkel, Karte", design: { preset: "espresso", hero: "card", radius: "xl" } },
+];

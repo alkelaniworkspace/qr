@@ -40,7 +40,7 @@ export function MenuTemplatePicker({ value, content, onPick }: { value: string; 
       {MENU_TEMPLATES.map((t) => {
         const active = (value || "") === t.id;
         return (
-          <button key={t.id} type="button" onClick={() => onPick(t)} aria-pressed={active} className={cn("group overflow-hidden rounded-2xl border text-left transition", active ? "border-brand ring-2 ring-brand/30" : "border-edge hover:-translate-y-0.5 hover:border-edge-strong")}>
+          <div key={t.id} role="button" tabIndex={0} onClick={() => onPick(t)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPick(t); } }} aria-pressed={active} className={cn("group cursor-pointer overflow-hidden rounded-2xl border text-left transition", active ? "border-brand ring-2 ring-brand/30" : "border-edge hover:-translate-y-0.5 hover:border-edge-strong")}>
             <LivePreview t={t} content={base} />
             <span className="flex items-start gap-2 border-t border-edge px-3 py-2.5">
               <span className="min-w-0 flex-1">
@@ -49,7 +49,7 @@ export function MenuTemplatePicker({ value, content, onPick }: { value: string; 
               </span>
               {active && <span className="grid size-5 shrink-0 place-items-center rounded-full bg-brand text-on-brand"><Check className="size-3" /></span>}
             </span>
-          </button>
+          </div>
         );
       })}
     </div>

@@ -36,6 +36,7 @@ export type Field =
   | { kind: "menutemplate"; name: string; label: string }
   | { kind: "review"; name: string; label: string; hint?: string }
   | { kind: "promos"; name: string; label: string }
+  | { kind: "gallery"; name: string; label: string }
   | { kind: "reviews"; name: string; label: string }
   | { kind: "section"; name: string; label: string; hint?: string }
   | { kind: "theme"; name: string; label: string };
@@ -289,6 +290,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       { kind: "textarea", name: "message", label: "Nachricht", placeholder: "Danke für deinen Besuch! Wir freuen uns über deine Bewertung." },
       { kind: "review", name: "googleUrl", label: "Google-Maps-Link deines Geschäfts", hint: "Link aus Google Maps einfügen. Wir erzeugen daraus den direkten Bewertungs-Link." },
       { kind: "url", name: "secondaryUrl", label: "Weitere Plattform (optional)", placeholder: "Tripadvisor, Yelp …" },
+      { kind: "text", name: "feedback", label: "Direktes Feedback an (optional)", placeholder: "E-Mail oder WhatsApp-Nummer", hint: "Wer weniger Sterne gibt, kann dir zusätzlich direkt schreiben. Der Google-Knopf bleibt immer sichtbar." },
       DESIGN,
     ],
     schema: z.object({
@@ -298,6 +300,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       message: str(300),
       googleUrl: url("Google-Link"),
       secondaryUrl: optUrl(),
+      feedback: str(120),
       accent: color,
       theme,
       design: designSchema.optional(),
@@ -464,9 +467,17 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       { kind: "textarea", name: "services", label: "Leistungen (eine pro Zeile)", placeholder: "Dachsanierung\nReparaturen\nDachfenster" },
       { kind: "textarea", name: "hours", label: "Öffnungszeiten (eine Zeile pro Tag)", placeholder: "Mo–Fr 8–18 Uhr\nSa 9–13 Uhr" },
       { kind: "tel", name: "phone", label: "Telefon", half: true },
+      { kind: "tel", name: "whatsapp", label: "WhatsApp", placeholder: "+49 170 1234567", half: true },
       { kind: "email", name: "email", label: "E-Mail", half: true },
-      { kind: "text", name: "address", label: "Adresse" },
+      { kind: "text", name: "address", label: "Adresse", half: true },
       { kind: "links", name: "links", label: "Links" },
+      { kind: "section", name: "_gallery", label: "Galerie", hint: "Fotos von deinem Laden, deinen Arbeiten oder Produkten. Antippen öffnet sie groß." },
+      { kind: "gallery", name: "gallery", label: "Fotos" },
+      { kind: "section", name: "_reviews", label: "Bewertungen", hint: "Zeig, was deine Kunden sagen. Übernimm die Werte aus deinem Google-Profil." },
+      { kind: "text", name: "rating", label: "Durchschnitt", placeholder: "4,9", half: true },
+      { kind: "text", name: "ratingCount", label: "Anzahl Bewertungen", placeholder: "86", half: true },
+      { kind: "url", name: "reviewUrl", label: "Link zu den Google-Bewertungen" },
+      { kind: "reviews", name: "reviews", label: "Stimmen" },
       DESIGN,
     ],
     schema: z.object({
@@ -480,12 +491,18 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       phone: str(40),
       email: z.union([z.literal(""), z.email("Ungültige E-Mail")]).default(""),
       address: str(200),
+      whatsapp: str(40),
       links: z.array(linkItem).max(20).default([]),
+      gallery: z.array(imageUrl()).max(12).default([]),
+      rating: z.string().trim().max(4).default("").refine((v) => !v || /^[1-5]([.,]\d)?$/.test(v), "Zahl zwischen 1 und 5, z. B. 4,8"),
+      ratingCount: z.string().trim().max(7).default("").refine((v) => !v || /^\d[\d.]*$/.test(v), "Nur eine Zahl"),
+      reviewUrl: optUrl(),
+      reviews: z.array(reviewItem).max(12).default([]),
       accent: color,
       theme,
       design: designSchema.optional(),
     }),
-    defaults: { name: "", tagline: "", about: "", services: "", hours: "", phone: "", email: "", address: "", links: [], accent: "#191919", theme: "light", design: { preset: "matcha" } },
+    defaults: { name: "", tagline: "", about: "", services: "", hours: "", phone: "", whatsapp: "", email: "", address: "", links: [], gallery: [], rating: "", ratingCount: "", reviewUrl: "", reviews: [], accent: "#191919", theme: "light", design: { preset: "studio", hero: "card" } },
   },
   location: {
     id: "location",

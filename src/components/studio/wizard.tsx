@@ -491,7 +491,7 @@ function WizardEditor({ init }: { init: Init }) {
               <div className="mt-8">
                 <ModeSwitch mode={mode} onChange={setMode} locked={locked} dynamicOnly={!def.modes.includes("static")} />
                 <div className="card p-5 sm:p-7">
-                  <ContentForm fields={def.fields} value={content} errors={errors} onChange={setContent} />
+                  <ContentForm type={def.id} fields={def.fields} value={content} errors={errors} onChange={setContent} />
                 </div>
                 {Object.keys(errors).length > 0 && (
                   <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-rose"><TriangleAlert className="size-4" /> Bitte die markierten Felder prüfen.</p>
