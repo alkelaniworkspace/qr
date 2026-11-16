@@ -146,7 +146,7 @@ export function ContentForm({ type, fields, value, errors, onChange, userId }: P
             );
           case "menutemplate":
             return (
-              <FieldShell key={field.name} label="Vorlage für die Speisekarte" hint="30 Vorlagen. Die ersten zehn sind komplette Restaurant-Seiten mit Aktionen, Bewertungen und Öffnungszeiten. Die Vorschau zeigt deine Gerichte. Farben und Schriften passt du danach unter „Farben & Schrift“ an." className="col-span-2">
+              <FieldShell key={field.name} label="Vorlage für die Speisekarte" hint="30 Vorlagen. Die ersten zehn sind komplette Restaurant-Seiten mit Aktionen, Bewertungen und Öffnungszeiten. Die Vorschau zeigt ein Beispiel mit Fotos, deine Karte übernimmt nur den Look." className="col-span-2">
                 <MenuTemplatePicker value={str(value[field.name])} content={value} onPick={(t) => onChange({ ...value, [field.name]: t.id, design: t.design })} />
               </FieldShell>
             );
@@ -154,7 +154,7 @@ export function ContentForm({ type, fields, value, errors, onChange, userId }: P
             return (
               <div key={field.name} className="col-span-2 space-y-5">
                 {type && type !== "menu" && (
-                  <FieldShell label="Look" hint="Komplette Designs mit deinem Inhalt. Danach kannst du unter „Farben & Schrift“ alles fein anpassen.">
+                  <FieldShell label="Look" hint="Komplette Designs, gezeigt an einem Beispiel mit Fotos. Deine Seite übernimmt nur den Look. Danach kannst du unter „Farben & Schrift“ alles fein anpassen.">
                     <PageLookPicker type={type} content={value} onPick={(d) => set(field.name, d)} />
                   </FieldShell>
                 )}

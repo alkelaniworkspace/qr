@@ -138,7 +138,7 @@ export default async function Home() {
                   <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-black" />
                   <div className="h-full overflow-y-auto [scrollbar-width:none]">
                     <div className="mp-preview origin-top-left" style={{ width: 390, transform: "scale(0.718)" }}>
-                      <HostedPage code={{ id: st.id, slug: st.id, name: String(st.content.name), type: st.type, mode: "static", status: "active", content: st.content }} />
+                      <HostedPage code={{ id: st.id, slug: st.id, name: String(st.content.name), type: st.type, mode: "static", status: "active", content: st.preview }} />
                     </div>
                   </div>
                 </div>

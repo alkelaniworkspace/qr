@@ -101,6 +101,13 @@ Done and pushed (commits "Menu: Showcase templates …" and "Hosted pages: new S
 - All other hosted pages except the poll were rebuilt in the same language (`pages-v2.tsx`). New fields: site (whatsapp, gallery[], rating, reviews), review (`feedback` = e-mail/WhatsApp for direct feedback; the Google button always stays visible, no review gating).
 - 14 "Looks" with live previews above "Farben & Schrift" for every non-menu type.
 - Shell uses `overflow-x-clip` (not hidden) so sticky nav and the floating bar work.
+- Studio round 2 (owner feedback: empty strip beside previews, old starter designs, step dock too weak):
+  - `live-thumb.tsx` scales a live page to exactly the box width (used by both pickers and the starter gallery).
+  - Pickers and starters show **demo content with photos** (`src/lib/samples.ts`, Unsplash hot-links, placeholder on failure). Picking a template/look only changes the design; starters copy texts **without photos and contact data** (`withoutPhotos` in `templates.ts`).
+  - `STARTERS` rebuilt: 15 starters in 3 categories (Gastronomie, Geschäft & Kontakt, Aktionen & Events) with filter tabs (`starter-gallery.tsx`), all on the new templates/looks.
+  - Editor: right column `live-pane.tsx` = sticky phone that fits the window height (uses CSS `zoom`, so scrolling inside is exact), toggle Handy-Seite / QR-Code (step 2 opens on the phone, step 3 on the code).
+  - New step bar (`step-dock.tsx`): sticky at the bottom of the editor column, back, clickable steps 1–4, big next button; on phones "Vorschau" opens a sheet (portal to body).
+  - Unsplash photo IDs in `samples.ts` were not all verified from the cloud session (Unsplash is blocked there). Check the studio once in production and swap any that do not load.
 - Test images for screenshots: put photos into `public/_shot/` and use `http://localhost:3000/_shot/x.jpg` in `/v#` payloads (the proxy 404s, the image then loads directly). Delete before committing.
 
 ## 8. Open items / ideas

@@ -8,7 +8,8 @@ import { CODE_TYPES, TYPE_ORDER, validateContent, type CodeTypeId } from "@/lib/
 import { staticPayload } from "@/lib/codes/payload";
 import { renderQrSvg } from "@/lib/qr/render";
 import { DEFAULT_STYLE, STYLE_PRESETS, normalizeStyle, type QrStyle } from "@/lib/qr/style";
-import { STARTERS, type Starter } from "@/lib/templates";
+import type { Starter } from "@/lib/templates";
+import { StarterGallery } from "./starter-gallery";
 import { defaultPoster, type PosterSettings } from "@/lib/print/types";
 import { getLocalCode, listLocalCodes, saveLocalCode } from "@/lib/codes/local-store";
 import { newSlug } from "@/lib/codes/slug";
@@ -18,6 +19,7 @@ import { ContentForm } from "./content-form";
 import { DesignPanel } from "./design-panel";
 import { Preview } from "./preview";
 import { StepDock } from "./step-dock";
+import { LivePane } from "./live-pane";
 import { PrintStudio } from "@/components/print/print-studio";
 import { PollResults } from "@/components/dashboard/poll-results";
 import { RsvpList } from "@/components/dashboard/rsvp-list";
@@ -347,11 +349,10 @@ function WizardEditor({ init }: { init: Init }) {
   }, [publishNav, step, reached, def.label, def.hostedPage, name, designPreset, output]);
   useEffect(() => () => publishNav?.(null), [publishNav]);
 
-  const previewEl = svg ? (
-    <Preview key={step === 2 && phone ? "p2" : "p3"} svg={svg} data={data} style={style} name={name || def.label} phone={phone} />
-  ) : (
+  const codeEl = svg ? <Preview svg={svg} data={data} style={style} name={name || def.label} /> : (
     <div className="card grid aspect-square place-items-center p-8 text-center text-sm text-dim">Zu viel Inhalt für einen QR-Code.</div>
   );
+  const paneEl = <LivePane phone={phone} code={codeEl} prefer={step === 3 ? "code" : "phone"} />;
 
   return (
     <div className="mx-auto w-full max-w-[1600px]">
@@ -399,30 +400,7 @@ function WizardEditor({ init }: { init: Init }) {
               <span>Du kannst den Typ wechseln, zum Beispiel von Website zu Speisekarte. Dein gedruckter Code bleibt exakt gleich und zeigt nach dem Veröffentlichen den neuen Inhalt.</span>
             </p>
           )}
-          <section className="mt-10">
-            <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 id="vorlagen" className="scroll-mt-24 font-display text-xl">Mit Vorlage starten</h2>
-              <span className="text-sm text-faint">Fertige Mini-Website mit passendem QR-Design. Alles danach frei änderbar.</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-              {STARTERS.map((st, i) => (
-                <div key={st.id} role="button" tabIndex={0} onClick={() => applyStarter(st)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); applyStarter(st); } }} style={{ animationDelay: `${i * 50}ms` }} className="card group cursor-pointer overflow-hidden p-0 text-left transition duration-300 animate-rise hover:-translate-y-1 hover:border-edge-strong">
-                  <div inert className="pointer-events-none relative h-56 overflow-hidden border-b border-edge bg-bg/40">
-                    <div className="mp-preview absolute left-1/2 top-3 w-[390px] origin-top -translate-x-1/2 scale-[0.46] overflow-hidden rounded-[36px] border-[10px] border-[#111] shadow-lift transition duration-500 group-hover:scale-[0.48]">
-                      <HostedPage code={{ id: st.id, slug: st.id, name: String(st.content.name), type: st.type, mode: "static", status: "active", content: st.content }} />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3.5">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-hi/10 text-fg"><TypeIcon name={st.icon} className="size-4" /></span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold">{st.name}</span>
-                      <span className="block truncate text-xs text-faint">{st.hint}</span>
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <StarterGallery onPick={applyStarter} />
 
           {GROUPS.map((group, gi) => (
             <section key={group.id} className="mt-10">
@@ -464,7 +442,7 @@ function WizardEditor({ init }: { init: Init }) {
 
       {/* ───── Steps 2 + 3: editor with live preview ───── */}
       {(step === 2 || step === 3) && (
-        <div className="grid gap-8 pb-28 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-10">
+        <div className="grid gap-8 pb-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_430px] xl:gap-10">
           <div className="min-w-0 animate-rise" key={step}>
             <div className="flex items-start gap-4">
               <button type="button" onClick={() => go(1)} title="Typ ändern" className="grid size-14 shrink-0 place-items-center rounded-2xl bg-brand text-on-brand shadow-[0_0_32px_-6px_rgb(var(--glow)/0.7)] transition hover:scale-105">
@@ -512,20 +490,24 @@ function WizardEditor({ init }: { init: Init }) {
                 <DesignPanel style={style} onChange={setStyle} data={data} />
               </div>
             )}
+
+            <StepDock
+              step={step}
+              reached={reached}
+              canOpen={(n) => canOpen(n as Step)}
+              onStep={(n) => stepClick(n as Step)}
+              backLabel={step === 2 ? "Typ" : "Inhalt"}
+              nextLabel={step === 2 ? "Weiter zum Design" : mode === "dynamic" && !token ? "Aktivieren & drucken" : "Druck & Download"}
+              onBack={() => go(step === 2 ? 1 : 2)}
+              onNext={step === 2 ? nextFromContent : toPrint}
+              nextDisabled={step === 2 && tooLong}
+              preview={paneEl}
+            />
           </div>
 
-          <aside className="hidden lg:sticky lg:top-6 lg:mt-14 lg:block lg:self-start">
-            {previewEl}
+          <aside className="hidden lg:sticky lg:top-6 lg:mt-16 lg:block lg:h-[calc(100vh-7rem)] lg:self-start">
+            {paneEl}
           </aside>
-          <StepDock
-            step={step}
-            backLabel={step === 2 ? "Typ" : "Inhalt"}
-            nextLabel={step === 2 ? "Weiter zum Design" : mode === "dynamic" && !token ? "Aktivieren & drucken" : "Druck & Download"}
-            onBack={() => go(step === 2 ? 1 : 2)}
-            onNext={step === 2 ? nextFromContent : toPrint}
-            nextDisabled={step === 2 && tooLong}
-            preview={previewEl}
-          />
         </div>
       )}
 
