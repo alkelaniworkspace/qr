@@ -21,6 +21,7 @@ import { designVars, resolveDesign, type Design } from "@/lib/page-design";
 import { menuTemplate } from "@/lib/menu-templates";
 import { CopyButton } from "./copy-button";
 import { MenuPage } from "./menu-page";
+import { ShowcaseMenu } from "./menu-showcase";
 import { PollPage } from "./poll-page";
 import { SmartImg } from "./smart-img";
 import { brandOf } from "./brand-icons";
@@ -34,7 +35,7 @@ const lines = (v: unknown) => s(v).split("\n").map((l) => l.trim()).filter(Boole
 function Shell({ d, children, branding = true }: { d: Design; children: React.ReactNode; branding?: boolean }) {
   return (
     <div
-      className="pg relative isolate min-h-screen overflow-hidden bg-[var(--pg-bg)] text-[var(--pg-fg)]"
+      className="pg relative isolate min-h-screen overflow-x-clip bg-[var(--pg-bg)] text-[var(--pg-fg)]"
       data-btn={d.button}
       data-card={d.card}
       data-bg={d.background}
@@ -404,7 +405,7 @@ export function HostedPage({ code, links }: { code: PublicCode; links?: PageLink
   switch (code.type) {
     case "vcard": body = <VCardPage code={code} c={c} d={d} links={links} />; break;
     case "links": body = <LinksPage c={c} d={d} />; break;
-    case "menu": body = <MenuPage c={c} />; break;
+    case "menu": body = tpl?.engine === "showcase" ? <ShowcaseMenu c={c} t={tpl} /> : <MenuPage c={c} />; break;
     case "review": body = <ReviewPage c={c} d={d} />; break;
     case "coupon": body = <CouponPage c={c} />; break;
     case "pdf": body = <PdfPage c={c} />; break;

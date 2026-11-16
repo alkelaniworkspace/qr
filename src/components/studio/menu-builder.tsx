@@ -37,9 +37,13 @@ function normalize(sections: Partial<MenuSectionData>[]): MenuSectionData[] {
   return sections.map((s) => ({
     title: s.title ?? "",
     note: s.note ?? "",
+    layout: s.layout ?? "auto",
     items: (s.items ?? []).map((it) => ({ ...emptyItem(), ...it, variants: it.variants ?? [], badges: it.badges ?? [] })),
   }));
 }
+
+/** Per-category layout (used by the Showcase templates). */
+const SECTION_LAYOUT_LABELS: [NonNullable<MenuSectionData["layout"]>, string][] = [["auto", "Automatisch"], ["list", "Liste mit Foto"], ["grid", "Raster"], ["cards", "Große Karten"], ["compact", "Kompakt"]];
 
 // ───────── Image field (logo, cover, dish photos) ─────────
 export function ImageField({ value, onChange, shape = "square", label = "Bild hochladen", className }: { value: string; onChange: (url: string) => void; shape?: "square" | "wide"; label?: string; className?: string }) {
@@ -155,7 +159,7 @@ export function MenuBuilder({ value, onChange, errors, prefix }: { value: Partia
   const setItem = (j: number, patch: Partial<MenuItemData>) => setItems(section.items.map((x, k) => (k === j ? { ...x, ...patch } : x)));
 
   function addSection() {
-    onChange([...sections, { title: "", note: "", items: [emptyItem()] }]);
+    onChange([...sections, { title: "", note: "", layout: "auto", items: [emptyItem()] }]);
     setActive(sections.length);
     setOpen(0);
   }
@@ -203,6 +207,12 @@ export function MenuBuilder({ value, onChange, errors, prefix }: { value: Partia
             </div>
           </div>
           <Input className="mt-2" value={section.note} placeholder="Hinweis zur Kategorie (optional), z. B. Alle Pizzen auch glutenfrei" onChange={(e) => setSection(cur, { ...section, note: e.target.value })} />
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 text-[12px] font-semibold text-dim">Darstellung</span>
+            {SECTION_LAYOUT_LABELS.map(([id, label]) => (
+              <button key={id} type="button" onClick={() => setSection(cur, { ...section, layout: id })} aria-pressed={(section.layout ?? "auto") === id} className={cn("rounded-full border px-3 py-1 text-[12.5px] font-medium transition", (section.layout ?? "auto") === id ? "border-brand bg-brand text-on-brand" : "border-edge text-dim hover:text-fg")}>{label}</button>
+            ))}
+          </div>
 
           <ul className="mt-4 space-y-2.5">
             {section.items.map((item, j) => {

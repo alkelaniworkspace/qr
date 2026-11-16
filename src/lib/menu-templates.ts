@@ -1,7 +1,10 @@
 import type { StoredDesign } from "@/lib/page-design";
 
 /**
- * 20 menu page templates. Each one is a complete composition (not just a
+ * Menu page templates. The first ten are "Showcase" templates: a complete
+ * restaurant page (cover, actions, promos, popular dishes, reviews, hours,
+ * map) rendered by menu-showcase.tsx. The others are compositions of the
+ * classic engine. Each one is a complete composition (not just a
  * colour change): its own header, category navigation, dish layout, section
  * headings and texture. The `design` part seeds colours and fonts, which the
  * owner can still fine-tune in the design editor.
@@ -15,6 +18,10 @@ export type Texture = "none" | "paper" | "grain";
 
 export interface MenuTemplate {
   id: string;
+  /** "showcase" = the full restaurant page (cover, actions, promos, reviews, hours, map). */
+  engine?: "showcase";
+  /** Showcase header: profile card over the cover, or the name set large on the full photo. */
+  hero?: "card" | "full";
   name: string;
   mood: string;
   header: HeaderKind;
@@ -29,7 +36,29 @@ export interface MenuTemplate {
  * Principles: one strong typeface per template, lots of white space, one
  * accent colour, food photos as the hero. No decoration for its own sake.
  */
+const SC = { engine: "showcase" as const, header: "below" as const, nav: "chips" as const, heading: "plain" as const, items: "row" as const, texture: "none" as const };
+
 export const MENU_TEMPLATES: MenuTemplate[] = [
+  { ...SC, id: "feuer", hero: "card", name: "Feuer", mood: "Warm und hell, kräftiges Rot, wie eine Liefer-App",
+    design: { preset: "studio", bg: "#f8f4ef", surface: "#ffffff", text: "#1c1412", muted: "#8b807a", accent: "#e3242b", accent2: "#fff1e3", font: "grotesk", radius: "xl" } },
+  { ...SC, id: "glut", hero: "full", name: "Glut", mood: "Dunkel, Glut-Orange, großes Titelfoto",
+    design: { preset: "midnight", bg: "#0f0d0c", surface: "#1b1817", text: "#f7f2ee", muted: "#9a908a", accent: "#ff7a1a", accent2: "#2a1d17", font: "grotesk", radius: "xl" } },
+  { ...SC, id: "granat", hero: "card", name: "Granatapfel", mood: "Döner, Grill, Orient: Granatrot auf Creme",
+    design: { preset: "terracotta", bg: "#f6efe4", surface: "#fffaf1", text: "#24170e", muted: "#7f6a55", accent: "#c8102e", accent2: "#f6e3d0", font: "bold", radius: "xl" } },
+  { ...SC, id: "trattoria", hero: "card", name: "Trattoria", mood: "Italienisch, Terracotta, klassische Serifen",
+    design: { preset: "terracotta", bg: "#f4efe6", surface: "#fffcf6", text: "#2a1d14", muted: "#85735f", accent: "#b0391e", accent2: "#efe2cf", font: "classic", radius: "lg" } },
+  { ...SC, id: "gold", hero: "full", name: "Schwarz & Gold", mood: "Fine Dining, Steakhouse, Bar",
+    design: { preset: "bordeaux", bg: "#0b0b0c", surface: "#161617", text: "#f5efe3", muted: "#a39e93", accent: "#d4af6a", accent2: "#221d15", font: "script", radius: "lg" } },
+  { ...SC, id: "street", hero: "full", name: "Street", mood: "Burger, Smash, Nacht: Schwarz und Gelb",
+    design: { preset: "neon", bg: "#111111", surface: "#1c1c1c", text: "#ffffff", muted: "#9b9b9b", accent: "#ffcc00", accent2: "#262626", font: "bold", radius: "xl" } },
+  { ...SC, id: "meer", hero: "card", name: "Meer", mood: "Sushi, Fisch, Poke: klares Blau",
+    design: { preset: "ocean", bg: "#f2f6f8", surface: "#ffffff", text: "#0e1d2a", muted: "#5f7180", accent: "#0f6fb8", accent2: "#e3eef6", font: "modern", radius: "xl" } },
+  { ...SC, id: "kaffee", hero: "card", name: "Kaffeehaus", mood: "Café, Bäckerei, Frühstück: Braun und Creme",
+    design: { preset: "latte", bg: "#f3ece3", surface: "#fffaf4", text: "#2f241d", muted: "#85715f", accent: "#7a4a2b", accent2: "#ead9c6", font: "editorial", radius: "xl" } },
+  { ...SC, id: "rose", hero: "card", name: "Rosé", mood: "Desserts, Bubble Tea, Eis: zartes Rosa",
+    design: { preset: "peach", bg: "#fdf3f4", surface: "#ffffff", text: "#2b1a1f", muted: "#8d6f77", accent: "#e0457b", accent2: "#fde1e8", font: "grotesk", radius: "xl" } },
+  { ...SC, id: "lime", hero: "full", name: "Lime Night", mood: "Schwarz mit Limette, modern und laut",
+    design: { preset: "midnight", bg: "#0c0c0c", surface: "#171717", text: "#ffffff", muted: "#9a9a9a", accent: "#c8ff2e", accent2: "#222222", font: "grotesk", radius: "xl" } },
   { id: "classic", name: "Klassik Rot", mood: "Weiß, kräftige Schrift, Fotokarten im Raster", header: "shop", nav: "chips", heading: "accent", items: "shop", texture: "none",
     design: { preset: "studio", bg: "#ffffff", surface: "#ffffff", text: "#111111", muted: "#6b6b6b", accent: "#e3120b", accent2: "#f6f4f1", font: "bold", radius: "lg" } },
   { id: "night", name: "Nacht", mood: "Schwarz mit Gelb, Fotokarten", header: "shop", nav: "chips", heading: "accent", items: "shop", texture: "none",
@@ -85,6 +114,19 @@ export const SAMPLE_MENU = {
   name: "Maison Lumière",
   subtitle: "Saisonale Küche · Wein · Kaffee",
   hours: "Di–Sa 12–23 Uhr\nSo 10–16 Uhr",
+  cover: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&q=80",
+  rating: "4,8",
+  ratingCount: "214",
+  delivery: "30–45 Min",
+  pickup: "15 Min",
+  promos: [
+    { kicker: "Di – Fr · 12 – 15 Uhr", title: "Mittagstisch", text: "Hauptgericht und ein Getränk", tag: "14,50 €", image: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=800&q=80" },
+    { kicker: "Jeden Sonntag", title: "Brunch", text: "Alles vom Buffet, Kaffee inklusive", tag: "24 €", image: "" },
+  ],
+  reviews: [
+    { name: "Lena M.", when: "vor 2 Tagen", stars: 5, text: "Das Risotto war ein Traum, der Service herzlich. Wir kommen wieder!" },
+    { name: "Jonas K.", when: "vor 1 Woche", stars: 5, text: "Schönes Ambiente und die beste Pasta in der Gegend." },
+  ],
   phone: "0201 123456",
   address: "Rüttenscheider Str. 12, Essen",
   sections: [

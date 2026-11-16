@@ -35,6 +35,9 @@ export type Field =
   | { kind: "design"; name: string; label: string }
   | { kind: "menutemplate"; name: string; label: string }
   | { kind: "review"; name: string; label: string; hint?: string }
+  | { kind: "promos"; name: string; label: string }
+  | { kind: "reviews"; name: string; label: string }
+  | { kind: "section"; name: string; label: string; hint?: string }
   | { kind: "theme"; name: string; label: string };
 
 export interface CodeTypeDef {
@@ -83,7 +86,12 @@ const menuItem = z.object({
   badges: z.array(z.enum(MENU_BADGES)).max(6).default([]),
   soldOut: z.boolean().default(false),
 });
-const menuSection = z.object({ title: reqStr("Kategorie", 80), note: str(160), items: z.array(menuItem).max(120) });
+export const SECTION_LAYOUTS = ["auto", "list", "grid", "cards", "compact"] as const;
+const menuSection = z.object({ title: reqStr("Kategorie", 80), note: str(160), layout: z.enum(SECTION_LAYOUTS).optional(), items: z.array(menuItem).max(120) });
+const promo = z.object({ kicker: str(40), title: reqStr("Titel", 60), text: str(160), tag: str(30), image: imageUrl() });
+const reviewItem = z.object({ name: reqStr("Name", 60), text: reqStr("Text", 400), stars: z.number().int().min(1).max(5).default(5), when: str(30) });
+export type PromoData = z.infer<typeof promo>;
+export type ReviewData = z.infer<typeof reviewItem>;
 export type MenuItemData = z.infer<typeof menuItem>;
 export type MenuSectionData = z.infer<typeof menuSection>;
 
@@ -198,6 +206,21 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       { kind: "text", name: "address", label: "Adresse", placeholder: "Hauptstraße 1, 46282 Dorsten", half: true },
       { kind: "textarea", name: "hours", label: "Öffnungszeiten (eine Zeile pro Tag)", placeholder: "Mo–Fr 11–22 Uhr\nSa–So 12–23 Uhr" },
       { kind: "textarea", name: "footer", label: "Hinweis unten", placeholder: "Allergene und Zusatzstoffe erfragen Sie bitte beim Personal." },
+      { kind: "section", name: "_extras", label: "Bestellen & Kontakt", hint: "Erscheint als Knöpfe und Infos oben auf der Karte. Leere Felder werden nicht angezeigt." },
+      { kind: "tel", name: "whatsapp", label: "WhatsApp-Nummer", placeholder: "+49 170 1234567", half: true },
+      { kind: "url", name: "orderUrl", label: "Online bestellen (Lieferando, Wolt …)", placeholder: "https://www.lieferando.de/…", half: true },
+      { kind: "text", name: "delivery", label: "Lieferzeit", placeholder: "30–45 Min", half: true },
+      { kind: "text", name: "pickup", label: "Abholung", placeholder: "15 Min · –10 %", half: true },
+      { kind: "url", name: "instagram", label: "Instagram", placeholder: "https://instagram.com/…", half: true },
+      { kind: "url", name: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/@…", half: true },
+      { kind: "url", name: "facebook", label: "Facebook", placeholder: "https://facebook.com/…", half: true },
+      { kind: "section", name: "_promo", label: "Aktionen", hint: "Große Banner oben, wechseln automatisch. Zum Beispiel Mittagstisch, Burger-Tag, Rabatt bei Abholung." },
+      { kind: "promos", name: "promos", label: "Aktionen" },
+      { kind: "section", name: "_reviews", label: "Bewertungen", hint: "Zeig, was deine Gäste sagen. Übernimm die Werte und Texte aus deinem Google-Profil." },
+      { kind: "text", name: "rating", label: "Durchschnitt", placeholder: "4,8", half: true },
+      { kind: "text", name: "ratingCount", label: "Anzahl Bewertungen", placeholder: "312", half: true },
+      { kind: "url", name: "reviewUrl", label: "Link zu den Google-Bewertungen", placeholder: "https://maps.google.com/…" },
+      { kind: "reviews", name: "reviews", label: "Stimmen" },
       { kind: "menutemplate", name: "template", label: "Vorlage" },
       DESIGN,
     ],
@@ -211,6 +234,18 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       address: str(200),
       hours: str(400),
       footer: str(600),
+      whatsapp: str(40),
+      orderUrl: optUrl(),
+      delivery: str(40),
+      pickup: str(40),
+      instagram: optUrl(),
+      tiktok: optUrl(),
+      facebook: optUrl(),
+      promos: z.array(promo).max(6).default([]),
+      rating: z.string().trim().max(4).default("").refine((v) => !v || /^[1-5]([.,]\d)?$/.test(v), "Zahl zwischen 1 und 5, z. B. 4,8"),
+      ratingCount: z.string().trim().max(7).default("").refine((v) => !v || /^\d[\d.]*$/.test(v), "Nur eine Zahl"),
+      reviewUrl: optUrl(),
+      reviews: z.array(reviewItem).max(12).default([]),
       layout: z.enum(["cards", "list", "grid", "elegant"]).default("cards"),
       template: z.string().max(24).default(""),
       style: z.enum(["modern", "bistro", "cafe", "street", "fine", "trattoria"]).default("modern"),
@@ -234,7 +269,9 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       layout: "cards",
       style: "modern",
       accent: "#191919",
-      theme: "light", template: "classic",
+      theme: "light", template: "feuer",
+      whatsapp: "", orderUrl: "", delivery: "", pickup: "", instagram: "", tiktok: "", facebook: "",
+      promos: [], rating: "", ratingCount: "", reviewUrl: "", reviews: [],
     },
   },
   review: {

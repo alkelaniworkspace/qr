@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowDown, ArrowUp, Check, FileUp, GripVertical, Loader2, Moon, Palette, Plus, Star, Sun, Trash2 } from "lucide-react";
-import type { Field, MenuSectionData } from "@/lib/codes/types";
+import type { Field, MenuSectionData, PromoData, ReviewData } from "@/lib/codes/types";
 import { FieldShell, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -99,6 +99,25 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
                 {error && <p className="mt-1.5 text-xs text-rose">{error}</p>}
               </div>
             );
+          case "section":
+            return (
+              <div key={field.name} className="col-span-2 mt-4 border-t border-edge pt-6">
+                <p className="text-[15px] font-semibold">{field.label}</p>
+                {field.hint && <p className="mt-1 text-[13px] leading-relaxed text-faint">{field.hint}</p>}
+              </div>
+            );
+          case "promos":
+            return (
+              <div key={field.name} className="col-span-2">
+                <PromosEditor value={(value[field.name] as PromoData[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
+              </div>
+            );
+          case "reviews":
+            return (
+              <div key={field.name} className="col-span-2">
+                <ReviewsEditor value={(value[field.name] as ReviewData[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
+              </div>
+            );
           case "review":
             return (
               <FieldShell key={field.name} label={field.label + " *"} error={error} className="col-span-2">
@@ -119,7 +138,7 @@ export function ContentForm({ fields, value, errors, onChange, userId }: Props) 
             );
           case "menutemplate":
             return (
-              <FieldShell key={field.name} label="Vorlage für die Speisekarte" hint="20 Vorlagen mit eigenem Aufbau. Die Vorschau zeigt deine Gerichte. Farben und Schriften passt du danach unter „Farben & Schrift“ an." className="col-span-2">
+              <FieldShell key={field.name} label="Vorlage für die Speisekarte" hint="30 Vorlagen. Die ersten zehn sind komplette Restaurant-Seiten mit Aktionen, Bewertungen und Öffnungszeiten. Die Vorschau zeigt deine Gerichte. Farben und Schriften passt du danach unter „Farben & Schrift“ an." className="col-span-2">
                 <MenuTemplatePicker value={str(value[field.name])} content={value} onPick={(t) => onChange({ ...value, [field.name]: t.id, design: t.design })} />
               </FieldShell>
             );
@@ -294,6 +313,76 @@ function LinksEditor({ value, onChange, errors, prefix }: { value: LinkItem[]; o
         <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={() => onChange([...value, { label: "", url: "" }])}>
           <Plus className="size-4" /> Link hinzufügen
         </Button>
+      )}
+    </div>
+  );
+}
+
+const PROMO_IDEAS: PromoData[] = [
+  { kicker: "Mo – Fr · 11 – 15 Uhr", title: "Mittagstisch", text: "Hauptgericht und ein Getränk", tag: "9,90 €", image: "" },
+  { kicker: "Jeden Dienstag", title: "Burger-Tag", text: "Der zweite Burger kostet die Hälfte", tag: "–50 %", image: "" },
+  { kicker: "Bei Abholung", title: "10 % auf alles", text: "Einfach anrufen und selbst abholen", tag: "–10 %", image: "" },
+];
+
+function PromosEditor({ value, onChange, errors, prefix }: { value: PromoData[]; onChange: (v: PromoData[]) => void; errors: Errors; prefix: string }) {
+  const update = (i: number, patch: Partial<PromoData>) => onChange(value.map((p, k) => (k === i ? { ...p, ...patch } : p)));
+  const err = (i: number) => errors[`${prefix}.${i}.title`];
+  return (
+    <div>
+      <div className="space-y-2.5">
+        {value.map((p, i) => (
+          <div key={i} className="flex items-start gap-3 rounded-2xl border border-edge bg-surface p-3">
+            <ImageField value={p.image} onChange={(v) => update(i, { image: v })} label="Bild" className="w-[84px] shrink-0" />
+            <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-2">
+              <Input value={p.title} placeholder="Titel, z. B. Mittagstisch" aria-invalid={!!err(i)} onChange={(e) => update(i, { title: e.target.value })} />
+              <Input value={p.kicker} placeholder="Zeile oben, z. B. Jeden Dienstag" onChange={(e) => update(i, { kicker: e.target.value })} />
+              <Input value={p.text} placeholder="Kurzer Text" onChange={(e) => update(i, { text: e.target.value })} />
+              <Input value={p.tag} placeholder="Etikett, z. B. 9,90 € oder –50 %" onChange={(e) => update(i, { tag: e.target.value })} />
+              {err(i) && <p className="text-xs text-rose sm:col-span-2">{err(i)}</p>}
+            </div>
+            <RowActions onUp={() => onChange(move(value, i, -1))} onDown={() => onChange(move(value, i, 1))} onRemove={() => onChange(value.filter((_, k) => k !== i))} />
+          </div>
+        ))}
+      </div>
+      {value.length < 6 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button type="button" variant="secondary" size="sm" onClick={() => onChange([...value, { kicker: "", title: "", text: "", tag: "", image: "" }])}><Plus className="size-4" /> Aktion hinzufügen</Button>
+          {value.length === 0 && PROMO_IDEAS.map((idea) => (
+            <button key={idea.title} type="button" onClick={() => onChange([...value, idea])} className="rounded-full border border-edge px-3 py-1.5 text-[13px] text-dim transition hover:border-edge-strong hover:text-fg">+ {idea.title}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReviewsEditor({ value, onChange, errors, prefix }: { value: ReviewData[]; onChange: (v: ReviewData[]) => void; errors: Errors; prefix: string }) {
+  const update = (i: number, patch: Partial<ReviewData>) => onChange(value.map((r, k) => (k === i ? { ...r, ...patch } : r)));
+  return (
+    <div>
+      <div className="space-y-2.5">
+        {value.map((r, i) => (
+          <div key={i} className="flex items-start gap-2 rounded-2xl border border-edge bg-surface p-3">
+            <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
+              <Input value={r.name} placeholder="Name, z. B. Lena M." aria-invalid={!!errors[`${prefix}.${i}.name`]} onChange={(e) => update(i, { name: e.target.value })} />
+              <Input value={r.when} placeholder="Wann, z. B. vor 2 Wochen" onChange={(e) => update(i, { when: e.target.value })} />
+              <div className="flex h-12 items-center gap-0.5 px-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button key={n} type="button" onClick={() => update(i, { stars: n })} aria-label={`${n} Sterne`} className="grid size-7 place-items-center">
+                    <Star className={cn("size-[18px]", n <= (r.stars ?? 5) ? "fill-amber-400 text-amber-400" : "text-faint")} />
+                  </button>
+                ))}
+              </div>
+              <div className="sm:col-span-3">
+                <Textarea value={r.text} rows={2} placeholder="Was der Gast geschrieben hat" aria-invalid={!!errors[`${prefix}.${i}.text`]} onChange={(e) => update(i, { text: e.target.value })} />
+              </div>
+            </div>
+            <RowActions onUp={() => onChange(move(value, i, -1))} onDown={() => onChange(move(value, i, 1))} onRemove={() => onChange(value.filter((_, k) => k !== i))} />
+          </div>
+        ))}
+      </div>
+      {value.length < 12 && (
+        <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={() => onChange([...value, { name: "", text: "", stars: 5, when: "" }])}><Plus className="size-4" /> Bewertung hinzufügen</Button>
       )}
     </div>
   );
