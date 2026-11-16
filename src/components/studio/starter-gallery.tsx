@@ -26,13 +26,13 @@ export function StarterGallery({ onPick }: { onPick: (st: Starter) => void }) {
           ))}
         </div>
       </div>
-      <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+      <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {list.map((st, i) => (
           <div key={st.id} role="button" tabIndex={0} onClick={() => onPick(st)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPick(st); } }}
             style={{ animationDelay: `${i * 40}ms` }}
             className="group cursor-pointer animate-rise">
-            <div className="relative overflow-hidden rounded-[30px] border-[6px] border-[#16181b] bg-black shadow-[0_24px_50px_-28px_rgba(0,0,0,.6)] transition duration-500 group-hover:-translate-y-1.5 group-hover:shadow-[0_34px_60px_-26px_rgba(0,0,0,.65)]">
-              <LiveThumb type={st.type} content={st.preview} className="aspect-[9/16] w-full" />
+            <div className="relative overflow-hidden rounded-[26px] border-[5px] border-[#16181b] bg-black shadow-[0_24px_50px_-28px_rgba(0,0,0,.6)] transition duration-500 group-hover:-translate-y-1.5 group-hover:shadow-[0_34px_60px_-26px_rgba(0,0,0,.65)]">
+              <LiveThumb type={st.type} content={st.preview} className="aspect-[3/4] w-full" />
               <span className="absolute inset-x-3 bottom-3 flex translate-y-3 items-center justify-center gap-2 rounded-2xl bg-lime py-3 text-[13.5px] font-bold text-night opacity-0 shadow-lg transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                 Vorlage nutzen <ArrowRight className="size-4" />
               </span>

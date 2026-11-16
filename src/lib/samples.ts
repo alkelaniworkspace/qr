@@ -104,8 +104,16 @@ export const DEMO_PAGES: Partial<Record<CodeTypeId, Record<string, unknown>>> = 
     links: [{ label: "Instagram", url: "https://instagram.com/" }],
   },
   links: {
-    title: "Lena Hoffmann", bio: "Fotografin · Hochzeiten, Portraits, Food", avatar: PHOTOS.womanPortrait, cover: PHOTOS.spread,
-    links: [{ label: "Termin buchen", url: "https://calendly.com/" }, { label: "Instagram", url: "https://instagram.com/" }, { label: "TikTok", url: "https://tiktok.com/" }, { label: "Portfolio", url: "https://example.com/" }],
+    title: "Lena Hoffmann", bio: "Fotografin · Hochzeiten, Portraits, Food", avatar: PHOTOS.womanPortrait, cover: PHOTOS.spread, linkStyle: "cards",
+    links: [
+      { label: "Termin buchen", url: "https://calendly.com/", icon: "calendly", image: "", highlight: true },
+      { label: "Instagram", url: "https://instagram.com/", icon: "instagram", image: "", highlight: false },
+      { label: "TikTok", url: "https://tiktok.com/", icon: "tiktok", image: "", highlight: false },
+      { label: "YouTube", url: "https://youtube.com/", icon: "youtube", image: "", highlight: false },
+      { label: "WhatsApp", url: "https://wa.me/49", icon: "whatsapp", image: "", highlight: false },
+      { label: "Spotify Playlist", url: "https://open.spotify.com/", icon: "spotify", image: "", highlight: false },
+      { label: "Portfolio", url: "https://example.com/", icon: "", image: "", highlight: false },
+    ],
   },
   vcard: {
     firstName: "Ahmad", lastName: "Kaya", title: "Geschäftsführer", company: "Kaya Bau GmbH", photo: PHOTOS.manPortrait, cover: PHOTOS.team,

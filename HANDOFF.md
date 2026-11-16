@@ -108,6 +108,8 @@ Done and pushed (commits "Menu: Showcase templates …" and "Hosted pages: new S
   - Editor: right column `live-pane.tsx` = sticky phone that fits the window height (uses CSS `zoom`, so scrolling inside is exact), toggle Handy-Seite / QR-Code (step 2 opens on the phone, step 3 on the code).
   - New step bar (`step-dock.tsx`): sticky at the bottom of the editor column, back, clickable steps 1–4, big next button; on phones "Vorschau" opens a sheet (portal to body).
   - Unsplash photo IDs in `samples.ts` were not all verified from the cloud session (Unsplash is blocked there). Check the studio once in production and swap any that do not load.
+- Round 3: preview cards smaller again; hovering/touching a card glides slowly down through the whole page (`live-thumb.tsx`).
+- Link page: 52 platforms with real brand icons and colours (`src/lib/platforms.ts`, paths in `brand-paths.ts` generated from simple-icons, CC0; LinkedIn/Lieferando/Wolt/Amazon/E-Mail/Telefon/Website drawn or lucide). Links now have `icon` (platform key or auto), `image` (own icon) and `highlight`. New editor `links-editor.tsx` (quick-add chips, icon menu with search + upload). Six link styles (`linkStyle`: cards, brand, tiles, glass, outline, spotlight) with live preview picker `link-style-picker.tsx`. `brandOf()` now uses the platform list everywhere.
 - Test images for screenshots: put photos into `public/_shot/` and use `http://localhost:3000/_shot/x.jpg` in `/v#` payloads (the proxy 404s, the image then loads directly). Delete before committing.
 
 ## 8. Open items / ideas

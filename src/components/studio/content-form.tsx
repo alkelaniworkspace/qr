@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, ArrowUp, Check, FileUp, GripVertical, Loader2, Moon, Palette, Plus, Star, Sun, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, FileUp, Loader2, Moon, Palette, Plus, Star, Sun, Trash2 } from "lucide-react";
 import type { CodeTypeId, Field, MenuSectionData, PromoData, ReviewData } from "@/lib/codes/types";
 import { FieldShell, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { ImageField, LayoutPicker, MenuBuilder, MenuImport, MenuStylePicker } fr
 import { DesignEditor } from "./design-editor";
 import { MenuTemplatePicker } from "./menu-template-picker";
 import { PageLookPicker } from "./page-look-picker";
+import { LinksEditor, type LinkItem } from "./links-editor";
+import { LinkStylePicker } from "./link-style-picker";
 
 type Content = Record<string, unknown>;
 type Errors = Record<string, string>;
@@ -113,6 +115,12 @@ export function ContentForm({ type, fields, value, errors, onChange, userId }: P
               <div key={field.name} className="col-span-2">
                 <PromosEditor value={(value[field.name] as PromoData[]) ?? []} errors={errors} prefix={field.name} onChange={(v) => set(field.name, v)} />
               </div>
+            );
+          case "linkstyle":
+            return (
+              <FieldShell key={field.name} label={field.label} hint="Wie deine Links aussehen. Die Vorschau zeigt ein Beispiel, deine Links übernehmen nur den Stil." className="col-span-2">
+                <LinkStylePicker value={str(value[field.name]) || "cards"} content={value} onPick={(v) => set(field.name, v)} />
+              </FieldShell>
             );
           case "gallery":
             return (
@@ -242,9 +250,7 @@ export function ColorInput({ id, value, onChange }: { id?: string; value: string
 }
 
 // ───────── Links ─────────
-type LinkItem = { label: string; url: string };
 
-const LINK_SUGGESTIONS = ["Instagram", "TikTok", "Facebook", "WhatsApp", "YouTube", "LinkedIn", "Website", "Google Maps"];
 
 function move<T>(list: T[], i: number, dir: -1 | 1): T[] {
   const j = i + dir;
@@ -287,51 +293,6 @@ function PollOptionsEditor({ value, onChange, errors, prefix }: { value: PollOpt
   );
 }
 
-function LinksEditor({ value, onChange, errors, prefix }: { value: LinkItem[]; onChange: (v: LinkItem[]) => void; errors: Errors; prefix: string }) {
-  const update = (i: number, patch: Partial<LinkItem>) => onChange(value.map((l, k) => (k === i ? { ...l, ...patch } : l)));
-  return (
-    <div>
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-[12px] font-semibold text-dim">Links</span>
-        <span className="text-xs text-faint">{value.length} / 30</span>
-      </div>
-      <div className="space-y-2.5">
-        {value.map((link, i) => (
-          <div key={i} className="group flex items-start gap-2 rounded-2xl border border-edge bg-surface p-2.5">
-            <GripVertical className="mt-4 size-4 shrink-0 text-faint" />
-            <div className="grid flex-1 gap-2 sm:grid-cols-[150px_1fr]">
-              <Input
-                value={link.label}
-                placeholder="Bezeichnung"
-                list="link-suggestions"
-                aria-invalid={!!errors[`${prefix}.${i}.label`]}
-                onChange={(e) => update(i, { label: e.target.value })}
-              />
-              <Input
-                value={link.url}
-                placeholder="https://"
-                aria-invalid={!!errors[`${prefix}.${i}.url`]}
-                onChange={(e) => update(i, { url: e.target.value })}
-              />
-              {(errors[`${prefix}.${i}.url`] || errors[`${prefix}.${i}.label`]) && (
-                <p className="text-xs text-rose sm:col-span-2">{errors[`${prefix}.${i}.label`] ?? errors[`${prefix}.${i}.url`]}</p>
-              )}
-            </div>
-            <RowActions onUp={() => onChange(move(value, i, -1))} onDown={() => onChange(move(value, i, 1))} onRemove={() => onChange(value.filter((_, k) => k !== i))} />
-          </div>
-        ))}
-      </div>
-      <datalist id="link-suggestions">
-        {LINK_SUGGESTIONS.map((s) => <option key={s} value={s} />)}
-      </datalist>
-      {value.length < 30 && (
-        <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={() => onChange([...value, { label: "", url: "" }])}>
-          <Plus className="size-4" /> Link hinzufügen
-        </Button>
-      )}
-    </div>
-  );
-}
 
 const PROMO_IDEAS: PromoData[] = [
   { kicker: "Mo – Fr · 11 – 15 Uhr", title: "Mittagstisch", text: "Hauptgericht und ein Getränk", tag: "9,90 €", image: "" },

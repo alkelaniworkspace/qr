@@ -37,6 +37,7 @@ export type Field =
   | { kind: "review"; name: string; label: string; hint?: string }
   | { kind: "promos"; name: string; label: string }
   | { kind: "gallery"; name: string; label: string }
+  | { kind: "linkstyle"; name: string; label: string }
   | { kind: "reviews"; name: string; label: string }
   | { kind: "section"; name: string; label: string; hint?: string }
   | { kind: "theme"; name: string; label: string };
@@ -73,7 +74,8 @@ const url = (label = "Link") =>
 const optUrl = () =>
   z.string().trim().max(2000).default("").transform(normalizeUrl).refine((v) => !v || isHttpUrl(v), "Ungültiger Link");
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#191919");
-const linkItem = z.object({ label: reqStr("Bezeichnung", 80), url: url() });
+const linkItem = z.object({ label: reqStr("Bezeichnung", 80), url: url(), icon: str(24), image: z.string().trim().max(600).default("").refine((v) => !v || /^https:\/\/[^\s"'<>]+$/.test(v), "Ungültiges Bild"), highlight: z.boolean().default(false) });
+export const LINK_STYLES = ["cards", "brand", "tiles", "glass", "outline", "spotlight"] as const;
 /** Images are uploaded to our storage (or any https URL). */
 const imageUrl = () => z.string().trim().max(600).default("").refine((v) => !v || /^https:\/\/[^\s"'<>]+$/.test(v), "Ungültiges Bild");
 export const MENU_BADGES = ["beliebt", "neu", "vegan", "vegetarisch", "scharf", "hausgemacht"] as const;
@@ -175,9 +177,11 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       { kind: "text", name: "title", label: "Name", required: true },
       { kind: "textarea", name: "bio", label: "Beschreibung" },
       { kind: "links", name: "links", label: "Links" },
+      { kind: "linkstyle", name: "linkStyle", label: "Stil der Links" },
       DESIGN,
     ],
     schema: z.object({
+      linkStyle: z.enum(LINK_STYLES).default("cards"),
       avatar: imageUrl(),
       cover: imageUrl(),
       title: reqStr("Name", 80),
@@ -187,7 +191,7 @@ export const CODE_TYPES: Record<CodeTypeId, CodeTypeDef> = {
       theme,
       design: designSchema.optional(),
     }),
-    defaults: { title: "", bio: "", links: [{ label: "Instagram", url: "" }], accent: "#191919", theme: "light", design: { preset: "peach" } },
+    defaults: { title: "", bio: "", links: [{ label: "Instagram", url: "", icon: "instagram", image: "", highlight: false }], linkStyle: "cards", accent: "#191919", theme: "light", design: { preset: "peach", hero: "centered" } },
   },
   menu: {
     id: "menu",

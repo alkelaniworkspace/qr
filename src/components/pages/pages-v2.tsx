@@ -11,7 +11,8 @@ import type { ReviewData } from "@/lib/codes/types";
 import { mapsUrl } from "@/lib/codes/payload";
 import { openState, parseHours, todayLine, type OpenState } from "@/lib/hours";
 import { isDark, type Design } from "@/lib/page-design";
-import { brandOf } from "./brand-icons";
+import { BrandIcon, brandOf } from "./brand-icons";
+import { isSocial, platformOf } from "@/lib/platforms";
 import { Head, MapArt, Reviews, toggleTheme, useReveal } from "./menu-showcase";
 import { RsvpCard } from "./rsvp-card";
 import { SmartImg } from "./smart-img";
@@ -337,35 +338,65 @@ export function SitePage({ c, d }: { c: C; d: Design }) {
 
 // ───────── Link page ─────────
 
+type LinkRow = { label: string; url: string; icon?: string; image?: string; highlight?: boolean };
+const LIGHT_BRANDS = new Set(["#FFFC00", "#53FC18", "#34E0A1"]);
+
+function BrandTile({ l, className = "" }: { l: LinkRow; className?: string }) {
+  const p = platformOf(l.url, l.icon);
+  if (l.image) return <span className={`lk-ic img ${className}`}><SmartImg src={l.image} width={160} /></span>;
+  return <span className={`lk-ic ${className}`} style={{ "--b": p.color, color: LIGHT_BRANDS.has(p.color) ? "#111" : "#fff" } as React.CSSProperties}><BrandIcon k={p.key} className="size-[52%]" /></span>;
+}
+
 export function LinksPage({ c, d }: { c: C; d: Design }) {
-  const links = ((c.links as { label: string; url: string }[]) ?? []).filter((l) => l && l.url);
-  const socials = links.filter((l) => brandOf(l.url).social).slice(0, 6);
-  const [first, ...rest] = links;
-  const featured = links.length > 2 ? first : null;
-  const list = featured ? rest : links;
+  const style = s(c.linkStyle) || "cards";
+  const links = ((c.links as LinkRow[]) ?? []).filter((l) => l && l.url);
+  const socials = links.filter((l) => isSocial(platformOf(l.url, l.icon))).slice(0, 6);
+  const marked = links.filter((l) => l.highlight);
+  const featured = marked.length ? marked : links.length > 2 ? [links[0]] : [];
+  const rest = links.filter((l) => !featured.includes(l));
+  const glass = style === "glass";
+  const item = (l: LinkRow, k: number) => {
+    const p = platformOf(l.url, l.icon);
+    const name = p.key === "website" || p.label.toLowerCase() === l.label.trim().toLowerCase() ? host(l.url) : p.label;
+    const vars = { "--b": p.color, "--d": `${k * 0.05}s` } as React.CSSProperties;
+    switch (style) {
+      case "brand":
+        return <a key={k} href={l.url} {...ext} className="lk lk-brand sc-rv" style={{ ...vars, color: LIGHT_BRANDS.has(p.color) ? "#111" : "#fff" }}><span className="lk-brand-ic">{l.image ? <SmartImg src={l.image} width={120} /> : <BrandIcon k={p.key} className="size-[22px]" />}</span><b>{l.label}</b><ArrowUpRight className="size-5 lk-go" /></a>;
+      case "tiles":
+        return <a key={k} href={l.url} {...ext} className="lk lk-tile sc-rv" style={vars}><BrandTile l={l} /><span className="lk-t"><b>{l.label}</b><small>{name}</small></span><ArrowUpRight className="size-[18px] lk-go" /></a>;
+      case "outline":
+        return <a key={k} href={l.url} {...ext} className="lk lk-out sc-rv" style={vars}><span className="lk-out-ic">{l.image ? <SmartImg src={l.image} width={120} /> : <BrandIcon k={p.key} className="size-5" />}</span><b>{l.label}</b><span className="lk-out-sp" /></a>;
+      case "spotlight":
+        return <a key={k} href={l.url} {...ext} className="lk lk-spot sc-rv" style={{ ...vars, color: LIGHT_BRANDS.has(p.color) ? "#111" : "#fff" }}><span className="lk-spot-mark"><BrandIcon k={p.key} className="size-full" /></span><BrandTile l={l} className="glassy" /><span className="lk-t"><small>{name}</small><b>{l.label}</b></span><span className="lk-spot-go"><ArrowRight className="size-5" /></span></a>;
+      case "glass":
+        return <a key={k} href={l.url} {...ext} className="lk lk-gl sc-rv" style={vars}><BrandTile l={l} /><span className="lk-t"><b>{l.label}</b><small>{name}</small></span><ArrowUpRight className="size-[18px] lk-go" /></a>;
+      default:
+        return <a key={k} href={l.url} {...ext} className="lk lk-card sc-rv" style={vars}><BrandTile l={l} /><span className="lk-t"><b>{l.label}</b><small>{name}</small></span><ArrowUpRight className="size-[18px] lk-go" /></a>;
+    }
+  };
   return (
-    <Frame d={d}>
-      <PageHead d={d} cover={s(c.cover)} avatar={s(c.avatar)} title={s(c.title) || "Dein Name"} subtitle={s(c.bio)}>
-        {socials.length > 1 && <div className="pv-soc-row">{socials.map((l) => <a key={l.url} href={l.url} {...ext} aria-label={brandOf(l.url).name}>{brandOf(l.url).icon}</a>)}</div>}
+    <Frame d={d} className={`pv-links-page lk-${style}`}>
+      {glass && (
+        <div className="lk-bg" aria-hidden>
+          {(s(c.cover) || s(c.avatar)) && <SmartImg src={s(c.cover) || s(c.avatar)} width={900} eager />}
+          <i /><i /><i />
+        </div>
+      )}
+      <PageHead d={glass ? { ...d, hero: "centered" } : d} cover={glass ? undefined : s(c.cover)} avatar={s(c.avatar)} title={s(c.title) || "Dein Name"} subtitle={s(c.bio)}>
+        {socials.length > 1 && <div className="pv-soc-row">{socials.map((l, k) => { const p = platformOf(l.url, l.icon); return <a key={k} href={l.url} {...ext} aria-label={p.label} style={{ "--b": p.color } as React.CSSProperties}><BrandIcon k={p.key} className="size-[19px]" /></a>; })}</div>}
       </PageHead>
       <div className="pv-links">
-        {featured && (
-          <a href={featured.url} {...ext} className="pv-feat sc-rv">
-            <span className="pv-feat-ic">{brandOf(featured.url).icon}</span>
-            <span className="pv-feat-t"><small>{brandOf(featured.url).name || host(featured.url)}</small><b>{featured.label}</b></span>
-            <span className="pv-feat-go"><ArrowRight className="size-5" /></span>
-          </a>
-        )}
-        {list.map((l, k) => {
-          const b = brandOf(l.url);
+        {featured.map((l, k) => {
+          const p = platformOf(l.url, l.icon);
           return (
-            <a key={k} href={l.url} {...ext} className="pv-link sc-rv" style={d$(k)}>
-              <span className="pv-ic">{b.icon}</span>
-              <span className="pv-row-t"><b>{l.label}</b><small>{host(l.url)}</small></span>
-              <ArrowUpRight className="size-[18px] pv-chev" />
+            <a key={`f${k}`} href={l.url} {...ext} className="pv-feat sc-rv" style={d$(k)}>
+              <span className="pv-feat-ic">{l.image ? <SmartImg src={l.image} width={160} /> : <BrandIcon k={p.key} className="size-[22px]" />}</span>
+              <span className="pv-feat-t"><small>{p.key === "website" ? host(l.url) : p.label}</small><b>{l.label}</b></span>
+              <span className="pv-feat-go"><ArrowRight className="size-5" /></span>
             </a>
           );
         })}
+        <div className={style === "tiles" ? "lk-grid" : "lk-list"}>{rest.map(item)}</div>
       </div>
     </Frame>
   );
