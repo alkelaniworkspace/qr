@@ -62,7 +62,9 @@ Read it before starting a task. Update the "Last state" and "Open items" section
 | Studio (4 steps: Type → Content → Design → Print) | `src/components/studio/wizard.tsx`, `content-form.tsx`, `design-panel.tsx` (QR design), `design-editor.tsx` (page colours/font), `preview.tsx`, `step-dock.tsx` (floating back/next + mobile preview sheet) |
 | Date/time picker | `src/components/ui/date-time-field.tsx` (used for `datetime`/`date` fields) |
 | App frame with sidebar | `src/components/shell/app-shell.tsx`, `studio-nav.tsx`, `src/lib/shell-data.ts` (calls `connection()`, rendered per request) |
-| Hosted pages | `src/components/pages/hosted-pages.tsx` (shell + all types), `menu-page.tsx` (menu engine), `smart-img.tsx`, `rsvp-card.tsx` |
+| Hosted pages | `src/components/pages/hosted-pages.tsx` (shell + switch), `pages-v2.tsx` (site, links, vCard, review, coupon, event, PDF in the Showcase style), `menu-showcase.tsx` + `menu-showcase.css` (Showcase menu and all shared `sc-`/`pv-` styles), `menu-page.tsx` (classic menu engine), `poll-page.tsx`, `smart-img.tsx`, `rsvp-card.tsx` |
+| Opening hours | `src/lib/hours.ts` parses free text ("Mo–Fr 11–22 Uhr") for the live "Geöffnet · bis 22:00" state and today's line |
+| Page looks | `PAGE_LOOKS` in `src/lib/page-design.ts` (14 looks), picker `src/components/studio/page-look-picker.tsx` (live previews, all types except menu). Heroes: card, full, cover (= card), centered, minimal |
 | Page design system | `src/lib/page-design.ts` (FONTS, PRESETS, `resolveDesign`, `designVars`); CSS `.pg …` in `globals.css` |
 | 20 menu templates | `src/lib/menu-templates.ts` (header/nav/heading/items/texture + design; retired IDs are mapped in `RETIRED`), picker `src/components/studio/menu-template-picker.tsx` |
 | Menu import | `src/lib/menu-import.ts`, `menu-dom.ts`, `menu-capture.ts` (bookmarklet), `src/app/import/` |
@@ -88,24 +90,18 @@ Read it before starting a task. Update the "Last state" and "Open items" section
 - The React-Compiler ESLint rules are strict (e.g. no assignments to `document.*` inside a component; move them into a helper function).
 - `verify-qr` imports `sticker-studio` → `content-form`. Anything that pulls in page CSS must be loaded lazily (`next/dynamic`), see `menu-template-picker.tsx`.
 
-## 7. Last state (2026-11-16)
+## 7. Last state (2026-11-17)
 
-Done and live on `main` (last commit: "Studio: floating step dock, preview sheet on phones, custom date picker; drop page presets"):
+Done and pushed (commits "Menu: Showcase templates …" and "Hosted pages: new Showcase-style designs …"):
 
-- 20 clean menu templates (shop cards like a delivery app, editorial, noir, Swiss …) and professional fonts.
-- Sidebar in the app frame on all app pages (studio, codes, dashboard). Not on the pricing page or other marketing pages.
-- Pricing page `/preise`:
-  - lime/black theme, Pro spotlight card, Business in red;
-  - ruler calculator (1 to 150+), 150+ leads to "Angebot anfragen" by mail;
-  - comparison table and FAQ.
-- New limits 1/15/50/150. The migration is applied to the live database.
-- English for the public site. Header navigation sits next to the logo. Larger footer.
-- Subtle motion: `.rise`, `.shimmer-text`, `.nav-link`, `.card-light`, `.pr-sheen`.
-- Studio:
-  - floating step dock (back/progress/next), mobile preview as a bottom sheet;
-  - custom date/time picker;
-  - the duplicated page preset grid was removed (fine-tuning lives under "Farben & Schrift").
-- Event registration with double opt-in by email and a public count (names are never shown).
+- The owner rejected the old menu designs as too plain and approved a delivery-app style preview ("Rocco's"). It is now the **Showcase menu** (`menu-showcase.tsx`):
+  - 10 templates at the top of the picker (Feuer = default, Glut, Granatapfel, Trattoria, Schwarz & Gold, Street, Meer, Kaffeehaus, Rosé, Lime Night); `engine: "showcase"`, `hero: "card" | "full"`.
+  - Cover with parallax, profile card (logo, rating, live open state), delivery/pickup/online chips, actions (call, WhatsApp, route, reviews), auto promo slider, search, sticky category chips with icons from the title, "Beliebt" carousel, per-category layout (auto/list/grid/cards/compact, set in the menu builder), dish sheet (portal) with sizes and allergens, reviews with count-up, hours with "Heute", map card, socials, floating call bar, light/dark switch.
+  - New menu fields: whatsapp, orderUrl, delivery, pickup, instagram/tiktok/facebook, promos[], rating, ratingCount, reviewUrl, reviews[]; section `layout`.
+- All other hosted pages except the poll were rebuilt in the same language (`pages-v2.tsx`). New fields: site (whatsapp, gallery[], rating, reviews), review (`feedback` = e-mail/WhatsApp for direct feedback; the Google button always stays visible, no review gating).
+- 14 "Looks" with live previews above "Farben & Schrift" for every non-menu type.
+- Shell uses `overflow-x-clip` (not hidden) so sticky nav and the floating bar work.
+- Test images for screenshots: put photos into `public/_shot/` and use `http://localhost:3000/_shot/x.jpg` in `/v#` payloads (the proxy 404s, the image then loads directly). Delete before committing.
 
 ## 8. Open items / ideas
 
@@ -116,7 +112,9 @@ Done and live on `main` (last commit: "Studio: floating step dock, preview sheet
 3. **Guests (no account)** can still create unlimited dynamic codes server-side (the limit only applies to accounts). Close that if the owner wants it.
 4. **More QR design options** (design panel), requested earlier.
 5. **Test the menu import on real sites** (needs a link from the owner, e.g. Kepizza).
-6. Ideas I proposed (the owner has not decided yet):
+6. **Poll page** still has the older look; bring it to the Showcase style.
+7. Owner feedback on the new pages is pending (only the menu was approved explicitly).
+8. Ideas I proposed (the owner has not decided yet):
    - ordering at the table via WhatsApp;
    - multilingual menus;
    - daily dish / happy hour by time;
