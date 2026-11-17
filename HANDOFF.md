@@ -121,10 +121,12 @@ Done and pushed (commits "Menu: Showcase templates …" and "Hosted pages: new S
 - User side: `/dashboard/codes` has tabs Aktiv / Archiv / Papierkorb; delete = trash, restore, delete forever only from trash.
 - Admin UI `/admin` (only visible to admins, sidebar "Verwaltung"): Übersicht (KPIs, 30-day bars), Nutzer (search/filter, detail page with gift plan + duration, suspend, role, user's codes), Codes (filters incl. trash/locked/guest, actions menu), Protokoll.
 - The admin pages were not screenshot-checked (needs a logged-in admin). Check once in production after the owner signs up.
+- Google sign-in works (Google Cloud project "My First Project", app published, External). Branding verification: first attempt failed (domain not verified, privacy page empty). Fixed: full `/datenschutz` (with "Anmeldung mit Google" + Limited Use), Search Console domain property verified via TXT at Hostinger (keep that record). Owner re-submits after 24 h ("I have fixed the issues").
+- `site.owner` (name/street/city/phone) in `src/lib/site.ts` is still empty; Impressum is still a placeholder. Needs the owner's legal name and address.
 
 ## 8. Open items / ideas
 
-1. **Owner setup:** in Google Cloud OAuth add origins `https://www.qlickqr.com`, `https://qlickqr.com`; in Supabase Auth set Site URL `https://www.qlickqr.com` + redirect `https://www.qlickqr.com/**`; sign up with `info@qlickqr.com` (becomes admin). Check Resend verification; then move Supabase auth e-mails to custom SMTP (Resend) from info@qlickqr.com.
+1. **Owner setup:** in Google Cloud OAuth add origins `https://www.qlickqr.com`, `https://qlickqr.com`; in Supabase Auth set Site URL `https://www.qlickqr.com` + redirect `https://www.qlickqr.com/**`; sign up with `info@qlickqr.com` (becomes admin). Resend domain is verified; then move Supabase auth e-mails to custom SMTP (Resend) from info@qlickqr.com.
    - **Phase 3 payments (Stripe)** waits on: Gewerbe, Stripe account, tax decision (Kleinunternehmer or MwSt), final prices/trial, legal pages (AGB, Widerruf, Impressum, Datenschutz).
 2. **Translate the studio and dashboard to English.** Only the public site is translated so far.
 3. **Guests (no account)** can still create unlimited dynamic codes server-side (the limit only applies to accounts). Close that if the owner wants it.
