@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3, Check, ChevronRight, ChevronsUpDown, Clapperboard, ClipboardList, CreditCard, FolderOpen, HelpCircle, LayoutTemplate, LogIn, LogOut, Menu,
-  Bell, Gem, Moon, ShieldCheck, TriangleAlert, PenLine, Plus, Printer, Shapes, Sparkles, Sticker, Sun, Palette, UserRound, X, Zap,
+  Bell, Gem, Settings, Moon, ShieldCheck, TriangleAlert, PenLine, Plus, Printer, Shapes, Sparkles, Sticker, Sun, Palette, UserRound, X, Zap,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/cn";
@@ -148,9 +148,10 @@ function SidebarBody({ user, admin }: { user: ShellUser | null; admin?: boolean 
 
       <Section title="Mehr">
         {user && <NavItem href="/dashboard/billing" icon={CreditCard} label="Tarif & Rechnungen" active={pathname.startsWith("/dashboard/billing")} />}
+        {user && <NavItem href="/dashboard/settings" icon={Settings} label="Einstellungen" active={pathname.startsWith("/dashboard/settings")} />}
         <NavItem href="/#funktionen" icon={Sparkles} label="Funktionen" />
         <NavItem href="/preise" icon={Zap} label="Preise" />
-        <NavItem href="mailto:info@qlickqr.com" icon={HelpCircle} label="Hilfe & Kontakt" />
+        <NavItem href="/hilfe" active={pathname.startsWith("/hilfe")} icon={HelpCircle} label="Hilfe & Kontakt" />
       </Section>
     </nav>
   );
@@ -307,8 +308,9 @@ function SidebarFooter({ user, plan, localCodes }: { user: ShellUser | null; pla
                 <span className={cn("ml-auto h-5 w-9 rounded-full p-0.5 transition", theme === "light" ? "bg-cta" : "bg-hi/15")}><span className={cn("block size-4 rounded-full bg-white transition", theme === "light" && "translate-x-4")} /></span>
               </button>
               {user && <Link href="/dashboard" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><Bell className="size-4" /> Übersicht & Statistik</Link>}
-              {user && <Link href="/dashboard/billing" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><CreditCard className="size-4" /> Konto & Tarif</Link>}
-              <a href="mailto:info@qlickqr.com" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><HelpCircle className="size-4" /> Hilfecenter</a>
+              {user && <Link href="/dashboard/billing" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><CreditCard className="size-4" /> Tarif & Rechnungen</Link>}
+              {user && <Link href="/dashboard/settings" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><Settings className="size-4" /> Einstellungen</Link>}
+              <Link href="/hilfe" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><HelpCircle className="size-4" /> Hilfecenter</Link>
             </div>
             <div className="mt-1 border-t border-edge pt-1">
               {user ? (

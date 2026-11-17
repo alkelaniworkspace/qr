@@ -40,11 +40,12 @@ Read it before starting a task. Update the "Last state" and "Open items" section
 
 ### Env vars (Vercel)
 - **Present:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_APP_URL` (= `https://www.qlickqr.com`), `VISITOR_SALT`, `SUPABASE_SECRET_KEY`, `RESEND_API_KEY` (sending-only, domain qlickqr.com), `MAIL_FROM` (`Qlick <info@qlickqr.com>`).
-- **Missing:** `SEND_EMAIL_HOOK_SECRET` (owner adds it, see §8), `ANTHROPIC_API_KEY` (optional, AI menu import).
+- **Also present:** `SEND_EMAIL_HOOK_SECRET` (Supabase Send Email hook, enabled).
+- **Missing:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (Qlick's own Stripe account, not the 3LedMaker one), optional `STRIPE_AUTOMATIC_TAX=1`, `ANTHROPIC_API_KEY` (optional, AI menu import).
 
 ### Domain & mail
 - Domain **qlickqr.com** (DNS at Hostinger; apex redirects to `www`). Mailbox `info@qlickqr.com` (Hostinger) = contact + admin e-mail.
-- Resend domain `qlickqr.com` (id `4b5eaf77-2ec7-421e-9fc4-e705b50a441b`); DNS records set at Hostinger, verification was pending.
+- Resend domain `qlickqr.com` (id `4b5eaf77-2ec7-421e-9fc4-e705b50a441b`); DNS records set at Hostinger, verified.
 - **Never** print, commit or ask for secrets in chat.
 
 ## 4. Git workflow
@@ -125,13 +126,18 @@ Done and pushed (commits "Menu: Showcase templates …" and "Hosted pages: new S
 - Branded auth e-mails: Supabase "Send Email" hook → `POST /api/auth/email` (verifies the standard-webhooks signature with `SEND_EMAIL_HOOK_SECRET`, renders `src/lib/auth-email.ts`, sends via Resend from `MAIL_FROM`; logo `public/email/qlick-logo.png`). Links go to `/auth/confirm?token_hash=…&type=…&next=…`. New pages `/forgot` and `/reset-password` (+ "Passwort vergessen?" on login).
 - Gifts & limits (migration `20261117210000_gifts_limits.sql`, applied live): `profiles.code_limit` (null = plan default, -1 = unlimited, n), `dynamic_limit(uid)` used by the triggers and the app (`dynamicLimit()` in `src/lib/account.ts`). `plan_grants`: gift any e-mail (`admin_gift_email`); applied at once if the account exists, else in `handle_new_user` on sign-up (months count from activation). Admin page `/admin/gifts` (form with live preview + open gifts with revoke), user detail has "Dynamische Codes" limit card and "Geschenk-E-Mail senden". Gift e-mail `src/lib/gift-email.ts`; CTA for new people → `/signup?gift=1&email=…` (prefilled, gift banner).
 - All e-mails share `src/lib/mail-layout.ts` (auth, gift, RSVP).
+- Billing & settings (migrations `20261117220000_billing_settings.sql`, `20261117221000_user_by_email.sql`, applied live):
+  - Stripe (`src/lib/billing.ts`, stripe-node v23, API 2026-10-28; `current_period_end` lives on subscription items). Products `qlick_{plan}` and prices with lookup key `qlick_{plan}_{month|year}_v1` are created on first use; founder coupon `QLICK_FOUNDER` (40 % forever, 100 seats). 14-day trial on the first subscription. Server actions in `src/app/dashboard/billing/actions.ts` (checkout, change plan with proration, cancel/resume at period end, customer portal). Webhook `POST /api/billing/webhook` syncs the profile (`subscription_*`, `billing_interval`, `current_period_end`, `cancel_at_period_end`; paid plan → `plan_source='paid'`, ended → Free) and sends a welcome mail. Everything shows a friendly "kommt gleich" error until `STRIPE_SECRET_KEY` exists.
+  - `/dashboard/billing` = `BillingView` (current plan card, usage meters, plans with monthly/yearly toggle, payment method, invoices from Stripe, FAQ).
+  - `/dashboard/settings`: profile name, e-mail change, password (handles re-authentication code), login methods, sign out everywhere, notification toggles (`notify_product`, `notify_reports`), theme + site language, JSON export (`/api/account/export`), delete account (ends subscription, `auth.admin.deleteUser`).
+  - Legal: `/agb`, `/widerruf` (with model form), `/impressum` (reads `site.owner`), `/kuendigen` (§ 312k BGB, no login: confirms by mail with timestamp, mails info@, sets cancel_at_period_end if the e-mail has a live subscription), `/hilfe` (FAQ). Footer + sidebar link to them. Legal texts are drafts, not lawyer-reviewed.
 - Google branding verification is approved (Qlick name + logo on the Google consent screen).
 - `site.owner` (name/street/city/phone) in `src/lib/site.ts` is still empty; Impressum is still a placeholder. Needs the owner's legal name and address.
 
 ## 8. Open items / ideas
 
 1. **Owner setup:** in Google Cloud OAuth add origins `https://www.qlickqr.com`, `https://qlickqr.com`; in Supabase Auth set Site URL `https://www.qlickqr.com` + redirect `https://www.qlickqr.com/**`; sign up with `info@qlickqr.com` (becomes admin). Resend domain is verified. Enable the Supabase Send Email hook (Auth → Hooks, HTTPS, URL `https://www.qlickqr.com/api/auth/email`), put its secret into Vercel env `SEND_EMAIL_HOOK_SECRET` and redeploy.
-   - **Phase 3 payments (Stripe)** waits on: Gewerbe, Stripe account, tax decision (Kleinunternehmer or MwSt), final prices/trial, legal pages (AGB, Widerruf, Impressum, Datenschutz).
+   - **Payments go live** once the owner has Qlick's own Stripe account: set `STRIPE_SECRET_KEY`, add webhook endpoint `https://www.qlickqr.com/api/billing/webhook` (events: checkout.session.completed, customer.subscription.*, invoice.paid, invoice.payment_failed) → `STRIPE_WEBHOOK_SECRET`, activate the customer portal in the Stripe dashboard. Before that, still needed: Gewerbe, Stripe account, tax decision (Kleinunternehmer or MwSt), final prices/trial, legal pages (AGB, Widerruf, Impressum, Datenschutz).
 2. **Translate the studio and dashboard to English.** Only the public site is translated so far.
 3. **Guests (no account)** can still create unlimited dynamic codes server-side (the limit only applies to accounts). Close that if the owner wants it.
 4. **More QR design options** (design panel), requested earlier.

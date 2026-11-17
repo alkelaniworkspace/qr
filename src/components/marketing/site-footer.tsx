@@ -20,7 +20,8 @@ export async function SiteFooter() {
       ["/studio", T("Poster A6 bis A0", "Posters A6 to A0")], ["/studio", T("Tischaufsteller", "Table tents")], ["/studio", T("Sticker mit Schnittkante", "Stickers with cut line")], ["/studio", T("Animation als MP4", "Animation as MP4")],
     ] },
     { title: T("Hilfe & Rechtliches", "Help & legal"), links: [
-      [`mailto:${site.email}`, T("Kontakt", "Contact")], ["/preise#faq", T("Häufige Fragen", "FAQ")], ["/impressum", T("Impressum", "Legal notice")], ["/datenschutz", T("Datenschutz", "Privacy")],
+      ["/hilfe", T("Hilfe & Kontakt", "Help & contact")], ["/impressum", T("Impressum", "Legal notice")], ["/datenschutz", T("Datenschutz", "Privacy")],
+      ["/agb", T("AGB", "Terms")], ["/widerruf", T("Widerrufsbelehrung", "Right of withdrawal")], ["/kuendigen", T("Verträge hier kündigen", "Cancel contract")],
     ] },
   ];
 

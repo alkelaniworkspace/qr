@@ -256,3 +256,10 @@ const now = ((await as(ADM, `select public.admin_gift_email('${"neu@kunde.de"}',
 check("gift: existing account gets it at once", now.status === "applied" && ((await db.query(`select plan, plan_until from public.profiles where id = '${E}'`)).rows[0] as { plan: string; plan_until: string | null }).plan === "business");
 await expectError("gift: bad e-mail is rejected", () => as(ADM, `select public.admin_gift_email('nope', 'pro', 1, null, null)`), /BAD_EMAIL/);
 await expectError("gift: only admins", () => as(B, `select public.admin_gift_email('x@y.de', 'pro', 1, null, null)`), /NOT_ADMIN/);
+
+// ── billing and settings ──
+await as(B, `update public.profiles set notify_product = false where id = '${B}'`);
+check("settings: user can change own e-mail preferences", ((await db.query(`select notify_product from public.profiles where id = '${B}'`)).rows[0] as { notify_product: boolean }).notify_product === false);
+await expectError("billing: user cannot fake a subscription", () => as(B, `update public.profiles set subscription_status = 'active'`), /permission denied/);
+await expectError("billing: user cannot set a customer id", () => as(B, `update public.profiles set stripe_customer_id = 'cus_x'`), /permission denied/);
+await expectError("cancel page: e-mail lookup is server-only", () => as(B, `select public.user_id_by_email('neu@kunde.de')`), /permission denied/);

@@ -1,58 +1,52 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Check } from "lucide-react";
-import { getSessionUser } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { getQuota } from "@/lib/codes/quota";
-import { PLANS, euro, type PlanId } from "@/lib/plans";
-import { cn } from "@/lib/cn";
+import {
+  billingConfigured, billingProfile, defaultCard, isLive, listInvoices, stripe, syncSubscription,
+  type CardInfo, type InvoiceRow,
+} from "@/lib/billing";
+import { BillingView } from "@/components/dashboard/billing-view";
 
-export const metadata: Metadata = { title: "Tarif" };
+export const metadata: Metadata = { title: "Tarif & Rechnungen" };
 
-export default async function BillingPage() {
+export default async function BillingPage({ searchParams }: { searchParams: Promise<{ checkout?: string }> }) {
   const user = await getSessionUser();
-  if (!user) redirect("/login");
-  const quota = await getQuota(user.id);
-  const pct = isFinite(quota.limit) ? Math.min(100, Math.round((quota.used / quota.limit) * 100)) : 0;
+  if (!user) redirect("/login?next=/dashboard/billing");
+  const { checkout } = await searchParams;
+  const configured = billingConfigured();
+
+  let prof = await billingProfile(user.id);
+  // Back from Checkout before the webhook arrived: pick up the subscription directly.
+  if (configured && checkout === "success" && prof?.stripe_customer_id && !isLive(prof.subscription_status)) {
+    try {
+      const subs = await stripe().subscriptions.list({ customer: prof.stripe_customer_id, limit: 1 });
+      if (subs.data[0]) { await syncSubscription(subs.data[0]); prof = await billingProfile(user.id); }
+    } catch { /* the webhook will catch up */ }
+  }
+
+  const supabase = await createClient();
+  const [quota, { count: formCount }] = await Promise.all([
+    getQuota(user.id),
+    supabase.from("forms").select("id", { count: "exact", head: true }),
+  ]);
+  const paid = quota.account.planSource === "paid" && isLive(prof?.subscription_status);
+  const gift = quota.account.planSource === "gift" && quota.plan !== "free";
+
+  let invoices: InvoiceRow[] = [];
+  let card: CardInfo | null = null;
+  if (configured && prof?.stripe_customer_id) {
+    [invoices, card] = await Promise.all([
+      listInvoices(prof.stripe_customer_id).catch(() => []),
+      defaultCard(prof.stripe_customer_id).catch(() => null),
+    ]);
+  }
 
   return (
-    <div className="animate-rise">
-      <p className="text-sm text-dim">Konto</p>
-      <h1 className="mt-1 font-display text-5xl leading-none">Dein Tarif</h1>
-
-      <div className="card card-glow mt-8 p-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-dim">Aktueller Tarif</p>
-            <p className="font-display text-5xl text-brand glow-text">{PLANS[quota.plan].label}</p>
-          </div>
-          <p className="text-sm text-dim">{quota.used} von {isFinite(quota.limit) ? quota.limit : "∞"} dynamischen Codes genutzt</p>
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-hi/[0.06]">
-          <div className={cn("h-full rounded-full", pct >= 100 ? "bg-rose" : "bg-brand shadow-[0_0_12px_rgb(var(--glow)/0.6)]")} style={{ width: `${pct}%` }} />
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {(Object.keys(PLANS) as PlanId[]).map((id) => {
-          const p = PLANS[id];
-          const current = id === quota.plan;
-          return (
-            <div key={id} className={cn("card flex flex-col p-6", current && "card-glow")}>
-              <p className="font-display text-lg">{p.label}</p>
-              <p className={cn("mt-3 font-display text-5xl", current && "text-brand")}>{euro(p.price)}<span className="font-sans text-sm font-normal text-dim"> / Monat</span></p>
-              <ul className="mt-6 flex-1 space-y-2.5 text-sm">
-                {p.features.map((f) => (
-                  <li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-brand" /> {f}</li>
-                ))}
-              </ul>
-              <button disabled className={cn("mt-6 h-11 rounded-xl text-xs font-bold", current ? "bg-brand/15 text-brand" : "border border-edge text-faint")}>
-                {current ? "Aktueller Tarif" : "Online-Zahlung folgt"}
-              </button>
-            </div>
-          );
-        })}
-      </div>
-      <p className="mt-6 text-sm text-dim">Egal welcher Tarif: Deine gedruckten Codes funktionieren für immer, auch nach einer Kündigung.</p>
-    </div>
+    <BillingView
+      checkout={checkout} configured={configured} plan={quota.plan} planSource={quota.account.planSource} planUntil={quota.account.planUntil}
+      used={quota.used} limit={isFinite(quota.limit) ? quota.limit : null} forms={formCount ?? 0} prof={prof} paid={paid} gift={gift}
+      invoices={invoices} card={card}
+    />
   );
 }
