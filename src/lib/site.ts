@@ -6,4 +6,6 @@ export const site = {
     "Gestalte QR-Codes, die zu deiner Marke passen. Dynamisch, messbar, DSGVO-konform und für immer funktionsfähig.",
   email: "info@qlickqr.com",
   domain: "qlickqr.com",
+  /** Legal owner shown in Impressum and Datenschutz. Fill in before launch. */
+  owner: { name: "", street: "", city: "", phone: "" },
 };
