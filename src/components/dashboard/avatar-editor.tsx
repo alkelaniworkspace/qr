@@ -71,8 +71,8 @@ export function AvatarEditor({ userId, url, initial }: { userId: string; url: st
       if (!blob) throw new Error();
       const supabase = createClient();
       const path = `${userId}/avatar-${Date.now()}.webp`;
-      const { error: up } = await supabase.storage.from("assets").upload(path, blob, { contentType: "image/webp", upsert: true });
-      if (up) throw new Error();
+      const { error: up } = await supabase.storage.from("assets").upload(path, blob, { contentType: "image/webp", upsert: false });
+      if (up) { console.error("avatar upload", up); throw new Error(); }
       const publicUrl = supabase.storage.from("assets").getPublicUrl(path).data.publicUrl;
       const r = await setAvatar(publicUrl);
       if (r.error) throw new Error(r.error);
