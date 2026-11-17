@@ -4,5 +4,6 @@ export const site = {
   tagline: "QR-Codes, die klicken",
   description:
     "Gestalte QR-Codes, die zu deiner Marke passen. Dynamisch, messbar, DSGVO-konform und für immer funktionsfähig.",
-  email: "hallo@qlick.codes",
+  email: "info@qlickqr.com",
+  domain: "qlickqr.com",
 };

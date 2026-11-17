@@ -31,7 +31,7 @@ export const PLANS = {
 
 /** Above the largest plan: individual offer. */
 export const QUOTE_FROM = 151;
-export const SALES_EMAIL = "hallo@qlick.codes";
+export const SALES_EMAIL = "info@qlickqr.com";
 
 export type PlanId = keyof typeof PLANS;
 export const planOf = (p: string | null | undefined): PlanId => (p && p in PLANS ? (p as PlanId) : p === "starter" ? "start" : p === "agency" ? "business" : "free");

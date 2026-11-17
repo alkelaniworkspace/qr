@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3, Check, ChevronRight, ChevronsUpDown, Clapperboard, ClipboardList, CreditCard, FolderOpen, HelpCircle, LayoutTemplate, LogIn, LogOut, Menu,
-  Bell, Gem, Moon, PenLine, Plus, Printer, Shapes, Sparkles, Sticker, Sun, Palette, UserRound, X, Zap,
+  Bell, Gem, Moon, ShieldCheck, TriangleAlert, PenLine, Plus, Printer, Shapes, Sparkles, Sticker, Sun, Palette, UserRound, X, Zap,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/cn";
@@ -28,7 +28,7 @@ export interface ShellPlan {
  * workspace navigation, the create-code path (numbered steps with
  * sub-menus), plan usage and the account. On phones it becomes a drawer.
  */
-export function AppShell({ user, plan, localCodes = 0, children }: { user: ShellUser | null; plan: ShellPlan | null; localCodes?: number; children: React.ReactNode }) {
+export function AppShell({ user, plan, localCodes = 0, admin = false, suspended = false, children }: { user: ShellUser | null; plan: ShellPlan | null; localCodes?: number; admin?: boolean; suspended?: string | false; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   // eslint-disable-next-line react-hooks/set-state-in-effect -- close the drawer after navigating
@@ -58,7 +58,7 @@ export function AppShell({ user, plan, localCodes = 0, children }: { user: Shell
             </span>
             <button type="button" onClick={() => setOpen(false)} aria-label="Menü schließen" className="grid size-9 place-items-center rounded-lg text-dim hover:bg-hi/5 lg:hidden"><X className="size-4" /></button>
           </div>
-          <SidebarBody user={user} />
+          <SidebarBody user={user} admin={admin} />
           <SidebarFooter user={user} plan={plan} localCodes={localCodes} />
         </aside>
 
@@ -75,6 +75,12 @@ export function AppShell({ user, plan, localCodes = 0, children }: { user: Shell
               </>
             )}
           </div>
+          {suspended !== false && (
+            <div className="mx-5 mt-5 flex items-start gap-3 rounded-2xl border border-rose/40 bg-rose/10 px-4 py-3 text-sm sm:mx-8 lg:mr-72">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-rose" />
+              <span><b className="font-semibold">Dein Konto ist gesperrt.</b> Deine Codes zeigen gerade eine Pause-Seite und du kannst keine neuen erstellen.{suspended ? ` Grund: ${suspended}.` : ""} Fragen? <a className="underline" href="mailto:info@qlickqr.com">info@qlickqr.com</a></span>
+            </div>
+          )}
           {children}
         </div>
       </div>
@@ -112,7 +118,7 @@ function NavItem({ href, icon: Icon, label, active, badge, onClick }: { href?: s
   return href ? <Link href={href} className={cls}>{inner}</Link> : <button type="button" onClick={onClick} className={cls}>{inner}</button>;
 }
 
-function SidebarBody({ user }: { user: ShellUser | null }) {
+function SidebarBody({ user, admin }: { user: ShellUser | null; admin?: boolean }) {
   const pathname = usePathname();
   const nav = useStudioNav();
   const inStudio = pathname.startsWith("/studio");
@@ -134,11 +140,17 @@ function SidebarBody({ user }: { user: ShellUser | null }) {
         </Section>
       )}
 
+      {admin && (
+        <Section title="Verwaltung">
+          <NavItem href="/admin" icon={ShieldCheck} label="Admin" active={pathname.startsWith("/admin")} badge={<span className="rounded-md bg-lime px-1.5 py-0.5 text-[10px] font-bold text-night">Owner</span>} />
+        </Section>
+      )}
+
       <Section title="Mehr">
         {user && <NavItem href="/dashboard/billing" icon={CreditCard} label="Tarif & Rechnungen" active={pathname.startsWith("/dashboard/billing")} />}
         <NavItem href="/#funktionen" icon={Sparkles} label="Funktionen" />
         <NavItem href="/preise" icon={Zap} label="Preise" />
-        <NavItem href="mailto:hallo@qlick.codes" icon={HelpCircle} label="Hilfe & Kontakt" />
+        <NavItem href="mailto:info@qlickqr.com" icon={HelpCircle} label="Hilfe & Kontakt" />
       </Section>
     </nav>
   );
@@ -296,7 +308,7 @@ function SidebarFooter({ user, plan, localCodes }: { user: ShellUser | null; pla
               </button>
               {user && <Link href="/dashboard" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><Bell className="size-4" /> Übersicht & Statistik</Link>}
               {user && <Link href="/dashboard/billing" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><CreditCard className="size-4" /> Konto & Tarif</Link>}
-              <a href="mailto:hallo@qlick.codes" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><HelpCircle className="size-4" /> Hilfecenter</a>
+              <a href="mailto:info@qlickqr.com" className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-dim hover:bg-hi/5 hover:text-fg"><HelpCircle className="size-4" /> Hilfecenter</a>
             </div>
             <div className="mt-1 border-t border-edge pt-1">
               {user ? (

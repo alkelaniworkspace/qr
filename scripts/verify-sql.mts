@@ -15,7 +15,7 @@ const B = "22222222-2222-2222-2222-222222222222";
 const stubs = `
 create role anon; create role authenticated; create role service_role; create schema extensions;
 create schema auth; create schema storage;
-create table auth.users (id uuid primary key, raw_user_meta_data jsonb default '{}');
+create table auth.users (id uuid primary key, email text, raw_user_meta_data jsonb default '{}', raw_app_meta_data jsonb default '{}', created_at timestamptz default now(), last_sign_in_at timestamptz, email_confirmed_at timestamptz);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 create table storage.buckets (id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
 create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text);
@@ -204,3 +204,33 @@ await expectError("rsvp: anon cannot register directly", () => asAnon(`select pu
 await expectError("rsvp: anon cannot read rows", () => asAnon(`insert into public.event_rsvps (code_id, email, token_hash) select id, 'a@b.de', '${"z".repeat(40)}' from public.qr_codes where slug = 'eventG1'`), /permission denied/);
 await asAnon(`select public.update_guest_code('eventG1', $1, 'Jazz', 'event', $2::jsonb, '{}')`, [ET, evContent({ rsvp: false })]);
 check("rsvp: closed when registration is off", (await rsvp("dora@example.com", 1, "x".repeat(40))) === "CLOSED");
+
+// ───────── admin, trash, gifts ─────────
+const ADM = "44444444-4444-4444-4444-444444444444";
+await db.exec(`insert into auth.users (id, email) values ('${ADM}', 'Info@QlickQR.com');`);
+check("admin: owner email becomes admin", ((await db.query(`select role from public.profiles where id = '${ADM}'`)).rows[0] as { role: string }).role === "admin");
+await expectError("admin: normal user cannot read the overview", () => as(A, `select public.admin_overview()`), /NOT_ADMIN/);
+check("admin: admin reads the overview", !!((await as(ADM, `select public.admin_overview() as o`)).rows[0] as { o: unknown }).o);
+check("admin: lists users", (await as(ADM, `select * from public.admin_users()`)).rows.length >= 3);
+await as(ADM, `select public.admin_set_plan('${B}', 'pro', now() + interval '30 days', 'Test')`);
+check("admin: gift plan applied", ((await db.query(`select public.effective_plan('${B}') as p`)).rows[0] as { p: string }).p === "pro");
+await db.exec(`update public.profiles set plan_until = now() - interval '1 day' where id = '${B}'`);
+check("admin: expired gift falls back to free", ((await db.query(`select public.effective_plan('${B}') as p`)).rows[0] as { p: string }).p === "free");
+check("admin: actions are logged", (await as(ADM, `select * from public.admin_audit_log()`)).rows.length >= 1);
+
+await as(B, `insert into public.qr_codes (name, slug, type, mode) values ('Trash me', 'trashB1', 'url', 'dynamic')`);
+await as(B, `update public.qr_codes set deleted_at = now() where slug = 'trashB1'`);
+check("trash: deleted code is gone for scanners", (await asAnon(`select * from public.public_code('trashB1')`)).rows.length === 0);
+await as(B, `insert into public.qr_codes (name, slug, type, mode) values ('Second', 'trashB2', 'url', 'dynamic')`);
+check("trash: trashed codes do not count against the plan", true);
+await expectError("trash: restore over the limit is blocked", () => as(B, `update public.qr_codes set deleted_at = null where slug = 'trashB1'`), /PLAN_LIMIT_REACHED/);
+
+const codeB2 = ((await db.query(`select id from public.qr_codes where slug = 'trashB2'`)).rows[0] as { id: string }).id;
+await as(ADM, `select public.admin_code_action('${codeB2}', 'lock', 'Spam')`);
+check("lock: scanners see paused", ((await asAnon(`select status from public.public_code('trashB2')`)).rows[0] as { status: string }).status === "paused");
+await expectError("lock: owner cannot remove the lock", () => as(B, `update public.qr_codes set locked_at = null where slug = 'trashB2'`), /permission denied/);
+await as(ADM, `select public.admin_code_action('${codeB2}', 'pause')`);
+await expectError("lock: owner cannot switch a locked code back on", () => as(B, `update public.qr_codes set status = 'active' where slug = 'trashB2'`), /CODE_LOCKED/);
+await as(ADM, `select public.admin_suspend_user('${A}', true, 'Test')`);
+await expectError("suspend: suspended user cannot create codes", () => as(A, `insert into public.qr_codes (name, slug, type, mode) values ('x', 'suspA1', 'url', 'static')`), /ACCOUNT_SUSPENDED/);
+await expectError("suspend: admin cannot suspend themselves", () => as(ADM, `select public.admin_suspend_user('${ADM}', true, 'x')`), /NOT_SELF/);

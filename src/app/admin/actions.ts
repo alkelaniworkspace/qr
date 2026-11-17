@@ -1,0 +1,45 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/admin";
+
+const ERR: Record<string, string> = {
+  NOT_SELF: "Das geht nicht mit deinem eigenen Konto.",
+  BAD_PLAN: "Unbekannter Tarif.",
+  NOT_ADMIN: "Keine Berechtigung.",
+};
+const msg = (e: { message: string } | null) => (e ? Object.entries(ERR).find(([k]) => e.message.includes(k))?.[1] ?? "Das hat nicht geklappt." : null);
+
+function refresh() {
+  revalidatePath("/admin", "layout");
+}
+
+/** Gift a plan until a date (null = no end), or reset to Free. */
+export async function giftPlan(userId: string, plan: string, until: string | null, note: string): Promise<string | null> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_set_plan", { p_user: userId, p_plan: plan, p_until: until, p_note: note } as never);
+  refresh();
+  return msg(error);
+}
+
+export async function suspendUser(userId: string, suspend: boolean, reason: string): Promise<string | null> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_suspend_user", { p_user: userId, p_suspend: suspend, p_reason: reason } as never);
+  refresh();
+  return msg(error);
+}
+
+export async function setRole(userId: string, role: "user" | "admin"): Promise<string | null> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_set_role", { p_user: userId, p_role: role } as never);
+  refresh();
+  return msg(error);
+}
+
+export type CodeAction = "pause" | "resume" | "lock" | "unlock" | "archive" | "unarchive" | "trash" | "restore" | "purge";
+export async function codeAction(codeId: string, action: CodeAction, reason = ""): Promise<string | null> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_code_action", { p_code: codeId, p_action: action, p_reason: reason } as never);
+  refresh();
+  return msg(error);
+}

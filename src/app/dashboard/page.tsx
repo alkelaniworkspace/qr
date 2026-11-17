@@ -22,7 +22,7 @@ export default async function TodayPage() {
   const supabase = await createClient();
   const [{ data: summaryRaw }, { data: recent }, { data: profile }, quota] = await Promise.all([
     supabase.rpc("dashboard_summary"),
-    supabase.from("qr_codes").select("id, name, slug, type, mode, content, style, status, scan_count, created_at").order("created_at", { ascending: false }).limit(6),
+    supabase.from("qr_codes").select("id, name, slug, type, mode, content, style, status, scan_count, created_at").is("deleted_at", null).is("archived_at", null).order("created_at", { ascending: false }).limit(6),
     supabase.from("profiles").select("full_name").eq("id", user!.id).maybeSingle(),
     getQuota(user!.id),
   ]);

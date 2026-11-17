@@ -7,10 +7,10 @@ import { ClaimGuestCodes } from "@/components/dashboard/claim-guest-codes";
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/dashboard");
-  const { user: shellUser, plan } = await getShellData();
+  const { user: shellUser, plan, admin, suspended } = await getShellData();
 
   return (
-    <AppShell user={shellUser} plan={plan}>
+    <AppShell user={shellUser} plan={plan} admin={admin} suspended={suspended}>
       <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:py-10"><ClaimGuestCodes />{children}</main>
     </AppShell>
   );

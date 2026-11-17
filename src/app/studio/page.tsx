@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default async function StudioPage() {
-  const { user, plan } = await getShellData();
+  const { user, plan, admin, suspended } = await getShellData();
   return (
-    <AppShell user={user} plan={plan}>
+    <AppShell user={user} plan={plan} admin={admin} suspended={suspended}>
       <main className="w-full flex-1 px-5 pb-24 pt-6 sm:px-8 lg:pt-8">
         <Suspense>
           <Wizard />

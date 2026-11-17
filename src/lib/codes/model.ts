@@ -10,6 +10,9 @@ export interface QrCodeRow {
   content: Record<string, unknown>;
   style: unknown;
   status: "active" | "paused";
+  archived_at?: string | null;
+  deleted_at?: string | null;
+  locked_at?: string | null;
   scan_count: number;
   last_scanned_at: string | null;
   created_at: string;

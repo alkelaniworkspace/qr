@@ -56,6 +56,9 @@ export async function createCode(input: SaveInput): Promise<SaveResult> {
       revalidatePath("/dashboard/codes");
       return { ok: true, id: data.id, slug: data.slug };
     }
+    if (error?.message.includes("ACCOUNT_SUSPENDED")) {
+      return { ok: false, message: "Dein Konto ist gesperrt. Schreib uns an info@qlickqr.com." };
+    }
     if (error?.message.includes("PLAN_LIMIT_REACHED")) {
       return { ok: false, message: "Dein Tarif ist voll. Upgrade für mehr dynamische Codes, oder erstelle einen statischen Code." };
     }
@@ -90,19 +93,50 @@ export async function updateCode(id: string, input: SaveInput): Promise<SaveResu
   return { ok: true, id, slug: existing.slug };
 }
 
-export async function setCodeStatus(id: string, status: "active" | "paused") {
-  const supabase = await createClient();
-  await supabase.from("qr_codes").update({ status }).eq("id", id);
+function refresh(id?: string) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/codes");
-  revalidatePath(`/dashboard/codes/${id}`);
+  if (id) revalidatePath(`/dashboard/codes/${id}`);
 }
 
-export async function deleteCode(id: string) {
+export async function setCodeStatus(id: string, status: "active" | "paused"): Promise<string | null> {
   const supabase = await createClient();
-  await supabase.from("qr_codes").delete().eq("id", id);
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/codes");
+  const { error } = await supabase.from("qr_codes").update({ status }).eq("id", id);
+  refresh(id);
+  if (error?.message.includes("CODE_LOCKED")) return "Dieser Code wurde vom Support gesperrt. Schreib uns an info@qlickqr.com.";
+  return error ? "Das hat nicht geklappt." : null;
+}
+
+/** Archive keeps the code working, it only leaves the main list. */
+export async function archiveCode(id: string, archived: boolean): Promise<string | null> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("qr_codes").update({ archived_at: archived ? new Date().toISOString() : null }).eq("id", id);
+  refresh(id);
+  return error ? "Das hat nicht geklappt." : null;
+}
+
+/** Trash: the code stops working at once and is deleted for good after 30 days. */
+export async function trashCode(id: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("qr_codes").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+  refresh(id);
+  return error ? "Das hat nicht geklappt." : null;
+}
+
+export async function restoreCode(id: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("qr_codes").update({ deleted_at: null }).eq("id", id);
+  refresh(id);
+  if (error?.message.includes("PLAN_LIMIT_REACHED")) return "Dein Tarif ist voll. Lösche oder archiviere erst einen anderen dynamischen Code, oder mach ein Upgrade.";
+  return error ? "Das hat nicht geklappt." : null;
+}
+
+/** Deletes for good, only from the trash. */
+export async function deleteCode(id: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("qr_codes").delete().eq("id", id).not("deleted_at", "is", null);
+  refresh(id);
+  return error ? "Das hat nicht geklappt." : null;
 }
 
 /** Moves guest codes (made without an account in this browser) into the signed-in account. */

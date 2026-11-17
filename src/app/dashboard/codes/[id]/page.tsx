@@ -50,14 +50,14 @@ export default async function CodePage({ params, searchParams }: { params: Promi
         <div className="card card-glow relative overflow-hidden p-5">
           <div className="relative overflow-hidden rounded-2xl bg-hi/[0.04] p-4 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
           <div className="mt-4 flex justify-center">
-            <CodeActions id={code.id} name={code.name} svg={svg} status={code.status} dynamic={dynamic} />
+            <CodeActions id={code.id} name={code.name} svg={svg} status={code.status} dynamic={dynamic} view={code.deleted_at ? "trash" : code.archived_at ? "archived" : "active"} locked={!!code.locked_at} />
           </div>
         </div>
 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={cn("badge", code.status === "paused" ? "bg-gold text-night" : dynamic ? "bg-brand text-on-brand" : "bg-lime text-night")}>
-              {code.status === "paused" ? "Pausiert" : dynamic ? "Dynamisch" : "Statisch"}
+            <span className={cn("badge", code.deleted_at || code.locked_at ? "bg-rose text-white" : code.status === "paused" ? "bg-gold text-night" : dynamic ? "bg-brand text-on-brand" : "bg-lime text-night")}>
+              {code.deleted_at ? "Im Papierkorb" : code.locked_at ? "Gesperrt" : code.status === "paused" ? "Pausiert" : dynamic ? "Dynamisch" : "Statisch"}
             </span>
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-dim"><TypeIcon name={def.icon} className="size-3.5" /> {def.label}</span>
           </div>

@@ -39,11 +39,12 @@ Read it before starting a task. Update the "Last state" and "Open items" section
 - **Resend** for email (RSVP confirmation). See `src/lib/email.ts`, env vars `RESEND_API_KEY` and `MAIL_FROM`.
 
 ### Env vars (Vercel)
-- **Present:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_APP_URL`, `VISITOR_SALT`.
-- **Missing (owner has to add):**
-  - `SUPABASE_SECRET_KEY`: needed for polls, RSVP and the scan RPCs. Without it those features fail in production.
-  - `RESEND_API_KEY`, `MAIL_FROM` (e.g. `Qlick <events@DOMAIN>`).
-  - `ANTHROPIC_API_KEY`: optional, for the AI menu import.
+- **Present:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_APP_URL` (= `https://www.qlickqr.com`), `VISITOR_SALT`, `SUPABASE_SECRET_KEY`, `RESEND_API_KEY` (sending-only, domain qlickqr.com), `MAIL_FROM` (`Qlick <info@qlickqr.com>`).
+- **Missing:** `ANTHROPIC_API_KEY` (optional, AI menu import).
+
+### Domain & mail
+- Domain **qlickqr.com** (DNS at Hostinger; apex redirects to `www`). Mailbox `info@qlickqr.com` (Hostinger) = contact + admin e-mail.
+- Resend domain `qlickqr.com` (id `4b5eaf77-2ec7-421e-9fc4-e705b50a441b`); DNS records set at Hostinger, verification was pending.
 - **Never** print, commit or ask for secrets in chat.
 
 ## 4. Git workflow
@@ -112,11 +113,19 @@ Done and pushed (commits "Menu: Showcase templates …" and "Hosted pages: new S
 - Link page: 52 platforms with real brand icons and colours (`src/lib/platforms.ts`, paths in `brand-paths.ts` generated from simple-icons, CC0; LinkedIn/Lieferando/Wolt/Amazon/E-Mail/Telefon/Website drawn or lucide). Links now have `icon` (platform key or auto), `image` (own icon) and `highlight`. New editor `links-editor.tsx` (quick-add chips, icon menu with search + upload). Six link styles (`linkStyle`: cards, brand, tiles, glass, outline, spotlight) with live preview picker `link-style-picker.tsx`. `brandOf()` now uses the platform list everywhere.
 - Test images for screenshots: put photos into `public/_shot/` and use `http://localhost:3000/_shot/x.jpg` in `/v#` payloads (the proxy 404s, the image then loads directly). Delete before committing.
 
+### Session 2026-11-17 (late): accounts, admin, trash
+- Migration `20261117200000_admin_trash.sql` + `20261117201000_admin_user.sql` (both applied live):
+  - profiles: `role`, `plan_until`, `plan_source` (free/paid/gift), `plan_note`, `suspended_at/_reason`. `admin_emails` table (seeded `info@qlickqr.com`): signing up with that address makes the account admin.
+  - `effective_plan()` (gift expires → free). Codes: `archived_at`, `deleted_at` (trash, purged after 30 days by pg_cron `purge-qr-trash`), `locked_at/_reason` (admin lock, owner cannot undo). Locked codes / suspended owners show the pause page; trashed codes 404.
+  - Admin RPCs (all call `require_admin()`): `admin_overview`, `admin_users`, `admin_user`, `admin_codes`, `admin_audit_log`, `admin_set_plan`, `admin_suspend_user`, `admin_set_role`, `admin_code_action`. Every action is written to `admin_audit`.
+- User side: `/dashboard/codes` has tabs Aktiv / Archiv / Papierkorb; delete = trash, restore, delete forever only from trash.
+- Admin UI `/admin` (only visible to admins, sidebar "Verwaltung"): Übersicht (KPIs, 30-day bars), Nutzer (search/filter, detail page with gift plan + duration, suspend, role, user's codes), Codes (filters incl. trash/locked/guest, actions menu), Protokoll.
+- The admin pages were not screenshot-checked (needs a logged-in admin). Check once in production after the owner signs up.
+
 ## 8. Open items / ideas
 
-1. **Keys (owner):** `SUPABASE_SECRET_KEY` on Vercel, then redeploy.
-   - The owner wants a **new sending domain for Qlick on Resend** but has not named it yet.
-   - Once it is named: create the domain in Resend (MCP), pass on the DNS records, create a sending-only API key after verification, then set `RESEND_API_KEY` and `MAIL_FROM` on Vercel.
+1. **Owner setup:** in Google Cloud OAuth add origins `https://www.qlickqr.com`, `https://qlickqr.com`; in Supabase Auth set Site URL `https://www.qlickqr.com` + redirect `https://www.qlickqr.com/**`; sign up with `info@qlickqr.com` (becomes admin). Check Resend verification; then move Supabase auth e-mails to custom SMTP (Resend) from info@qlickqr.com.
+   - **Phase 3 payments (Stripe)** waits on: Gewerbe, Stripe account, tax decision (Kleinunternehmer or MwSt), final prices/trial, legal pages (AGB, Widerruf, Impressum, Datenschutz).
 2. **Translate the studio and dashboard to English.** Only the public site is translated so far.
 3. **Guests (no account)** can still create unlimited dynamic codes server-side (the limit only applies to accounts). Close that if the owner wants it.
 4. **More QR design options** (design panel), requested earlier.

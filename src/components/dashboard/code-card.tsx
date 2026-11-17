@@ -1,38 +1,44 @@
 import Link from "next/link";
+import { trashDaysLeft } from "@/lib/time";
 import { BarChart3 } from "lucide-react";
 import { CODE_TYPES } from "@/lib/codes/types";
 import { qrData } from "@/lib/codes/payload";
 import type { QrCodeRow } from "@/lib/codes/model";
 import { renderQrSvg } from "@/lib/qr/render";
 import { normalizeStyle } from "@/lib/qr/style";
-import { CodeActions } from "./code-actions";
+import { CodeActions, type CodeView } from "./code-actions";
 import { TypeIcon } from "@/components/type-icon";
 import { cn } from "@/lib/cn";
 
 const nf = new Intl.NumberFormat("de-DE");
 const df = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
-type Row = Pick<QrCodeRow, "id" | "name" | "slug" | "type" | "mode" | "content" | "style" | "status" | "scan_count" | "created_at">;
+type Row = Pick<QrCodeRow, "id" | "name" | "slug" | "type" | "mode" | "content" | "style" | "status" | "scan_count" | "created_at" | "deleted_at" | "locked_at">;
 
 /** One code as a card: badge, preview, name, scans, actions. */
-export function CodeCard({ code }: { code: Row }) {
+export function CodeCard({ code, view = "active" }: { code: Row; view?: CodeView }) {
   const def = CODE_TYPES[code.type];
   const dynamic = code.mode === "dynamic";
   const svg = renderQrSvg(qrData(code), normalizeStyle(code.style), { size: 640, id: `c-${code.slug}` });
   const href = dynamic ? `/dashboard/codes/${code.id}` : `/dashboard/codes/${code.id}/edit`;
-  const accent = code.status === "paused" ? "border-l-gold" : dynamic ? "border-l-brand" : "border-l-lime";
+  const accent = view === "trash" || code.locked_at ? "border-l-rose" : code.status === "paused" ? "border-l-gold" : dynamic ? "border-l-brand" : "border-l-lime";
+  const daysLeft = code.deleted_at ? trashDaysLeft(code.deleted_at) : 0;
 
   return (
-    <div className={cn("card group relative flex flex-col overflow-visible border-l-[3px] p-5 transition duration-300 hover:-translate-y-1 hover:border-hi/20", accent)}>
+    <div className={cn("card group relative flex flex-col overflow-visible border-l-[3px] p-5 transition duration-300 hover:-translate-y-1 hover:border-hi/20", accent, view === "trash" && "opacity-75 saturate-50 hover:opacity-100 hover:saturate-100")}>
       <div className="flex items-center justify-between gap-2">
-        {code.status === "paused" ? (
+        {view === "trash" ? (
+          <span className="badge bg-rose/15 text-rose">Noch {daysLeft} {daysLeft === 1 ? "Tag" : "Tage"}</span>
+        ) : code.locked_at ? (
+          <span className="badge bg-rose text-white">Gesperrt</span>
+        ) : code.status === "paused" ? (
           <span className="badge bg-gold text-night">Pausiert</span>
         ) : dynamic ? (
           <span className="badge bg-brand text-on-brand">Dynamisch</span>
         ) : (
           <span className="badge bg-hi/10 text-dim">Statisch</span>
         )}
-        <CodeActions id={code.id} name={code.name} svg={svg} status={code.status} dynamic={dynamic} compact />
+        <CodeActions id={code.id} name={code.name} svg={svg} status={code.status} dynamic={dynamic} compact view={view} locked={!!code.locked_at} />
       </div>
       <Link href={href} className="mt-4 flex items-center gap-4">
         <span className="grid size-24 shrink-0 place-items-center overflow-hidden rounded-2xl bg-hi/[0.04] p-2 transition group-hover:scale-[1.04] [&>svg]:h-auto [&>svg]:max-h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
