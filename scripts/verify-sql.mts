@@ -265,3 +265,11 @@ await expectError("billing: user cannot set a customer id", () => as(B, `update 
 await expectError("cancel page: e-mail lookup is server-only", () => as(B, `select public.user_id_by_email('neu@kunde.de')`), /permission denied/);
 await as(B, `update public.profiles set avatar_url = 'https://x.supabase.co/storage/v1/object/public/assets/${B}/a.webp' where id = '${B}'`);
 check("avatar: user can set own photo", !!((await db.query(`select avatar_url from public.profiles where id = '${B}'`)).rows[0] as { avatar_url: string }).avatar_url);
+
+// ── forms 2.0 ──
+await as(E, `insert into public.forms (slug, title, fields, settings) values ('capE01', 'Cap', '[]', '{"maxResponses": 1}'), ('dateE1', 'Date', '[]', '{"closeAt": "2020-01-01T00:00:00Z"}')`);
+const s1 = ((await asAnon(`select public.submit_form_response('capE01', '{}', '{}') as r`)).rows[0] as { r: string }).r;
+const s2 = ((await asAnon(`select public.submit_form_response('capE01', '{}', '{}') as r`)).rows[0] as { r: string }).r;
+check("forms: response cap from settings", s1 === "OK" && s2 === "FULL");
+check("forms: closing date from settings", ((await asAnon(`select public.submit_form_response('dateE1', '{}', '{}') as r`)).rows[0] as { r: string }).r === "CLOSED");
+await expectError("forms: owner e-mail lookup is server-only", () => asAnon(`select public.form_owner_email('capE01')`), /permission denied/);

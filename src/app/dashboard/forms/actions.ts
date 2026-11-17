@@ -9,7 +9,11 @@ import { newSlug } from "@/lib/codes/slug";
 export async function createForm(form: FormData) {
   if (!(await getUserId())) redirect("/login?next=/dashboard/forms");
   const tpl = FORM_TEMPLATES.find((t) => t.id === form.get("template"));
-  const def = tpl ? tpl.build() : { title: "Neues Formular", description: "", settings: {}, fields: [{ id: newFieldId(), type: "short" as const, label: "Deine Frage", required: false }] };
+  const def = tpl ? tpl.build() : {
+    title: "Neues Formular", description: "",
+    settings: { look: String(form.get("look") || "lime"), mode: "dark" as const, showProgress: true },
+    fields: [{ id: newFieldId(), type: "short" as const, label: "Name", required: true }, { id: newFieldId(), type: "email" as const, label: "E-Mail", required: true }, { id: newFieldId(), type: "long" as const, label: "Deine Nachricht" }],
+  };
   const supabase = await createClient();
   const { data, error } = await supabase.from("forms").insert({ slug: newSlug(8), title: def.title, description: def.description, fields: def.fields, settings: def.settings }).select("id").single();
   if (error) redirect(`/dashboard/forms?error=${error.message.includes("FORM_LIMIT") ? "limit" : "save"}`);
@@ -19,7 +23,12 @@ export async function createForm(form: FormData) {
 
 export async function saveForm(id: string, input: unknown): Promise<{ ok: true } | { ok: false; message: string }> {
   if (!(await getUserId())) return { ok: false, message: "Bitte anmelden" };
-  const parsed = formSchema.safeParse(input);
+  // tolerate half-typed edits during autosave
+  const raw = (input ?? {}) as { fields?: { label?: string; options?: string[]; type?: string }[] };
+  if (Array.isArray(raw.fields)) {
+    raw.fields = raw.fields.map((f) => ({ ...f, label: (f.label ?? "").trim() || "Ohne Titel", ...(Array.isArray(f.options) ? { options: f.options.map((o) => o.trim()).filter(Boolean) } : {}) }));
+  }
+  const parsed = formSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Ungültig" };
   const d = parsed.data;
   for (const f of d.fields) {

@@ -36,15 +36,15 @@ function Summary({ field, rows }: { field: FormField; rows: ResponseRow[] }) {
   const answered = values.length;
   let body: React.ReactNode;
 
-  if (field.type === "single" || field.type === "dropdown" || field.type === "multi") {
+  if (field.type === "single" || field.type === "dropdown" || field.type === "multi" || field.type === "yesno") {
     const counts = new Map<string, number>();
     for (const v of values) for (const x of Array.isArray(v) ? v : [v]) counts.set(String(x), (counts.get(String(x)) ?? 0) + 1);
-    const opts = [...new Set([...(field.options ?? []), ...counts.keys()])].sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0));
+    const opts = [...new Set([...(field.type === "yesno" ? ["Ja", "Nein"] : field.options ?? []), ...counts.keys()])].sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0));
     body = <div className="space-y-2.5">{opts.map((o) => <Bar key={o} label={o} n={counts.get(o) ?? 0} total={answered} />)}</div>;
-  } else if (field.type === "rating" || field.type === "nps" || field.type === "number") {
+  } else if (field.type === "rating" || field.type === "nps" || field.type === "number" || field.type === "slider") {
     const nums = values.map(Number).filter(isFinite);
     const avg = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
-    if (field.type === "number") {
+    if (field.type === "number" || field.type === "slider") {
       body = (
         <div className="grid grid-cols-3 gap-3 text-center">
           {[["Ø", avg], ["Min", Math.min(...nums)], ["Max", Math.max(...nums)]].map(([k, v]) => (
