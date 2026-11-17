@@ -5,7 +5,7 @@ import { env } from "@/lib/env";
 import { getSessionUser } from "@/lib/supabase/server";
 import { getAccount } from "@/lib/account";
 import {
-  billingConfigured, billingProfile, ensureCustomer, ensurePrice, founderCoupon, isLive, stripe, syncSubscription,
+  billingConfigured, billingProfile, ensureCustomer, ensurePortalConfig, ensurePrice, founderCoupon, isLive, stripe, syncSubscription,
   PAID_PLANS, type Interval, type PaidPlan,
 } from "@/lib/billing";
 
@@ -104,7 +104,7 @@ export async function openPortal(): Promise<BillingResult> {
   try {
     const prof = await billingProfile(user.id);
     if (!prof?.stripe_customer_id) return { error: "Noch keine Zahlungsdaten hinterlegt." };
-    const s = await stripe().billingPortal.sessions.create({ customer: prof.stripe_customer_id, return_url: `${env.appUrl}/dashboard/billing`, locale: "de" });
+    const s = await stripe().billingPortal.sessions.create({ configuration: await ensurePortalConfig(), customer: prof.stripe_customer_id, return_url: `${env.appUrl}/dashboard/billing`, locale: "de" });
     return { url: s.url };
   } catch (e) {
     console.error("portal", e);

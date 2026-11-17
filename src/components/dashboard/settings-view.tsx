@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   Bell, Check, Download, KeyRound, Languages, Loader2, LogOut, Mail, Monitor, Moon, Palette, ShieldCheck, Sun, Trash2, User,
 } from "lucide-react";
-import { changeEmail, changePassword, deleteAccount, savePrefs, signOutEverywhere, updateName, type SettingsResult } from "@/app/dashboard/settings/actions";
+import { changeEmail, deleteAccount, savePrefs, sendPasswordLink, signOutEverywhere, updateName, type SettingsResult } from "@/app/dashboard/settings/actions";
+import { AvatarEditor } from "@/components/dashboard/avatar-editor";
 import { cn } from "@/lib/cn";
 
 const SECTIONS = [
@@ -79,6 +80,7 @@ function saveLangCookie(l: "de" | "en") {
 }
 
 export function SettingsView(p: {
+  userId: string;
   name: string; email: string; pendingEmail: string | null; createdAt: string; lastSignIn: string | null; providers: string[]; avatar: string | null;
   notifyProduct: boolean; notifyReports: boolean; admin: boolean; lang: "de" | "en";
 }) {
@@ -94,9 +96,7 @@ export function SettingsView(p: {
   const [nameR, setNameR] = useState<SettingsResult | null>(null);
   const [email, setEmail] = useState("");
   const [emailR, setEmailR] = useState<SettingsResult | null>(null);
-  const [pw, setPw] = useState({ a: "", b: "", code: "" });
   const [pwR, setPwR] = useState<SettingsResult | null>(null);
-  const [needCode, setNeedCode] = useState(false);
   const [prefs, setPrefs] = useState({ notify_product: p.notifyProduct, notify_reports: p.notifyReports });
   const [prefsR, setPrefsR] = useState<SettingsResult | null>(null);
   const [del, setDel] = useState("");
@@ -129,15 +129,9 @@ export function SettingsView(p: {
 
         <div className="min-w-0 space-y-6">
           <Section id="profil" title="Profil" desc="So erscheinst du in Qlick und in E-Mails an dich.">
-            <div className="mb-6 flex items-center gap-4">
-              {p.avatar
-                ? // eslint-disable-next-line @next/next/no-img-element -- Google avatar, tiny
-                  <img src={p.avatar} alt="" referrerPolicy="no-referrer" className="size-16 rounded-2xl object-cover" />
-                : <span className="grid size-16 place-items-center rounded-2xl bg-lime font-display text-2xl text-night">{initial}</span>}
-              <div className="min-w-0">
-                <p className="truncate text-lg font-semibold">{p.name || p.email.split("@")[0]}</p>
-                <p className="truncate text-sm text-dim">Dabei seit {dateFmt.format(new Date(p.createdAt))}</p>
-              </div>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <AvatarEditor userId={p.userId} url={p.avatar} initial={initial} />
+              <p className="text-sm text-dim">Dabei seit {dateFmt.format(new Date(p.createdAt))}</p>
             </div>
             <Row label="Name">
               <div className="flex gap-2">
@@ -174,23 +168,10 @@ export function SettingsView(p: {
               </div>
               <p className="mt-2.5 text-[12.5px] text-faint">Mit einem Anmelde-Link per E-Mail kommst du immer rein, auch ohne Passwort.</p>
             </Row>
-            <Row label={hasPassword ? "Passwort ändern" : "Passwort festlegen"} hint="Mindestens 8 Zeichen.">
-              <div className="grid gap-2 sm:grid-cols-2">
-                <input type="password" autoComplete="new-password" value={pw.a} onChange={(e) => setPw({ ...pw, a: e.target.value })} placeholder="Neues Passwort" className={input} />
-                <input type="password" autoComplete="new-password" value={pw.b} onChange={(e) => setPw({ ...pw, b: e.target.value })} placeholder="Wiederholen" className={input} />
-              </div>
-              {needCode && (
-                <div className="mt-3 rounded-xl bg-hi/[0.04] p-3.5 animate-rise">
-                  <p className="text-[13px] text-dim">Zur Sicherheit haben wir dir einen Code an {p.email} geschickt.</p>
-                  <input inputMode="numeric" value={pw.code} onChange={(e) => setPw({ ...pw, code: e.target.value.trim() })} placeholder="Code aus der E-Mail" className={cn(input, "mt-2 max-w-52 tracking-widest")} />
-                </div>
-              )}
-              <button type="button" disabled={pending || !pw.a || !pw.b || (needCode && !pw.code)} onClick={() => run("pw", () => changePassword(pw.a, pw.b, needCode ? pw.code : undefined), (r) => {
-                setPwR(r);
-                if (r.needCode) setNeedCode(true);
-                if (r.ok) { setPw({ a: "", b: "", code: "" }); setNeedCode(false); }
-              })} className={cn(btn, "mt-3 bg-fg text-bg")}>
-                {busy === "pw" ? <Loader2 className="size-4 animate-spin" /> : "Passwort speichern"}
+            <Row label={hasPassword ? "Passwort ändern" : "Passwort festlegen"} hint="Zu deiner Sicherheit per Link an deine E-Mail.">
+              <p className="text-sm text-dim">Wir schicken dir einen Link an <b className="text-fg">{p.email}</b>. Darüber legst du das neue Passwort fest. So kann niemand dein Passwort ändern, der nur kurz an deinem Gerät sitzt.</p>
+              <button type="button" disabled={pending} onClick={() => run("pw", () => sendPasswordLink(), setPwR)} className={cn(btn, "mt-3 bg-fg text-bg")}>
+                {busy === "pw" ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />} Link per E-Mail senden
               </button>
               <Note r={pwR} />
             </Row>

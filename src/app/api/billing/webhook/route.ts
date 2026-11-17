@@ -37,7 +37,8 @@ export async function POST(request: Request) {
       case "customer.subscription.deleted":
       case "customer.subscription.paused":
       case "customer.subscription.resumed":
-        await syncSubscription(event.data.object);
+        // re-read with the SDK's API version: the endpoint may send an older payload shape
+        await syncSubscription(await stripe().subscriptions.retrieve(event.data.object.id));
         break;
       case "invoice.payment_failed":
       case "invoice.paid": {

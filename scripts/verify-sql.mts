@@ -263,3 +263,5 @@ check("settings: user can change own e-mail preferences", ((await db.query(`sele
 await expectError("billing: user cannot fake a subscription", () => as(B, `update public.profiles set subscription_status = 'active'`), /permission denied/);
 await expectError("billing: user cannot set a customer id", () => as(B, `update public.profiles set stripe_customer_id = 'cus_x'`), /permission denied/);
 await expectError("cancel page: e-mail lookup is server-only", () => as(B, `select public.user_id_by_email('neu@kunde.de')`), /permission denied/);
+await as(B, `update public.profiles set avatar_url = 'https://x.supabase.co/storage/v1/object/public/assets/${B}/a.webp' where id = '${B}'`);
+check("avatar: user can set own photo", !!((await db.query(`select avatar_url from public.profiles where id = '${B}'`)).rows[0] as { avatar_url: string }).avatar_url);

@@ -13,6 +13,7 @@ export interface Account {
   suspendedReason: string | null;
   /** Admin override: null = plan default, -1 = unlimited, n = exactly n dynamic codes. */
   codeLimit: number | null;
+  avatarUrl: string | null;
 }
 
 /** Dynamic-code limit that counts right now (null = unlimited). Mirrors public.dynamic_limit(). */
@@ -31,7 +32,7 @@ export async function getAccount(userId: string): Promise<Account> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("full_name, plan, plan_until, plan_source, role, suspended_at, suspended_reason, code_limit")
+    .select("full_name, plan, plan_until, plan_source, role, suspended_at, suspended_reason, code_limit, avatar_url")
     .eq("id", userId)
     .maybeSingle();
   return {
@@ -43,5 +44,6 @@ export async function getAccount(userId: string): Promise<Account> {
     suspended: !!data?.suspended_at,
     suspendedReason: data?.suspended_reason ?? null,
     codeLimit: typeof data?.code_limit === "number" ? data.code_limit : null,
+    avatarUrl: data?.avatar_url ?? null,
   };
 }

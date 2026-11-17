@@ -14,6 +14,7 @@ import { StudioNavProvider, useStudioNav, type Output } from "./studio-nav";
 export interface ShellUser {
   name: string;
   email: string;
+  avatar?: string | null;
 }
 export interface ShellPlan {
   id: string;
@@ -279,7 +280,7 @@ function SidebarFooter({ user, plan, localCodes }: { user: ShellUser | null; pla
         {menu && (
           <div className="absolute bottom-full left-0 z-10 mb-2 w-[300px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-edge bg-solid p-2 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] animate-rise">
             <div className="flex items-center gap-3 rounded-xl px-2.5 py-2">
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-hi/[0.08] text-[15px] font-semibold">{user ? user.name.charAt(0).toUpperCase() : <UserRound className="size-4" />}</span>
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-hi/[0.08] text-[15px] font-semibold">{user?.avatar ? <img src={user.avatar} alt="" className="size-full rounded-full object-cover" /> : user ? user.name.charAt(0).toUpperCase() : <UserRound className="size-4" />}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[14px] font-semibold">{user ? user.name : "Gast"}</span>
                 <span className="block truncate text-[12px] text-faint">{plan ? `${plan.label}-Tarif` : "Ohne Konto"}</span>
@@ -326,7 +327,7 @@ function SidebarFooter({ user, plan, localCodes }: { user: ShellUser | null; pla
         <button type="button" onClick={() => setMenu((v) => !v)} aria-expanded={menu} className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition hover:bg-hi/[0.05]">
           <span className="avatar-ring relative grid size-10 shrink-0 place-items-center rounded-full">
             <span className="grid size-[34px] place-items-center rounded-full bg-solid text-[14px] font-semibold text-fg">
-              {user ? user.name.charAt(0).toUpperCase() : <UserRound className="size-4" />}
+              {user?.avatar ? <img src={user.avatar} alt="" className="size-full rounded-full object-cover" /> : user ? user.name.charAt(0).toUpperCase() : <UserRound className="size-4" />}
             </span>
           </span>
           <span className="min-w-0 flex-1">

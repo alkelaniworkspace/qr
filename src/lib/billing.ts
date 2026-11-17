@@ -149,3 +149,20 @@ export async function defaultCard(customer: string): Promise<CardInfo | null> {
   if (pm.card) return { brand: pm.card.brand, last4: pm.card.last4, exp: `${String(pm.card.exp_month).padStart(2, "0")}/${String(pm.card.exp_year).slice(-2)}` };
   return { brand: pm.type, last4: "", exp: "" };
 }
+
+/** Customer portal settings for Qlick (payment method, address, tax ID, invoices). Created once, found via metadata. */
+export async function ensurePortalConfig(): Promise<string> {
+  const list = await stripe().billingPortal.configurations.list({ active: true, limit: 100 });
+  const found = list.data.find((c) => c.metadata?.app === "qlick");
+  if (found) return found.id;
+  const c = await stripe().billingPortal.configurations.create({
+    business_profile: { headline: `${site.name}: Zahlungsdaten und Rechnungen` },
+    features: {
+      customer_update: { enabled: true, allowed_updates: ["email", "address", "name", "tax_id"] },
+      invoice_history: { enabled: true },
+      payment_method_update: { enabled: true },
+    },
+    metadata: { app: "qlick" },
+  });
+  return c.id;
+}

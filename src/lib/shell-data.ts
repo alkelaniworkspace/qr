@@ -18,7 +18,7 @@ export async function getShellData(): Promise<{ user: ShellUser | null; plan: Sh
   ]);
   const def = PLANS[account.plan];
   return {
-    user: { name: account.fullName || session.email.split("@")[0], email: session.email },
+    user: { name: account.fullName || session.email.split("@")[0], email: session.email, avatar: account.avatarUrl },
     plan: { id: account.plan, label: def.label, used: count ?? 0, limit: dynamicLimit(account) },
     admin: account.role === "admin" && !account.suspended,
     suspended: account.suspended ? account.suspendedReason ?? "" : false,

@@ -41,7 +41,8 @@ Read it before starting a task. Update the "Last state" and "Open items" section
 ### Env vars (Vercel)
 - **Present:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_APP_URL` (= `https://www.qlickqr.com`), `VISITOR_SALT`, `SUPABASE_SECRET_KEY`, `RESEND_API_KEY` (sending-only, domain qlickqr.com), `MAIL_FROM` (`Qlick <info@qlickqr.com>`).
 - **Also present:** `SEND_EMAIL_HOOK_SECRET` (Supabase Send Email hook, enabled).
-- **Missing:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (Qlick's own Stripe account, not the 3LedMaker one), optional `STRIPE_AUTOMATIC_TAX=1`, `ANTHROPIC_API_KEY` (optional, AI menu import).
+- `STRIPE_WEBHOOK_SECRET` is set (webhook `we_1UcuBDRs50zEu6yi7xY4uDUB` in the **3LedMaker sandbox**, test mode, created by the owner's request for testing).
+- **Missing:** `STRIPE_SECRET_KEY` (owner pastes the sandbox `sk_test_` for testing; for real money a separate Qlick Stripe account with live keys and a new live webhook), optional `STRIPE_AUTOMATIC_TAX=1`, `ANTHROPIC_API_KEY` (optional, AI menu import).
 
 ### Domain & mail
 - Domain **qlickqr.com** (DNS at Hostinger; apex redirects to `www`). Mailbox `info@qlickqr.com` (Hostinger) = contact + admin e-mail.
@@ -131,6 +132,7 @@ Done and pushed (commits "Menu: Showcase templates …" and "Hosted pages: new S
   - `/dashboard/billing` = `BillingView` (current plan card, usage meters, plans with monthly/yearly toggle, payment method, invoices from Stripe, FAQ).
   - `/dashboard/settings`: profile name, e-mail change, password (handles re-authentication code), login methods, sign out everywhere, notification toggles (`notify_product`, `notify_reports`), theme + site language, JSON export (`/api/account/export`), delete account (ends subscription, `auth.admin.deleteUser`).
   - Legal: `/agb`, `/widerruf` (with model form), `/impressum` (reads `site.owner`), `/kuendigen` (§ 312k BGB, no login: confirms by mail with timestamp, mails info@, sets cancel_at_period_end if the e-mail has a live subscription), `/hilfe` (FAQ). Footer + sidebar link to them. Legal texts are drafts, not lawyer-reviewed.
+- Settings: profile photo with round crop (`avatar-editor.tsx`: drag, wheel/pinch, slider; 512 px WebP to `assets/<uid>/avatar-*.webp`; `profiles.avatar_url`, migration `20261117222000_avatar.sql`), shown in the sidebar. Password change only via e-mail link (`sendPasswordLink` → recovery mail → `/reset-password`). Portal config is created in code (`ensurePortalConfig`, metadata app=qlick). The webhook re-reads subscriptions with the SDK API version.
 - Google branding verification is approved (Qlick name + logo on the Google consent screen).
 - `site.owner` (name/street/city/phone) in `src/lib/site.ts` is still empty; Impressum is still a placeholder. Needs the owner's legal name and address.
 

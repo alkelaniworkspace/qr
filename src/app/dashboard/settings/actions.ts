@@ -33,21 +33,26 @@ export async function changeEmail(email: string): Promise<SettingsResult> {
   return { ok: `Fast geschafft: Bestätige die Änderung über den Link, den wir an ${next} geschickt haben.` };
 }
 
-/** New password. If Supabase asks for re-authentication, a code is mailed and must be passed as `nonce`. */
-export async function changePassword(password: string, confirm: string, nonce?: string): Promise<SettingsResult> {
+/** Password changes go through a link by e-mail (proves access to the inbox). */
+export async function sendPasswordLink(): Promise<SettingsResult> {
   const user = await getSessionUser();
   if (!user) return { error: "Bitte melde dich an." };
-  if (password.length < 8) return { error: "Das Passwort braucht mindestens 8 Zeichen." };
-  if (password.length > 72) return { error: "Das Passwort ist zu lang." };
-  if (password !== confirm) return { error: "Die Passwörter stimmen nicht überein." };
   const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser(nonce ? { password, nonce } : { password });
-  if (error?.code === "reauthentication_needed" || error?.code === "reauthentication_not_valid") {
-    if (error.code === "reauthentication_needed") await supabase.auth.reauthenticate();
-    return { needCode: true, error: error.code === "reauthentication_not_valid" ? "Der Code stimmt nicht oder ist abgelaufen." : undefined };
-  }
-  if (error) return { error: error.code === "same_password" ? "Bitte ein anderes Passwort als das bisherige wählen." : error.code === "weak_password" ? "Das Passwort ist zu schwach." : "Das hat nicht geklappt." };
-  return { ok: "Passwort gespeichert." };
+  const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: `${env.appUrl}/auth/confirm?next=/reset-password` });
+  if (error) return { error: error.status === 429 ? "Du hast gerade erst einen Link bekommen. Bitte warte eine Minute." : "Der Link konnte nicht gesendet werden." };
+  return { ok: `Link gesendet an ${user.email}. Er ist eine Stunde gültig.` };
+}
+
+/** Saves the uploaded profile photo (must live in the user's own folder) or removes it. */
+export async function setAvatar(url: string | null): Promise<SettingsResult> {
+  const user = await getSessionUser();
+  if (!user) return { error: "Bitte melde dich an." };
+  const prefix = `${env.supabaseUrl}/storage/v1/object/public/assets/${user.id}/`;
+  if (url !== null && !url.startsWith(prefix)) return { error: "Ungültiges Bild." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ avatar_url: url } as never).eq("id", user.id);
+  revalidatePath("/", "layout");
+  return error ? { error: "Speichern hat nicht geklappt." } : { ok: url ? "Profilbild gespeichert." : "Profilbild entfernt." };
 }
 
 export async function savePrefs(prefs: { notify_product: boolean; notify_reports: boolean }): Promise<SettingsResult> {
