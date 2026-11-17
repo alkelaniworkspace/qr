@@ -93,3 +93,31 @@ export async function oauthSignIn(form: FormData) {
   if (error || !data.url) redirect(`/login?error=provider&p=${provider.id}`);
   redirect(data.url);
 }
+
+/** Sends the branded "reset password" e-mail. Always answers the same so addresses cannot be probed. */
+export async function requestReset(_: AuthState, form: FormData): Promise<AuthState> {
+  const email = String(form.get("email") ?? "").trim();
+  if (!z.email().safeParse(email).success) return { error: "Bitte eine gültige E-Mail eingeben", email };
+  if (!supabaseConfigured) return { error: NOT_READY, email };
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${env.appUrl}/auth/confirm?next=/reset-password` });
+  if (error?.status === 429) return { error: "Zu viele Versuche. Bitte in einer Minute erneut.", email };
+  return { info: "Wenn ein Konto zu dieser Adresse existiert, haben wir dir einen Link für ein neues Passwort geschickt.", email };
+}
+
+const newPasswordSchema = z.object({
+  password: z.string().min(8, "Das Passwort braucht mindestens 8 Zeichen").max(72),
+  confirm: z.string(),
+}).refine((v) => v.password === v.confirm, { message: "Die Passwörter stimmen nicht überein" });
+
+/** Sets a new password for the user who arrived via the recovery link. */
+export async function updatePassword(_: AuthState, form: FormData): Promise<AuthState> {
+  const parsed = newPasswordSchema.safeParse({ password: form.get("password") ?? "", confirm: form.get("confirm") ?? "" });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) {
+    return { error: error.code === "same_password" ? "Bitte ein anderes Passwort als das bisherige wählen." : "Das hat nicht geklappt. Fordere bitte einen neuen Link an." };
+  }
+  redirect("/dashboard");
+}

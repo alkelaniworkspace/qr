@@ -40,7 +40,7 @@ Read it before starting a task. Update the "Last state" and "Open items" section
 
 ### Env vars (Vercel)
 - **Present:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_APP_URL` (= `https://www.qlickqr.com`), `VISITOR_SALT`, `SUPABASE_SECRET_KEY`, `RESEND_API_KEY` (sending-only, domain qlickqr.com), `MAIL_FROM` (`Qlick <info@qlickqr.com>`).
-- **Missing:** `ANTHROPIC_API_KEY` (optional, AI menu import).
+- **Missing:** `SEND_EMAIL_HOOK_SECRET` (owner adds it, see §8), `ANTHROPIC_API_KEY` (optional, AI menu import).
 
 ### Domain & mail
 - Domain **qlickqr.com** (DNS at Hostinger; apex redirects to `www`). Mailbox `info@qlickqr.com` (Hostinger) = contact + admin e-mail.
@@ -122,11 +122,13 @@ Done and pushed (commits "Menu: Showcase templates …" and "Hosted pages: new S
 - Admin UI `/admin` (only visible to admins, sidebar "Verwaltung"): Übersicht (KPIs, 30-day bars), Nutzer (search/filter, detail page with gift plan + duration, suspend, role, user's codes), Codes (filters incl. trash/locked/guest, actions menu), Protokoll.
 - The admin pages were not screenshot-checked (needs a logged-in admin). Check once in production after the owner signs up.
 - Google sign-in works (Google Cloud project "My First Project", app published, External). Branding verification: first attempt failed (domain not verified, privacy page empty). Fixed: full `/datenschutz` (with "Anmeldung mit Google" + Limited Use), Search Console domain property verified via TXT at Hostinger (keep that record). Owner re-submits after 24 h ("I have fixed the issues").
+- Branded auth e-mails: Supabase "Send Email" hook → `POST /api/auth/email` (verifies the standard-webhooks signature with `SEND_EMAIL_HOOK_SECRET`, renders `src/lib/auth-email.ts`, sends via Resend from `MAIL_FROM`; logo `public/email/qlick-logo.png`). Links go to `/auth/confirm?token_hash=…&type=…&next=…`. New pages `/forgot` and `/reset-password` (+ "Passwort vergessen?" on login).
+- Google branding verification is approved (Qlick name + logo on the Google consent screen).
 - `site.owner` (name/street/city/phone) in `src/lib/site.ts` is still empty; Impressum is still a placeholder. Needs the owner's legal name and address.
 
 ## 8. Open items / ideas
 
-1. **Owner setup:** in Google Cloud OAuth add origins `https://www.qlickqr.com`, `https://qlickqr.com`; in Supabase Auth set Site URL `https://www.qlickqr.com` + redirect `https://www.qlickqr.com/**`; sign up with `info@qlickqr.com` (becomes admin). Resend domain is verified; then move Supabase auth e-mails to custom SMTP (Resend) from info@qlickqr.com.
+1. **Owner setup:** in Google Cloud OAuth add origins `https://www.qlickqr.com`, `https://qlickqr.com`; in Supabase Auth set Site URL `https://www.qlickqr.com` + redirect `https://www.qlickqr.com/**`; sign up with `info@qlickqr.com` (becomes admin). Resend domain is verified. Enable the Supabase Send Email hook (Auth → Hooks, HTTPS, URL `https://www.qlickqr.com/api/auth/email`), put its secret into Vercel env `SEND_EMAIL_HOOK_SECRET` and redeploy.
    - **Phase 3 payments (Stripe)** waits on: Gewerbe, Stripe account, tax decision (Kleinunternehmer or MwSt), final prices/trial, legal pages (AGB, Widerruf, Impressum, Datenschutz).
 2. **Translate the studio and dashboard to English.** Only the public site is translated so far.
 3. **Guests (no account)** can still create unlimited dynamic codes server-side (the limit only applies to accounts). Close that if the owner wants it.

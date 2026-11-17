@@ -163,9 +163,12 @@ export function AuthForm({ mode, next, initialError }: { mode: "login" | "signup
           <Input id="email" name="email" type="email" autoComplete="email" required defaultValue={state?.email} placeholder="du@firma.de" />
         </FieldShell>
         {method === "password" && (
-          <FieldShell label="Passwort" htmlFor="password" hint={mode === "signup" ? "Mindestens 8 Zeichen" : undefined}>
-            <Input id="password" name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={mode === "signup" ? 8 : undefined} />
-          </FieldShell>
+          <div>
+            <FieldShell label="Passwort" htmlFor="password" hint={mode === "signup" ? "Mindestens 8 Zeichen" : undefined}>
+              <Input id="password" name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={mode === "signup" ? 8 : undefined} />
+            </FieldShell>
+            {mode === "login" && <Link href="/forgot" className="mt-2 inline-block text-[13px] font-semibold text-dim underline-offset-4 hover:text-fg hover:underline">Passwort vergessen?</Link>}
+          </div>
         )}
         {state?.error && <p className="rounded-xl border border-rose/30 bg-rose/10 px-3 py-2.5 text-sm text-rose">{state.error}</p>}
         <Button type="submit" size="lg" className="w-full" disabled={pending}>
