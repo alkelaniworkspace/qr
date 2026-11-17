@@ -1,7 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { PLANS } from "@/lib/plans";
-import { getAccount } from "@/lib/account";
+import { dynamicLimit, getAccount } from "@/lib/account";
 
 export async function getQuota(userId: string) {
   const supabase = await createClient();
@@ -11,6 +10,6 @@ export async function getQuota(userId: string) {
   ]);
   const plan = account.plan;
   const used = count ?? 0;
-  const limit: number = PLANS[plan].dynamic ?? Infinity;
+  const limit: number = dynamicLimit(account) ?? Infinity;
   return { plan, used, limit, locked: used >= limit || account.suspended, account };
 }

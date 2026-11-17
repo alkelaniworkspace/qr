@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { planOf, type PlanId } from "@/lib/plans";
+import { PLANS, planOf, type PlanId } from "@/lib/plans";
 
 export interface Account {
   fullName: string;
@@ -11,6 +11,15 @@ export interface Account {
   role: "user" | "admin";
   suspended: boolean;
   suspendedReason: string | null;
+  /** Admin override: null = plan default, -1 = unlimited, n = exactly n dynamic codes. */
+  codeLimit: number | null;
+}
+
+/** Dynamic-code limit that counts right now (null = unlimited). Mirrors public.dynamic_limit(). */
+export function dynamicLimit(a: Pick<Account, "plan" | "codeLimit">): number | null {
+  if (a.codeLimit === -1) return null;
+  if (a.codeLimit !== null) return a.codeLimit;
+  return PLANS[a.plan].dynamic;
 }
 
 export function effectivePlan(plan: string | null | undefined, until: string | null | undefined): PlanId {
@@ -22,7 +31,7 @@ export async function getAccount(userId: string): Promise<Account> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("full_name, plan, plan_until, plan_source, role, suspended_at, suspended_reason")
+    .select("full_name, plan, plan_until, plan_source, role, suspended_at, suspended_reason, code_limit")
     .eq("id", userId)
     .maybeSingle();
   return {
@@ -33,5 +42,6 @@ export async function getAccount(userId: string): Promise<Account> {
     role: data?.role === "admin" ? "admin" : "user",
     suspended: !!data?.suspended_at,
     suspendedReason: data?.suspended_reason ?? null,
+    codeLimit: typeof data?.code_limit === "number" ? data.code_limit : null,
   };
 }

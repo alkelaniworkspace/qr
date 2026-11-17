@@ -234,3 +234,25 @@ await expectError("lock: owner cannot switch a locked code back on", () => as(B,
 await as(ADM, `select public.admin_suspend_user('${A}', true, 'Test')`);
 await expectError("suspend: suspended user cannot create codes", () => as(A, `insert into public.qr_codes (name, slug, type, mode) values ('x', 'suspA1', 'url', 'static')`), /ACCOUNT_SUSPENDED/);
 await expectError("suspend: admin cannot suspend themselves", () => as(ADM, `select public.admin_suspend_user('${ADM}', true, 'x')`), /NOT_SELF/);
+
+// ── custom limits and gifts by e-mail ──
+await as(ADM, `select public.admin_set_limit('${B}', 0)`);
+await expectError("limit: custom limit 0 blocks new dynamic codes", () => as(B, `insert into public.qr_codes (name, slug, type, mode) values ('L', 'limB01', 'url', 'dynamic')`), /PLAN_LIMIT_REACHED/);
+await as(ADM, `select public.admin_set_limit('${B}', -1)`);
+await as(B, `insert into public.qr_codes (name, slug, type, mode) values ('L1', 'limB01', 'url', 'dynamic'), ('L2', 'limB02', 'url', 'dynamic'), ('L3', 'limB03', 'url', 'dynamic')`);
+check("limit: unlimited lets the user create more", true);
+check("limit: dynamic_limit is null for unlimited", ((await as(B, `select public.dynamic_limit('${B}') l`)).rows[0] as { l: number | null }).l === null);
+await expectError("limit: users cannot set their own limit", () => as(B, `update public.profiles set code_limit = -1`), /permission denied/);
+await expectError("limit: only admins", () => as(B, `select public.admin_set_limit('${B}', -1)`), /NOT_ADMIN/);
+
+const pend = ((await as(ADM, `select public.admin_gift_email('Neu@Kunde.de', 'pro', 3, null, 7, 'Pilot') r`)).rows[0] as { r: { status: string } }).r;
+check("gift: unknown e-mail waits for sign-up", pend.status === "pending" && (await as(ADM, `select * from public.admin_grants()`)).rows.length === 1);
+const E = "55555555-5555-5555-5555-555555555555";
+await db.exec(`insert into auth.users (id, email) values ('${E}', 'neu@kunde.de');`);
+const ep = (await db.query(`select plan, plan_source, code_limit, plan_until > now() + interval '80 days' as later from public.profiles where id = '${E}'`)).rows[0] as { plan: string; plan_source: string; code_limit: number; later: boolean };
+check("gift: applied on sign-up (plan, months from sign-up, limit)", ep.plan === "pro" && ep.plan_source === "gift" && ep.code_limit === 7 && ep.later);
+check("gift: claimed gift leaves the open list", (await as(ADM, `select * from public.admin_grants()`)).rows.length === 0);
+const now = ((await as(ADM, `select public.admin_gift_email('${"neu@kunde.de"}', 'business', null, null, null) r`)).rows[0] as { r: { status: string } }).r;
+check("gift: existing account gets it at once", now.status === "applied" && ((await db.query(`select plan, plan_until from public.profiles where id = '${E}'`)).rows[0] as { plan: string; plan_until: string | null }).plan === "business");
+await expectError("gift: bad e-mail is rejected", () => as(ADM, `select public.admin_gift_email('nope', 'pro', 1, null, null)`), /BAD_EMAIL/);
+await expectError("gift: only admins", () => as(B, `select public.admin_gift_email('x@y.de', 'pro', 1, null, null)`), /NOT_ADMIN/);

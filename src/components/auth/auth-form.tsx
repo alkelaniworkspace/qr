@@ -119,7 +119,7 @@ function SocialButtons({ next, mode }: { next?: string; mode: "login" | "signup"
   );
 }
 
-export function AuthForm({ mode, next, initialError }: { mode: "login" | "signup"; next?: string; initialError?: string }) {
+export function AuthForm({ mode, next, initialError, defaultEmail }: { mode: "login" | "signup"; next?: string; initialError?: string; defaultEmail?: string }) {
   const [method, setMethod] = useState<"link" | "password">("link");
   const passwordAction = mode === "login" ? signIn : signUp;
   const [state, action, pending] = useActionState<AuthState, FormData>(
@@ -160,7 +160,7 @@ export function AuthForm({ mode, next, initialError }: { mode: "login" | "signup
           </FieldShell>
         )}
         <FieldShell label="E-Mail" htmlFor="email">
-          <Input id="email" name="email" type="email" autoComplete="email" required defaultValue={state?.email} placeholder="du@firma.de" />
+          <Input id="email" name="email" type="email" autoComplete="email" required defaultValue={state?.email ?? defaultEmail} placeholder="du@firma.de" />
         </FieldShell>
         {method === "password" && (
           <div>

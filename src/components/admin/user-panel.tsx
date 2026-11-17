@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Ban, Check, Crown, Gift, Loader2, RotateCcw, ShieldCheck, ShieldOff } from "lucide-react";
-import { giftPlan, setRole, suspendUser } from "@/app/admin/actions";
+import { Ban, Check, Crown, Gift, Infinity as Inf, Loader2, QrCode, RotateCcw, ShieldCheck, ShieldOff } from "lucide-react";
+import { giftPlan, setCodeLimit, setRole, suspendUser } from "@/app/admin/actions";
+import { PLANS, planOf } from "@/lib/plans";
 import { cn } from "@/lib/cn";
 
-const PLANS = [
+const PLAN_CHOICES = [
   { id: "start", label: "Start", hint: "15 dynamische Codes" },
   { id: "pro", label: "Pro", hint: "50 dynamische Codes" },
   { id: "business", label: "Business", hint: "150 dynamische Codes" },
@@ -26,9 +27,15 @@ function addMonths(m: number) {
   return d.toISOString();
 }
 
-export function UserPanel({ id, self, role, suspended, suspendedReason, plan, gift }: {
-  id: string; self: boolean; role: "user" | "admin"; suspended: boolean; suspendedReason: string | null; plan: string; gift: boolean;
+export function UserPanel({ id, self, role, suspended, suspendedReason, plan, effectivePlan, gift, codeLimit, used }: {
+  id: string; self: boolean; role: "user" | "admin"; suspended: boolean; suspendedReason: string | null; plan: string; effectivePlan: string; gift: boolean;
+  codeLimit: number | null; used: number;
 }) {
+  const [notify, setNotify] = useState(true);
+  const [message, setMessage] = useState("");
+  const [limitMode, setLimitMode] = useState<"plan" | "custom" | "unlimited">(codeLimit === null ? "plan" : codeLimit === -1 ? "unlimited" : "custom");
+  const [custom, setCustom] = useState(String(codeLimit !== null && codeLimit >= 0 ? codeLimit : 100));
+  const planDefault = PLANS[planOf(effectivePlan)].dynamic;
   const [pick, setPick] = useState("pro");
   const [dur, setDur] = useState("1m");
   const [date, setDate] = useState("");
@@ -54,7 +61,7 @@ export function UserPanel({ id, self, role, suspended, suspendedReason, plan, gi
         <p className="flex items-center gap-2 text-[15px] font-semibold"><Gift className="size-4 text-lime" /> Tarif verschenken</p>
         <p className="mt-1 text-[13px] text-dim">Gilt sofort. Nach Ablauf fällt das Konto automatisch auf Free zurück, die Codes bleiben erhalten.</p>
         <div className="mt-4 grid grid-cols-3 gap-2">
-          {PLANS.map((p) => (
+          {PLAN_CHOICES.map((p) => (
             <button key={p.id} type="button" onClick={() => setPick(p.id)} className={chip(pick === p.id)}>
               <span className="block">{p.label}</span><span className="block text-[11px] font-medium text-faint">{p.hint}</span>
             </button>
@@ -65,8 +72,16 @@ export function UserPanel({ id, self, role, suspended, suspendedReason, plan, gi
         </div>
         {dur === "date" && <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-3 h-11 w-full rounded-xl border border-edge bg-surface px-3 text-sm outline-none focus:border-brand/60" />}
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Notiz (nur intern), z. B. Pilotkunde, Freund, Gewinnspiel" className="mt-3 h-11 w-full rounded-xl border border-edge bg-surface px-3 text-sm outline-none placeholder:text-faint focus:border-brand/60" />
+        <label className="mt-3 flex cursor-pointer items-center gap-3">
+          <span className={cn("relative h-6 w-11 shrink-0 rounded-full transition", notify ? "bg-lime" : "bg-hi/20")}>
+            <span className={cn("absolute top-0.5 size-5 rounded-full bg-white shadow transition-all", notify ? "left-[22px]" : "left-0.5")} />
+          </span>
+          <input type="checkbox" className="sr-only" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
+          <span className="text-[13px] font-semibold">Geschenk-E-Mail senden</span>
+        </label>
+        {notify && <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} maxLength={400} placeholder="Persönliche Nachricht (optional, steht in der E-Mail)" className="mt-3 w-full resize-none rounded-xl border border-edge bg-surface px-3 py-2.5 text-sm outline-none placeholder:text-faint focus:border-brand/60" />}
         <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" disabled={pending || (dur === "date" && !date)} onClick={() => run(() => giftPlan(id, pick, until(), note), "Tarif verschenkt.")} className="btn-cta inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-bold disabled:opacity-50">
+          <button type="button" disabled={pending || (dur === "date" && !date)} onClick={() => run(() => giftPlan(id, pick, until(), note, notify, message), notify ? "Tarif verschenkt, E-Mail gesendet." : "Tarif verschenkt.")} className="btn-cta inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-bold disabled:opacity-50">
             {pending ? <Loader2 className="size-4 animate-spin" /> : <Crown className="size-4" />} Verschenken
           </button>
           {(plan !== "free" || gift) && (
@@ -75,6 +90,20 @@ export function UserPanel({ id, self, role, suspended, suspendedReason, plan, gi
             </button>
           )}
         </div>
+      </div>
+
+      <div className="card p-5">
+        <p className="flex items-center gap-2 text-[15px] font-semibold"><QrCode className="size-4" /> Dynamische Codes</p>
+        <p className="mt-1 text-[13px] text-dim">Genutzt: <b className="text-fg">{used}</b> von {codeLimit === -1 ? "unbegrenzt" : codeLimit ?? planDefault}{codeLimit !== null && <span className="text-faint"> (eigenes Limit)</span>}</p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <button type="button" onClick={() => setLimitMode("plan")} className={cn(chip(limitMode === "plan"), "py-1.5")}>Wie im Tarif ({planDefault})</button>
+          <button type="button" onClick={() => setLimitMode("custom")} className={cn(chip(limitMode === "custom"), "py-1.5")}>Eigene Anzahl</button>
+          <button type="button" onClick={() => setLimitMode("unlimited")} className={cn(chip(limitMode === "unlimited"), "inline-flex items-center gap-1.5 py-1.5")}><Inf className="size-4" /> Unbegrenzt</button>
+        </div>
+        {limitMode === "custom" && <input type="number" min={0} max={100000} value={custom} onChange={(e) => setCustom(e.target.value)} aria-label="Anzahl" className="mt-3 h-11 w-36 rounded-xl border border-edge bg-surface px-3 text-sm outline-none focus:border-brand/60" />}
+        <button type="button" disabled={pending} onClick={() => run(() => setCodeLimit(id, limitMode === "plan" ? null : limitMode === "unlimited" ? -1 : Math.max(0, Math.floor(Number(custom) || 0))), "Limit gespeichert.")} className="mt-3 inline-flex h-11 items-center gap-2 rounded-xl bg-fg px-5 text-sm font-bold text-bg">
+          <Check className="size-4" /> Limit speichern
+        </button>
       </div>
 
       <div className="card p-5">

@@ -43,7 +43,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               {[
                 [CalendarDays, "Registriert", dtf.format(new Date(u.created_at))],
                 [Clock, "Zuletzt angemeldet", ago(u.last_sign_in_at)],
-                [QrCode, "Codes", `${u.codes} (${u.dynamic_codes} dynamisch)`],
+                [QrCode, "Codes", `${u.codes} (${u.dynamic_codes}/${u.dynamic_limit ?? "∞"} dynamisch)`],
                 [ScanLine, "Scans", nf.format(u.scans)],
               ].map(([I, k, v]) => {
                 const Icon = I as typeof Clock;
@@ -68,7 +68,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
             <CodeTable codes={all} showOwner={false} />
           </div>
         </div>
-        <UserPanel id={u.id} self={u.id === me.id} role={u.role} suspended={!!u.suspended_at} suspendedReason={u.suspended_reason} plan={u.plan} gift={gift} />
+        <UserPanel id={u.id} self={u.id === me.id} role={u.role} suspended={!!u.suspended_at} suspendedReason={u.suspended_reason} plan={u.plan} effectivePlan={u.effective_plan} gift={gift} codeLimit={u.code_limit ?? null} used={u.dynamic_codes} />
       </div>
     </div>
   );

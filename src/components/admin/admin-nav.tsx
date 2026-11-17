@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Gauge, History, QrCode, Trash2, Users } from "lucide-react";
+import { Gauge, Gift, History, QrCode, Trash2, Users } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const TABS = [
   { href: "/admin", label: "Übersicht", icon: Gauge, exact: true },
   { href: "/admin/users", label: "Nutzer", icon: Users },
+  { href: "/admin/gifts", label: "Geschenke", icon: Gift },
   { href: "/admin/codes", label: "Codes", icon: QrCode },
   { href: "/admin/codes?f=trash", label: "Papierkorb", icon: Trash2 },
   { href: "/admin/log", label: "Protokoll", icon: History },

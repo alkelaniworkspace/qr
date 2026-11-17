@@ -17,7 +17,10 @@ export interface AdminUser {
   created_at: string; last_sign_in_at: string | null; email_confirmed: boolean;
   plan: string; effective_plan: string; plan_until: string | null; plan_source: "free" | "paid" | "gift"; plan_note: string | null;
   suspended_at: string | null; suspended_reason: string | null; codes: number; dynamic_codes: number; scans: number; total?: number;
+  code_limit?: number | null; dynamic_limit?: number | null;
 }
+
+export interface AdminGrant { id: string; email: string; plan: string; months: number | null; until: string | null; code_limit: number | null; note: string | null; created_at: string; admin_email: string | null }
 
 export interface AdminCode {
   id: string; slug: string; name: string; type: string; mode: "dynamic" | "static"; status: "active" | "paused";
@@ -36,5 +39,5 @@ export interface AuditRow { id: number; created_at: string; action: string; admi
 export const ACTION_LABEL: Record<string, string> = {
   "plan.gift": "Tarif verschenkt", "plan.reset": "Tarif auf Free", "user.suspend": "Konto gesperrt", "user.unsuspend": "Konto entsperrt", "user.role": "Rolle geändert",
   "code.pause": "Code pausiert", "code.resume": "Code aktiviert", "code.lock": "Code gesperrt", "code.unlock": "Code entsperrt", "code.archive": "Code archiviert",
-  "code.unarchive": "Aus Archiv geholt", "code.trash": "In den Papierkorb", "code.restore": "Wiederhergestellt", "code.purge": "Endgültig gelöscht",
+  "code.unarchive": "Aus Archiv geholt", "plan.gift_email": "Geschenk per E-Mail", "plan.grant_revoke": "Geschenk zurückgezogen", "user.limit": "Code-Limit geändert", "code.trash": "In den Papierkorb", "code.restore": "Wiederhergestellt", "code.purge": "Endgültig gelöscht",
 };

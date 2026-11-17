@@ -1,3 +1,4 @@
+import { mailLayout } from "@/lib/mail-layout";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { adminClient } from "@/lib/supabase/admin";
@@ -66,11 +67,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const code = await getPublicCode(slug);
     const title = String(code?.content.title ?? "Veranstaltung");
     const link = `${env.appUrl}/api/rsvp/confirm?t=${token}`;
-    const greet = name ? `Hallo ${escapeHtml(name)},` : "Hallo,";
     const sent = await sendMail(
       email,
       `Bitte bestätige deine Anmeldung: ${title}`,
-      `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:auto;padding:24px;color:#141414"><p>${greet}</p><p>du hast dich für <b>${escapeHtml(title)}</b> angemeldet${guests > 1 ? ` (${guests} Personen)` : ""}. Bitte bestätige mit einem Klick:</p><p style="margin:28px 0"><a href="${link}" style="background:#141414;color:#fff;padding:14px 22px;border-radius:12px;text-decoration:none;font-weight:600">Teilnahme bestätigen</a></p><p style="color:#777;font-size:13px">Du hast dich nicht angemeldet? Dann ignoriere diese E-Mail einfach.</p></div>`,
+      mailLayout({
+        preheader: `Ein Klick und dein Platz bei ${title} ist bestätigt.`,
+        title: "Bestätige deine Anmeldung",
+        intro: `${name ? `Hallo ${escapeHtml(name.split(" ")[0])},` : "Hallo,"}<br>du hast dich für <b>${escapeHtml(title)}</b> angemeldet${guests > 1 ? ` (${guests} Personen)` : ""}. Bitte bestätige mit einem Klick, dann ist dein Platz reserviert.`,
+        cta: "Teilnahme bestätigen",
+        link,
+        after: "Du hast dich nicht angemeldet? Dann ignoriere diese E-Mail einfach.",
+      }),
       `${name ? `Hallo ${name},` : "Hallo,"}\n\ndu hast dich für ${title} angemeldet. Bitte bestätige hier:\n${link}\n\nNicht angemeldet? Einfach ignorieren.`,
     );
     if (!sent) return NextResponse.json({ ok: false, message: "Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte erneut versuchen." }, { status: 502, headers: noStore });

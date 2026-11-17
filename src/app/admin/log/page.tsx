@@ -6,6 +6,7 @@ function tone(a: string) {
   if (a.includes("suspend") && !a.includes("unsuspend")) return "bg-rose";
   if (a === "code.lock" || a === "code.purge" || a === "code.trash") return "bg-rose";
   if (a.startsWith("plan.gift")) return "bg-lime";
+  if (a === "plan.grant_revoke") return "bg-rose";
   if (a === "code.pause") return "bg-gold";
   return "bg-hi/30";
 }
@@ -14,6 +15,10 @@ function detail(d: Record<string, unknown>) {
   const out: string[] = [];
   if (d.plan) out.push(`Tarif ${String(d.plan)}`);
   if (d.until) out.push(`bis ${dtf.format(new Date(String(d.until)))}`);
+  if (d.email) out.push(String(d.email));
+  if (d.months) out.push(`${String(d.months)} Monate`);
+  if ("limit" in d && (d.limit !== undefined)) out.push(d.limit === null ? "Codes wie im Tarif" : d.limit === -1 ? "unbegrenzt Codes" : `${String(d.limit)} Codes`);
+  if (d.pending) out.push("wartet auf Registrierung");
   if (d.reason) out.push(`Grund: ${String(d.reason)}`);
   if (d.note) out.push(`Notiz: ${String(d.note)}`);
   if (d.role) out.push(`Rolle ${String(d.role)}`);
